@@ -51,7 +51,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _area: {fileID: 2585871502210841351}
   _margin: 10
-  _conections: 000000
+  _conections: 01010101
 --- !u!1 &7819814163779509273
 GameObject:
   m_ObjectHideFlags: 0

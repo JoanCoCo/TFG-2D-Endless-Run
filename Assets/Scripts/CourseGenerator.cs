@@ -1,6 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Assertions;
 
 public class CourseGenerator : MonoBehaviour
 {
@@ -11,7 +12,12 @@ public class CourseGenerator : MonoBehaviour
     private float _initialY, _initialX;
     private Camera _mainCamera;
     public float margin = 10.0f;
-    private GameObject[] _previousRow;
+    private GameObject[] _previousCol, _newCol;
+    public float cellSizeX = 6.0f;
+    public float cellSizeY = 6.0f;
+
+    private bool _red = false;
+    private int maxHeight = 1;
     // Start is called before the first frame update
     void Start()
     {
@@ -19,7 +25,8 @@ public class CourseGenerator : MonoBehaviour
         _initialY = _origin.position.y;
         _initialX = _origin.position.x;
         _mainCamera = Camera.main;
-        _previousRow = new GameObject[_rows];
+        _previousCol = new GameObject[_rows];
+        _newCol = new GameObject[_rows];
     }
 
     // Update is called once per frame
@@ -30,20 +37,42 @@ public class CourseGenerator : MonoBehaviour
         {
             GenerateNewCol();
         }
+        Assert.IsTrue(maxHeight <= _rows);
     }
 
     private void GenerateNewCol()
     {
-        for (int i = 0; i < _rows; i++)
+        int currentHeight = _rows;
+        for (int i = _rows - 1; i >= 0; i--)
         {
             Transform spawnPoint = _origin;
-            spawnPoint.position = new Vector3(
-                _currentCol * _cells[0].GetComponent<Cell>().GetWidth() + _initialX,
-                i * _cells[0].GetComponent<Cell>().GetHeight() + _initialY,
-                0);
+            spawnPoint.position = new Vector3(_currentCol * cellSizeX + _initialX,
+                i * cellSizeY + _initialY, 0);
             GameObject o = Instantiate(suggestCell(i));
+            if (!o.GetComponent<Cell>().IsConnected(Cell.DOWN)) currentHeight--;
             o.transform.position = spawnPoint.position;
-            _previousRow[i] = o;
+            o.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(
+                RectTransform.Axis.Vertical, cellSizeY);
+            o.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(
+                RectTransform.Axis.Horizontal, cellSizeX);
+            if(_red)
+            {
+                _red = false;
+                if (o.GetComponentInChildren<SpriteRenderer>() != null)
+                {
+                    o.GetComponentInChildren<SpriteRenderer>().color = Color.red;
+                }
+            }
+            _newCol[i] = o;
+        }
+
+        Debug.Log("Current height = " + currentHeight.ToString());
+        maxHeight = Random.Range(Mathf.Max(2, currentHeight - 2), Mathf.Min(_rows, currentHeight + 2) + 1);
+        Debug.Log("Next max height = " + maxHeight.ToString());
+
+        for (int i = 0; i < _rows; i++)
+        {
+            _previousCol[i] = _newCol[i];
         }
         _currentCol++;
     }
@@ -52,25 +81,48 @@ public class CourseGenerator : MonoBehaviour
     {
         bool found = false;
         GameObject candidate = null;
+        int counterM = 0;
         while(!found)
         {
             candidate = _cells[Random.Range(0, _cells.Length)];
             Cell c = candidate.GetComponent<Cell>();
-            if (_previousRow[row] == null)
+            if(_previousCol[row] == null)
             {
-                if (row == 0)
+                if(row == 0)
                 {
-                    found = !c.IsConnected(c.DOWN);
+                    found = c.IsConnected(Cell.UP) & c.IsConnected(Cell.DOWN) &
+                        c.IsConnected(Cell.RIGHT) & c.IsConnected(Cell.LEFT);
                 } else
                 {
-                    found = c.IsConnected(c.DOWN);
+                    found = !c.IsConnected(Cell.DOWN);
+                }
+            } else
+            {
+                Cell p = _previousCol[row].GetComponent<Cell>();
+                if(row >= maxHeight - 1)
+                {
+                    found = !c.IsConnected(Cell.DOWN);
+                } else if(row > 0)
+                {
+                    Cell b = _newCol[row + 1].GetComponent<Cell>();
+                    found = !b.IsConnected(Cell.DOWN) || c.IsConnected(Cell.UP);
+                    found &= c.IsConnected(Cell.UP) || !c.IsConnected(Cell.LEFT) || p.IsConnected(Cell.RIGHT);
+                    found &= c.IsConnected(Cell.UP) || !p.IsConnected(Cell.RIGHT) || c.IsConnected(Cell.LEFT);
+                } else
+                {
+                    //Cell b = _newCol[row + 1].GetComponent<Cell>();
+                    found = c.IsConnected(Cell.UP) && c.IsConnected(Cell.DOWN) &&
+                        c.IsConnected(Cell.RIGHT) && c.IsConnected(Cell.LEFT);
+                    //found |= !c.IsConnected(Cell.DOWN) && !b.IsConnected(Cell.DOWN);
                 }
             }
-            else
+            counterM++;
+            if(counterM > 2000)
             {
                 found = true;
+                _red = true;
             }
         }
         return candidate;
-    }
+    } 
 }

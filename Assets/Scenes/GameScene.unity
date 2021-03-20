@@ -456,12 +456,15 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 19c8ca78c6d384e12a2f29c1ece9bbf7, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _rows: 4
+  _rows: 20
   _cells:
-  - {fileID: 7350454985027971671, guid: 0314384c87f0b40439166050221c1680, type: 3}
   - {fileID: 7350454985027971671, guid: 3cec52bbba8854feeb0862102c3b0666, type: 3}
+  - {fileID: 7350454985027971671, guid: 0314384c87f0b40439166050221c1680, type: 3}
   - {fileID: 7350454985027971671, guid: 221334cc830804e6d912c4a2b432fb18, type: 3}
+  - {fileID: 7350454985027971671, guid: 3b73fa430d16249b68aa167bd0f073bd, type: 3}
   margin: 10
+  cellSizeX: 3
+  cellSizeY: 0.5
 --- !u!4 &2129837211
 Transform:
   m_ObjectHideFlags: 0

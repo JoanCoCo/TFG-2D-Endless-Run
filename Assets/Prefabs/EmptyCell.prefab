@@ -34,7 +34,7 @@ RectTransform:
   m_AnchorMin: {x: 0.5, y: 0.5}
   m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: 2, y: 2}
+  m_SizeDelta: {x: 6, y: 6}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &3611790968118917497
 MonoBehaviour:
@@ -50,4 +50,4 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   _area: {fileID: 2585871502210841351}
   _margin: 10
-  _conections: 010101
+  _conections: 00000000

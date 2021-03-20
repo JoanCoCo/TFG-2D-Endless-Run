@@ -8,15 +8,16 @@ public class Cell : MonoBehaviour
     [SerializeField] private RectTransform _area;
     private Camera _mainCamera;
     [SerializeField] private float _margin = 10.0f;
-    public readonly int UP = 0;
-    public readonly int CENTER = 1;
-    public readonly int DOWN = 2;
-    [SerializeField] private bool[] _conections = { false, true, false };
+    public static readonly int UP = 0;
+    public static readonly int RIGHT = 1;
+    public static readonly int LEFT = 2;
+    public static readonly int DOWN = 3;
+    [SerializeField] private bool[] _conections = { true, true, true, true };
 
     // Start is called before the first frame update
     void Start()
     {
-        Assert.AreEqual(3, _conections.Length);
+        Assert.AreEqual(4, _conections.Length);
         _mainCamera = Camera.main;
     }
 
