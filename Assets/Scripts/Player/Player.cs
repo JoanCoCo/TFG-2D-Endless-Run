@@ -8,6 +8,7 @@ public class Player : MonoBehaviour
     private BoxCollider2D _collider;
     public float speed = 10.0f;
     public float jumpForce = 10.0f;
+    public int health = 3;
 
     private InteractableObject _currentInteractable;
 
@@ -89,5 +90,19 @@ public class Player : MonoBehaviour
             Debug.Log("Interactable out of range.");
             _currentInteractable = null;
         }
+    }
+
+    private void OnCollisionEnter2D(Collision2D collision)
+    {
+        if(collision.gameObject.CompareTag("Damage"))
+        {
+            ReceiveDamage(1);
+        }
+    }
+
+    private void ReceiveDamage(int damage)
+    {
+        health = (damage > health) ? 0 : health - damage;
+        Messenger<int>.Broadcast(GameEvent.PLAYER_HEALTH_CHANGED, health);
     }
 }

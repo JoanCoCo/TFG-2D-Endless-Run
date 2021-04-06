@@ -18,6 +18,9 @@ public class CourseGenerator : MonoBehaviour
 
     private bool _red = false;
     private int maxHeight = 1;
+    public int maxDamageLenght = 3;
+    private int currentDamageChain = 0;
+
     // Start is called before the first frame update
     void Start()
     {
@@ -43,6 +46,7 @@ public class CourseGenerator : MonoBehaviour
     private void GenerateNewCol()
     {
         bool topFound = false;
+        bool hasDamage = false;
         for (int i = _rows - 1; i >= 0; i--)
         {
             Transform spawnPoint = _origin;
@@ -50,6 +54,7 @@ public class CourseGenerator : MonoBehaviour
                 i * cellSizeY + _initialY, 0);
             GameObject o = Instantiate(suggestCell(i));
             o.transform.position = spawnPoint.position;
+            hasDamage |= o.CompareTag("Damage");
             o.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(
                 RectTransform.Axis.Vertical, cellSizeY);
             o.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(
@@ -70,6 +75,15 @@ public class CourseGenerator : MonoBehaviour
             }
         }
         Debug.Log("Next max height = " + maxHeight.ToString());
+
+        if (hasDamage)
+        {
+            currentDamageChain++;
+        }
+        else
+        {
+            currentDamageChain = 0;
+        }
 
         for (int i = 0; i < _rows; i++)
         {
@@ -106,6 +120,7 @@ public class CourseGenerator : MonoBehaviour
                 _red = true;
                 found = true;
             }
+            if (candidate.CompareTag("Damage") && currentDamageChain >= maxDamageLenght) found = false;
         }
         return candidate;
     } 
