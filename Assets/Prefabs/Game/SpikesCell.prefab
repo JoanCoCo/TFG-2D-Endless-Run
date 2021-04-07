@@ -13,8 +13,8 @@ GameObject:
   - component: {fileID: 7198166905988465714}
   - component: {fileID: 3032248098136348010}
   m_Layer: 0
-  m_Name: ramp
-  m_TagString: Untagged
+  m_Name: spikes
+  m_TagString: Damage
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0

@@ -9,6 +9,7 @@ public class Player : MonoBehaviour
     public float speed = 10.0f;
     public float jumpForce = 10.0f;
     public int health = 3;
+    public int maxHealth = 3;
 
     private InteractableObject _currentInteractable;
 
@@ -98,11 +99,13 @@ public class Player : MonoBehaviour
         {
             ReceiveDamage(1);
         }
+        Debug.Log("Col : " + collision.gameObject.tag);
     }
 
     private void ReceiveDamage(int damage)
     {
         health = (damage > health) ? 0 : health - damage;
-        Messenger<int>.Broadcast(GameEvent.PLAYER_HEALTH_CHANGED, health);
+        Messenger<float>.Broadcast(GameEvent.PLAYER_HEALTH_CHANGED, (float) health / (float) maxHealth);
+        if (health == 0) Messenger.Broadcast(GameEvent.PLAYER_DIED);
     }
 }

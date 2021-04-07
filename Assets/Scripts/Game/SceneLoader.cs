@@ -3,10 +3,11 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.SceneManagement;
 
-public class GameStarter : MonoBehaviour, InteractableObject
+public class SceneLoader : MonoBehaviour, InteractableObject
 {
     [SerializeField] private GameObject note;
     private KeyCode interactionKey = KeyCode.Z;
+    public string scene;
 
     // Start is called before the first frame update
     void Start()
@@ -21,7 +22,7 @@ public class GameStarter : MonoBehaviour, InteractableObject
 
     public void Interact()
     {
-        SceneManager.LoadScene("GameScene");
+        SceneManager.LoadScene(scene);
     }
 
     private void OnTriggerEnter2D(Collider2D other)
