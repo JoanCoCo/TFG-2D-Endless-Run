@@ -10,6 +10,7 @@ public class CourseUI : MonoBehaviour
     [SerializeField] private GameObject healthBar;
     private RectTransform healthBarInitialTransform;
     [SerializeField] private TextMeshProUGUI chronoText;
+    [SerializeField] private TextMeshProUGUI distaceText;
     [SerializeField] private GameObject pausedScreen;
     [SerializeField] private GameObject finishedScreen;
 
@@ -22,6 +23,7 @@ public class CourseUI : MonoBehaviour
         Messenger.AddListener(GameEvent.PAUSE, OnChangeState);
         Messenger.AddListener(GameEvent.RESUME, OnChangeState);
         Messenger.AddListener(GameEvent.PLAYER_DIED, OnPlayerDeath);
+        Messenger<int>.AddListener(GameEvent.DISTANCE_INCREASED, OnDistanceIncreased);
         pausedScreen.SetActive(false);
         finishedScreen.SetActive(false);
     }
@@ -64,5 +66,11 @@ public class CourseUI : MonoBehaviour
         Messenger.RemoveListener(GameEvent.PAUSE, OnChangeState);
         Messenger.RemoveListener(GameEvent.RESUME, OnChangeState);
         Messenger.RemoveListener(GameEvent.PLAYER_DIED, OnPlayerDeath);
+        Messenger<int>.RemoveListener(GameEvent.DISTANCE_INCREASED, OnDistanceIncreased);
+    }
+
+    private void OnDistanceIncreased(int d)
+    {
+        distaceText.text = d.ToString() + " m";
     }
 }

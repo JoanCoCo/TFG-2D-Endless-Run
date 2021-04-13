@@ -32,9 +32,9 @@ public class ScoreScreen : MonoBehaviour
 
     private string GetScoreString()
     {
-        int time = (int) PlayerPrefs.GetFloat( (isNewHighscore) ? "HighScore" : "LastScore", 0.0f);
-        string s = (time % 60) >= 10 ? (time % 60).ToString() : "0" + (time % 60);
-        return time / 60 + ":" + s;
+        int d = (int) PlayerPrefs.GetFloat( (isNewHighscore) ? "HighScore" : "LastScore", 0.0f);
+        //string s = (time % 60) >= 10 ? (time % 60).ToString() : "0" + (time % 60);
+        return d.ToString() + " m";
     }
 
     private void OnDestroy()

@@ -10,6 +10,8 @@ public class Player : MonoBehaviour
     public float jumpForce = 10.0f;
     public int health = 3;
     public int maxHealth = 3;
+    [SerializeField] private Collider2D confiner;
+    public bool isInLobby = true;
 
     private InteractableObject _currentInteractable;
 
@@ -19,6 +21,7 @@ public class Player : MonoBehaviour
         _body = GetComponent<Rigidbody2D>();
         _collider = GetComponent<BoxCollider2D>();
         _currentInteractable = null;
+        if(!isInLobby) Messenger<float>.Broadcast(GameEvent.PLAYER_STARTS, gameObject.transform.position.x);
     }
 
     // Update is called once per frame
@@ -26,6 +29,15 @@ public class Player : MonoBehaviour
     {
         Vector2 currentSpeed = _body.velocity;
         currentSpeed.x = speed * Input.GetAxisRaw("Horizontal");
+
+        if(Mathf.Sign(currentSpeed.y) < 0  && !IsTouchingGround())
+        {
+            _body.gravityScale = 2.0f;
+        } else
+        {
+            _body.gravityScale = 1.0f;
+        }
+
         _body.velocity = currentSpeed;
 
         if (Input.GetKeyDown(KeyCode.Space) && IsTouchingGround())
@@ -33,7 +45,13 @@ public class Player : MonoBehaviour
             Debug.Log("Jumping");
             _body.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
         }
+
         ManageInteraction();
+    }
+
+    private void FixedUpdate()
+    {
+        if (!isInLobby) Messenger<float>.Broadcast(GameEvent.PLAYER_MOVED, gameObject.transform.position.x);
     }
 
     private bool IsTouchingGround()
@@ -42,7 +60,7 @@ public class Player : MonoBehaviour
         Vector3 min = _collider.bounds.min;
         Vector2 cUp = new Vector2(max.x, min.y - .1f);
         Vector2 cDown = new Vector2(min.x, min.y - .2f);
-        return Physics2D.OverlapArea(cUp, cDown) != null;
+        return Physics2D.OverlapArea(cUp, cDown, Physics.DefaultRaycastLayers, -1.0f, 1.0f) != null;
     }
 
     private void ManageInteraction()

@@ -138,6 +138,21 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 5481941042463264971, guid: 1cbcb44d9d58945dab098c7073eb09b5,
         type: 3}
+      propertyPath: confiner
+      value: 
+      objectReference: {fileID: 1329406267}
+    - target: {fileID: 5481941042463264971, guid: 1cbcb44d9d58945dab098c7073eb09b5,
+        type: 3}
+      propertyPath: isInLobby
+      value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5481941042463264971, guid: 1cbcb44d9d58945dab098c7073eb09b5,
+        type: 3}
+      propertyPath: jumpForce
+      value: 10
+      objectReference: {fileID: 0}
+    - target: {fileID: 5481941042463264971, guid: 1cbcb44d9d58945dab098c7073eb09b5,
+        type: 3}
       propertyPath: maxHealth
       value: 3
       objectReference: {fileID: 0}
@@ -195,6 +210,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_LocalEulerAnglesHint.z
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 5481941042463264975, guid: 1cbcb44d9d58945dab098c7073eb09b5,
+        type: 3}
+      propertyPath: m_Mass
+      value: 1
       objectReference: {fileID: 0}
     - target: {fileID: 5481941042463264975, guid: 1cbcb44d9d58945dab098c7073eb09b5,
         type: 3}
@@ -366,6 +386,18 @@ Transform:
     type: 3}
   m_PrefabInstance: {fileID: 21069828}
   m_PrefabAsset: {fileID: 0}
+--- !u!114 &1140129202 stripped
+MonoBehaviour:
+  m_CorrespondingSourceObject: {fileID: 8779484783339717518, guid: 51242349f4ff44b0d84a86b19547ee94,
+    type: 3}
+  m_PrefabInstance: {fileID: 8294716467623430323}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f4688fdb7df04437aeb418b961361dc5, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
 --- !u!1 &1186317243 stripped
 GameObject:
   m_CorrespondingSourceObject: {fileID: 1255541397060084028, guid: f40a0fba558f74a38a6754c4d954c43b,
@@ -389,12 +421,6 @@ MonoBehaviour:
   m_BoundingShape2D: {fileID: 1329406267}
   m_ConfineScreenEdges: 1
   m_Damping: 0
---- !u!1 &1237070644 stripped
-GameObject:
-  m_CorrespondingSourceObject: {fileID: 8294716468826422151, guid: 51242349f4ff44b0d84a86b19547ee94,
-    type: 3}
-  m_PrefabInstance: {fileID: 8294716467623430323}
-  m_PrefabAsset: {fileID: 0}
 --- !u!1 &1265573528
 GameObject:
   m_ObjectHideFlags: 0
@@ -565,7 +591,7 @@ Transform:
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1329406265}
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalPosition: {x: 0, y: 0, z: 10}
   m_LocalScale: {x: 1, y: 1, z: 1}
   m_Children: []
   m_Father: {fileID: 1265573532}
@@ -836,6 +862,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 8294716468686909715, guid: 51242349f4ff44b0d84a86b19547ee94,
+        type: 3}
+      propertyPath: m_text
+      value: 'Score: 0 m'
+      objectReference: {fileID: 0}
     - target: {fileID: 8294716468848108501, guid: 51242349f4ff44b0d84a86b19547ee94,
         type: 3}
       propertyPath: m_Name
@@ -843,9 +874,9 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8294716468848108504, guid: 51242349f4ff44b0d84a86b19547ee94,
         type: 3}
-      propertyPath: healthBar
+      propertyPath: distaceText
       value: 
-      objectReference: {fileID: 1237070644}
+      objectReference: {fileID: 1140129202}
     - target: {fileID: 8294716468848108505, guid: 51242349f4ff44b0d84a86b19547ee94,
         type: 3}
       propertyPath: m_Pivot.x
