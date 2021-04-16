@@ -54,6 +54,7 @@ public class CourseGenerator : MonoBehaviour
                 i * cellSizeY + _initialY, 0);
             GameObject o = Instantiate(suggestCell(i));
             o.transform.position = spawnPoint.position;
+            //o.transform.parent = gameObject.transform;
             hasDamage |= o.CompareTag("Damage");
             o.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(
                 RectTransform.Axis.Vertical, cellSizeY);
