@@ -3,6 +3,9 @@
 [Oo]bj/
 [Bb]uild/
 [Bb]uilds/
+[Ll]ogs/
+.vsconfig
+.DS_Store
 Assets/AssetStoreTools*
 
 # Visual Studio cache directory
@@ -35,3 +38,4 @@ sysinfo.txt
 # Builds
 *.apk
 *.unitypackage
+Logs/Packages-Update.log
