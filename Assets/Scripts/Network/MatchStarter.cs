@@ -11,7 +11,7 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
     [SerializeField] private int minNumberOfPlayers;
     [SerializeField] private int maxNumberOfPlayers;
 
-    [SyncVar] int currNumberOfPlayers = 0;
+    int currNumberOfPlayers = 0;
 
     private bool readyConfirmationPending = true;
     private bool gameIsStarting = false;
@@ -54,6 +54,7 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
     [ClientRpc]
     private void RpcUpdateNumberOfReadyPlayers()
     {
+        currNumberOfPlayers += 1;
         Debug.Log("Ready players: " + currNumberOfPlayers);
     }
 
