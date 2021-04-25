@@ -7,21 +7,23 @@ public class ForwardHorizontalDisplacement : MonoBehaviour
     [SerializeField] private GameObject target;
     private float lastPos;
     private float initialDiff;
-    // Start is called before the first frame update
-    void Start()
-    {
-        lastPos = target.transform.position.x;
-        initialDiff = gameObject.transform.position.x - lastPos;
-    }
 
     // Update is called once per frame
     void Update()
     {
-        if(lastPos < target.transform.position.x)
+        if (target != null)
         {
+            if (lastPos < target.transform.position.x)
+            {
+                lastPos = target.transform.position.x;
+                gameObject.transform.position = new Vector3(initialDiff + lastPos,
+                    gameObject.transform.position.y, gameObject.transform.position.z);
+            }
+        } else
+        {
+            target = GameObject.FindWithTag("LocalPlayer");
             lastPos = target.transform.position.x;
-            gameObject.transform.position = new Vector3(initialDiff + lastPos,
-                gameObject.transform.position.y, gameObject.transform.position.z);
+            initialDiff = gameObject.transform.position.x - lastPos;
         }
     }
 }

@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 using Cinemachine;
+using UnityEngine.SceneManagement;
 
 public class Player : NetworkBehaviour
 {
@@ -17,18 +18,23 @@ public class Player : NetworkBehaviour
 
     private InteractableObject _currentInteractable;
 
+    private void Awake()
+    {
+        isInLobby = SceneManager.GetActiveScene().name.Equals("LobbyScene");
+    }
+
     // Start is called before the first frame update
     void Start()
     {
         if (isLocalPlayer)
         {
+            gameObject.tag = "LocalPlayer";
             _body = GetComponent<Rigidbody2D>();
             _collider = GetComponent<BoxCollider2D>();
             _currentInteractable = null;
             if (!isInLobby) Messenger<float>.Broadcast(GameEvent.PLAYER_STARTS, gameObject.transform.position.x);
             vcamera = GameObject.FindWithTag("CameraSet").GetComponent<CinemachineVirtualCamera>();
             vcamera.Follow = transform;
-            gameObject.tag = "LocalPlayer";
         }
     }
 

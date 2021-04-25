@@ -741,7 +741,7 @@ MonoBehaviour:
   netManager: {fileID: 1739939606}
   minNumberOfPlayers: 1
   maxNumberOfPlayers: 6
-  matchCountdown: 30
+  matchCountdown: 10
   gameScene: GameScene
 --- !u!212 &597201626
 SpriteRenderer:

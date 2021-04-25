@@ -73,15 +73,6 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
         }
     }
 
-    [ClientRpc]
-    private void RpcStartGame()
-    {
-        if(!readyConfirmationPending)
-        {
-            SceneManager.LoadScene(gameScene);
-        }
-    }
-
     private void Update()
     {
         if(isServer)
@@ -100,7 +91,7 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
                 }
                 else
                 {
-                    RpcStartGame();
+                    netManager.ServerChangeScene(gameScene);
                 }
             }
         } else

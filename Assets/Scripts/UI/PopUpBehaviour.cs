@@ -15,7 +15,7 @@ public class PopUpBehaviour : MonoBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        //Debug.Log("Someone in range.");
+        Debug.Log("Someone in range.");
         if (other.gameObject.CompareTag("LocalPlayer")
             && other.gameObject.GetComponent<Player>().isLocalPlayer)
         {
