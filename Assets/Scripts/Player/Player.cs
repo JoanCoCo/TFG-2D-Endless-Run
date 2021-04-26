@@ -149,7 +149,6 @@ public class Player : NetworkBehaviour
         if (health == 0)
         {
             Messenger.Broadcast(GameEvent.PLAYER_DIED);
-            gameObject.SetActive(false);
         }
     }
 
@@ -157,7 +156,11 @@ public class Player : NetworkBehaviour
     private void CmdUpdateHealth(int health)
     {
         this.health = health;
-        if (health == 0) RpcHidePlayer();
+        if (health == 0)
+        {
+            RpcHidePlayer();
+            NetworkServer.Destroy(gameObject);
+        }
     }
 
     private void RpcHidePlayer()
