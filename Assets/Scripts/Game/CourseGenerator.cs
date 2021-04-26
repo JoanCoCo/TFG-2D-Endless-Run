@@ -2,15 +2,15 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
+using UnityEngine.Networking;
 
-public class CourseGenerator : MonoBehaviour
+public class CourseGenerator : NetworkBehaviour
 {
     [SerializeField] private int _rows;
     [SerializeField] private GameObject[] _cells;
     private int _currentCol = 0;
     private Transform _origin;
     private float _initialY, _initialX;
-    private Camera _mainCamera;
     public float margin = 10.0f;
     private GameObject[] _previousCol, _newCol;
     public float cellSizeX = 6.0f;
@@ -21,26 +21,48 @@ public class CourseGenerator : MonoBehaviour
     public int maxDamageLenght = 3;
     private int currentDamageChain = 0;
 
+    private float refX = 0.0f;
+    private Camera _mainCamera;
+
+    private void Awake()
+    {
+        Messenger<float>.AddListener(GameEvent.FIRST_PLAYER_POSITION_CHANGED, OnFirstPlayerPositionChanged);
+    }
+
     // Start is called before the first frame update
     void Start()
     {
-        _origin = GetComponent<Transform>();
-        _initialY = _origin.position.y;
-        _initialX = _origin.position.x;
-        _mainCamera = Camera.main;
-        _previousCol = new GameObject[_rows];
-        _newCol = new GameObject[_rows];
+        if (isServer)
+        {
+            _origin = GetComponent<Transform>();
+            _initialY = _origin.position.y;
+            _initialX = _origin.position.x;
+            _previousCol = new GameObject[_rows];
+            _newCol = new GameObject[_rows];
+            _mainCamera = Camera.main;
+        }
+    }
+
+    private void OnFirstPlayerPositionChanged(float posX)
+    {
+        if(posX > refX)
+        {
+            refX = posX;
+        }
     }
 
     // Update is called once per frame
     void Update()
     {
-        while (gameObject.transform.position.x < _mainCamera.transform.position.x
-            + _mainCamera.orthographicSize * _mainCamera.aspect + margin)
+        if (isServer)
         {
-            GenerateNewCol();
+            while (gameObject.transform.position.x < refX
+                + _mainCamera.orthographicSize * _mainCamera.aspect + margin)
+            {
+                GenerateNewCol();
+            }
+            Assert.IsTrue(maxHeight <= _rows);
         }
-        Assert.IsTrue(maxHeight <= _rows);
     }
 
     private void GenerateNewCol()
@@ -56,10 +78,11 @@ public class CourseGenerator : MonoBehaviour
             o.transform.position = spawnPoint.position;
             //o.transform.parent = gameObject.transform;
             hasDamage |= o.CompareTag("Damage");
-            o.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(
-                RectTransform.Axis.Vertical, cellSizeY);
-            o.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(
-                RectTransform.Axis.Horizontal, cellSizeX);
+            //o.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, cellSizeY);
+            //o.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, cellSizeX);
+            o.GetComponent<Cell>().SetHeight(cellSizeY);
+            o.GetComponent<Cell>().SetWidth(cellSizeX);
+
             if(_red)
             {
                 _red = false;
@@ -68,6 +91,9 @@ public class CourseGenerator : MonoBehaviour
                     o.GetComponentInChildren<SpriteRenderer>().color = Color.red;
                 }
             }
+
+            NetworkServer.Spawn(o);
+
             _newCol[i] = o;
             if (o.GetComponent<Cell>().IsConnected(Cell.RIGHT) && !topFound)
             {
@@ -75,7 +101,7 @@ public class CourseGenerator : MonoBehaviour
                 topFound = true;
             }
         }
-        Debug.Log("Next max height = " + maxHeight.ToString());
+        //Debug.Log("Next max height = " + maxHeight.ToString());
 
         if (hasDamage)
         {
@@ -124,5 +150,10 @@ public class CourseGenerator : MonoBehaviour
             if (candidate.CompareTag("Damage") && currentDamageChain >= maxDamageLenght) found = false;
         }
         return candidate;
-    } 
+    }
+
+    private void OnDestroy()
+    {
+        Messenger<float>.RemoveListener(GameEvent.FIRST_PLAYER_POSITION_CHANGED, OnFirstPlayerPositionChanged);
+    }
 }

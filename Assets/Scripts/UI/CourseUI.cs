@@ -14,16 +14,20 @@ public class CourseUI : MonoBehaviour
     [SerializeField] private GameObject pausedScreen;
     [SerializeField] private GameObject finishedScreen;
 
-    // Start is called before the first frame update
-    void Start()
+    private void Awake()
     {
-        healthBarInitialTransform = healthBar.GetComponent<RectTransform>();
         Messenger<float>.AddListener(GameEvent.PLAYER_HEALTH_CHANGED, OnHealthChange);
         Messenger<int>.AddListener(GameEvent.TIME_PASSED, OnTimePassed);
         Messenger.AddListener(GameEvent.PAUSE, OnChangeState);
         Messenger.AddListener(GameEvent.RESUME, OnChangeState);
-        Messenger.AddListener(GameEvent.PLAYER_DIED, OnPlayerDeath);
+        Messenger.AddListener(GameEvent.GAME_FINISHED, OnGameFinished);
         Messenger<int>.AddListener(GameEvent.DISTANCE_INCREASED, OnDistanceIncreased);
+    }
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        healthBarInitialTransform = healthBar.GetComponent<RectTransform>();
         pausedScreen.SetActive(false);
         finishedScreen.SetActive(false);
     }
@@ -54,7 +58,7 @@ public class CourseUI : MonoBehaviour
         pausedScreen.SetActive(!pausedScreen.activeSelf);
     }
 
-    private void OnPlayerDeath()
+    private void OnGameFinished()
     {
         finishedScreen.SetActive(true);
     }
@@ -65,7 +69,7 @@ public class CourseUI : MonoBehaviour
         Messenger<int>.RemoveListener(GameEvent.TIME_PASSED, OnTimePassed);
         Messenger.RemoveListener(GameEvent.PAUSE, OnChangeState);
         Messenger.RemoveListener(GameEvent.RESUME, OnChangeState);
-        Messenger.RemoveListener(GameEvent.PLAYER_DIED, OnPlayerDeath);
+        Messenger.RemoveListener(GameEvent.GAME_FINISHED, OnGameFinished);
         Messenger<int>.RemoveListener(GameEvent.DISTANCE_INCREASED, OnDistanceIncreased);
     }
 

@@ -59,7 +59,7 @@ public class Player : NetworkBehaviour
 
             if (Input.GetKeyDown(KeyCode.Space) && IsTouchingGround())
             {
-                Debug.Log("Jumping");
+                //Debug.Log("Jumping");
                 _body.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
             }
 
@@ -138,15 +138,19 @@ public class Player : NetworkBehaviour
         {
             ReceiveDamage(1);
         }
-        Debug.Log("Col : " + collision.gameObject.tag);
+        //Debug.Log("Col : " + collision.gameObject.tag);
     }
 
     private void ReceiveDamage(int damage)
     {
         health = (damage > health) ? 0 : health - damage;
         Messenger<float>.Broadcast(GameEvent.PLAYER_HEALTH_CHANGED, (float) health / maxHealth);
-        if (health == 0) Messenger.Broadcast(GameEvent.PLAYER_DIED);
         CmdUpdateHealth(health);
+        if (health == 0)
+        {
+            Messenger.Broadcast(GameEvent.PLAYER_DIED);
+            gameObject.SetActive(false);
+        }
     }
 
     [Command]

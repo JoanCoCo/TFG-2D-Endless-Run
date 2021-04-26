@@ -1,29 +1,51 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.Networking;
 
-public class ForwardHorizontalDisplacement : MonoBehaviour
+public class ForwardHorizontalDisplacement : NetworkBehaviour
 {
-    [SerializeField] private GameObject target;
-    private float lastPos;
-    private float initialDiff;
+    private float lastPos = 0.0f;
+    private float initialDiff = 0.0f;
+    private bool hasBeenInit = false;
 
-    // Update is called once per frame
-    void Update()
+    private void Start()
     {
-        if (target != null)
+        if (isServer)
         {
-            if (lastPos < target.transform.position.x)
-            {
-                lastPos = target.transform.position.x;
-                gameObject.transform.position = new Vector3(initialDiff + lastPos,
-                    gameObject.transform.position.y, gameObject.transform.position.z);
-            }
-        } else
+            Messenger<float>.AddListener(GameEvent.PLAYER_STARTS, OnPlayersStarts);
+            Messenger<float>.AddListener(GameEvent.LAST_PLAYER_POSITION_CHANGED, OnLastPlayerPositionChanged);
+        }
+    }
+
+    private void OnPlayersStarts(float posX)
+    {
+        if (!hasBeenInit || (hasBeenInit && lastPos > posX))
         {
-            target = GameObject.FindWithTag("LocalPlayer");
-            lastPos = target.transform.position.x;
+            lastPos = posX;
             initialDiff = gameObject.transform.position.x - lastPos;
+            hasBeenInit = true;
+            Debug.Log("Last pos: " + lastPos.ToString());
+        }
+    }
+
+    private void OnLastPlayerPositionChanged(float posX)
+    {
+        if(lastPos < posX)
+        {
+            lastPos = posX;
+            gameObject.transform.position = new Vector3(initialDiff + lastPos,
+                    gameObject.transform.position.y, gameObject.transform.position.z);
+            Debug.Log("Last pos updated: " + lastPos);
+        }
+    }
+
+    private void OnDestroy()
+    {
+        if (isServer)
+        {
+            Messenger<float>.RemoveListener(GameEvent.PLAYER_STARTS, OnPlayersStarts);
+            Messenger<float>.RemoveListener(GameEvent.LAST_PLAYER_POSITION_CHANGED, OnLastPlayerPositionChanged);
         }
     }
 }
