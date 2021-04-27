@@ -21,6 +21,7 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
 
     private void Start()
     {
+        if (netManager == null) netManager = GameObject.FindWithTag("NetManager").GetComponent<NetworkManager>();
         netIdentity = GetComponent<NetworkIdentity>();
     }
 

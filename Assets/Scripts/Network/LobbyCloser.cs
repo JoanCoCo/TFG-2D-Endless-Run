@@ -13,6 +13,7 @@ public class LobbyCloser : NetworkBehaviour, InteractableObject
 
     private void Start()
     {
+        if (netManagerObject == null) netManagerObject = GameObject.FindWithTag("NetManager");
         netManager = netManagerObject.GetComponent<NetworkManager>();
     }
 

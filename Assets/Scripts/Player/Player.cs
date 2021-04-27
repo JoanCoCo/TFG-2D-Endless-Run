@@ -4,6 +4,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using Cinemachine;
 using UnityEngine.SceneManagement;
+using TMPro;
 
 public class Player : NetworkBehaviour
 {
@@ -15,6 +16,11 @@ public class Player : NetworkBehaviour
     public int maxHealth = 3;
     public bool isInLobby = true;
     private CinemachineVirtualCamera vcamera;
+    [SerializeField] private GameObject arrow;
+    [SerializeField] private GameObject healthBarObject;
+    [SerializeField] private GameObject healthBar;
+    [SerializeField] private GameObject textCanvas;
+    [SerializeField] private TextMeshProUGUI distanceText;
 
     private InteractableObject _currentInteractable;
 
@@ -35,6 +41,17 @@ public class Player : NetworkBehaviour
             if (!isInLobby) Messenger<float>.Broadcast(GameEvent.PLAYER_STARTS, gameObject.transform.position.x);
             vcamera = GameObject.FindWithTag("CameraSet").GetComponent<CinemachineVirtualCamera>();
             vcamera.Follow = transform;
+            healthBarObject.SetActive(false);
+            textCanvas.SetActive(false);
+            if (!isInLobby) Messenger<int>.AddListener(GameEvent.DISTANCE_INCREASED, OnDistanceIncreased);
+        } else
+        {
+            arrow.SetActive(false);
+            if(isInLobby)
+            {
+                healthBarObject.SetActive(false);
+                textCanvas.SetActive(false);
+            }
         }
     }
 
@@ -61,6 +78,7 @@ public class Player : NetworkBehaviour
             {
                 //Debug.Log("Jumping");
                 _body.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
+                _body.AddTorque(Mathf.Sign(_body.velocity.x) * -10.0f, ForceMode2D.Impulse);
             }
 
             ManageInteraction();
@@ -73,6 +91,23 @@ public class Player : NetworkBehaviour
         {
             if (!isInLobby) Messenger<float>.Broadcast(GameEvent.PLAYER_MOVED, gameObject.transform.position.x);
         }
+    }
+
+    private void OnDistanceIncreased(int d)
+    {
+        CmdDistanceIncreased(d);
+    }
+
+    [Command]
+    private void CmdDistanceIncreased(int d)
+    {
+        RpcDistanceIncreased(d);
+    }
+
+    [ClientRpc]
+    private void RpcDistanceIncreased(int d)
+    {
+        if(!isLocalPlayer) distanceText.text = d.ToString() + " m";
     }
 
     private bool IsTouchingGround()
@@ -161,6 +196,7 @@ public class Player : NetworkBehaviour
             RpcHidePlayer();
             NetworkServer.Destroy(gameObject);
         }
+        RpcUpdateHealthBar(health);
     }
 
     private void RpcHidePlayer()
@@ -187,5 +223,16 @@ public class Player : NetworkBehaviour
             }
             networkIdentity.AssignClientAuthority(player.connectionToClient);
         }
+    }
+
+    [ClientRpc]
+    private void RpcUpdateHealthBar(int h)
+    {
+        if(!isLocalPlayer) healthBar.transform.localScale = new Vector3(((float) h) / maxHealth, 1.0f, 1.0f);
+    }
+
+    private void OnDestroy()
+    {
+        if (isLocalPlayer && !isInLobby) Messenger<int>.RemoveListener(GameEvent.DISTANCE_INCREASED, OnDistanceIncreased);
     }
 }

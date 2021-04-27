@@ -1219,6 +1219,11 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 8294716468848108504, guid: 51242349f4ff44b0d84a86b19547ee94,
         type: 3}
+      propertyPath: health
+      value: 
+      objectReference: {fileID: 8294716467623430324}
+    - target: {fileID: 8294716468848108504, guid: 51242349f4ff44b0d84a86b19547ee94,
+        type: 3}
       propertyPath: distaceText
       value: 
       objectReference: {fileID: 1140129202}
@@ -1444,3 +1449,9 @@ PrefabInstance:
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: 51242349f4ff44b0d84a86b19547ee94, type: 3}
+--- !u!1 &8294716467623430324 stripped
+GameObject:
+  m_CorrespondingSourceObject: {fileID: 8294716468480013258, guid: 51242349f4ff44b0d84a86b19547ee94,
+    type: 3}
+  m_PrefabInstance: {fileID: 8294716467623430323}
+  m_PrefabAsset: {fileID: 0}

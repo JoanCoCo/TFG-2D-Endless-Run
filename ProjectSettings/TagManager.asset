@@ -9,6 +9,7 @@ TagManager:
   - Confiner
   - CameraSet
   - LocalPlayer
+  - NetManager
   layers:
   - Default
   - TransparentFX

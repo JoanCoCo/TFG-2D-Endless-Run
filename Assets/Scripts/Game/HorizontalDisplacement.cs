@@ -9,7 +9,7 @@ public class HorizontalDisplacement : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        target = GameObject.FindWithTag("LocalPlayer");
+        target = GameObject.FindWithTag("CameraSet");
     }
 
     // Update is called once per frame
@@ -21,7 +21,7 @@ public class HorizontalDisplacement : MonoBehaviour
                 transform.position.y, transform.position.z);
         } else
         {
-            target = GameObject.FindWithTag("LocalPlayer");
+            target = GameObject.FindWithTag("CameraSet");
         }
     }
 }

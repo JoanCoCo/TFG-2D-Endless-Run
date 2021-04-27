@@ -4,15 +4,18 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
+using UnityEngine.Networking;
 
 public class CourseUI : MonoBehaviour
 {
+    [SerializeField] private GameObject health;
     [SerializeField] private GameObject healthBar;
     private RectTransform healthBarInitialTransform;
     [SerializeField] private TextMeshProUGUI chronoText;
     [SerializeField] private TextMeshProUGUI distaceText;
     [SerializeField] private GameObject pausedScreen;
     [SerializeField] private GameObject finishedScreen;
+    private bool playerIsDead = false;
 
     private void Awake()
     {
@@ -22,6 +25,7 @@ public class CourseUI : MonoBehaviour
         Messenger.AddListener(GameEvent.RESUME, OnChangeState);
         Messenger.AddListener(GameEvent.GAME_FINISHED, OnGameFinished);
         Messenger<int>.AddListener(GameEvent.DISTANCE_INCREASED, OnDistanceIncreased);
+        Messenger.AddListener(GameEvent.PLAYER_DIED, OnPlayerDeath);
     }
 
     // Start is called before the first frame update
@@ -38,8 +42,15 @@ public class CourseUI : MonoBehaviour
         if(finishedScreen.activeSelf && Input.GetKey(KeyCode.Return))
         {
             Time.timeScale = 1;
-            SceneManager.LoadScene("LobbyScene");
+            NetworkManager netManager = GameObject.FindWithTag("NetManager").GetComponent<NetworkManager>();
+            //netManager.ServerChangeScene("LobbyScene");
         }
+    }
+
+    private void OnPlayerDeath()
+    {
+        health.SetActive(false);
+        distaceText.text = "";
     }
 
     private void OnHealthChange(float health)
@@ -71,6 +82,7 @@ public class CourseUI : MonoBehaviour
         Messenger.RemoveListener(GameEvent.RESUME, OnChangeState);
         Messenger.RemoveListener(GameEvent.GAME_FINISHED, OnGameFinished);
         Messenger<int>.RemoveListener(GameEvent.DISTANCE_INCREASED, OnDistanceIncreased);
+        Messenger.RemoveListener(GameEvent.PLAYER_DIED, OnPlayerDeath);
     }
 
     private void OnDistanceIncreased(int d)
