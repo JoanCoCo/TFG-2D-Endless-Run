@@ -93,7 +93,8 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
                 }
                 else
                 {
-                    netManager.ServerChangeScene(gameScene);
+                    //netManager.ServerChangeScene(gameScene);
+                    Messenger.Broadcast(NetworkEvent.SPLIT);
                 }
             }
         } else
