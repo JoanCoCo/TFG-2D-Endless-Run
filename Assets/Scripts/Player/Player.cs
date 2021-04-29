@@ -221,7 +221,8 @@ public class Player : NetworkBehaviour
             {
                 networkIdentity.RemoveClientAuthority(otherOwner);
             }
-            networkIdentity.AssignClientAuthority(player.connectionToClient);
+            networkIdentity.AssignClientAuthority(connectionToClient);
+            Debug.Log("Authority given to " + networkIdentity.netId.ToString());
         }
     }
 

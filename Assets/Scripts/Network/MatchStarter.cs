@@ -23,6 +23,7 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
     {
         if (netManager == null) netManager = GameObject.FindWithTag("NetManager").GetComponent<NetworkManager>();
         netIdentity = GetComponent<NetworkIdentity>();
+        RequestAuthority();
     }
 
     public KeyCode GetKey()
@@ -36,7 +37,7 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
         {
             readyConfirmationPending = false;
             Messenger.Broadcast(LobbyEvent.WAITING_FOR_MATCH);
-            CmdUpdateNumberOfReadyPlayers();
+            RunCmdUpdateNumberOfReadyPlayers();
         }
     }
 
@@ -46,16 +47,16 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
         if (currNumberOfPlayers < maxNumberOfPlayers)
         {
             currNumberOfPlayers += 1;
-            RpcUpdateNumberOfReadyPlayers();
+            RpcUpdateNumberOfReadyPlayers(currNumberOfPlayers);
             if (gameIsStarting) RpcGetReadyForMatch();
             Debug.Log("Server Ready Players: " + currNumberOfPlayers.ToString());
         }
     }
 
     [ClientRpc]
-    private void RpcUpdateNumberOfReadyPlayers()
+    private void RpcUpdateNumberOfReadyPlayers(int n)
     {
-        currNumberOfPlayers += 1;
+        currNumberOfPlayers = n;
         Debug.Log("Ready players: " + currNumberOfPlayers);
     }
 
@@ -94,17 +95,59 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
                 else
                 {
                     //netManager.ServerChangeScene(gameScene);
-                    Messenger.Broadcast(NetworkEvent.SPLIT);
+                    //Messenger.Broadcast(NetworkEvent.SPLIT);
+                    RpcSendSplit();
+                    currNumberOfPlayers = 0;
+                    readyConfirmationPending = true;
                 }
-            }
-        } else
-        {
-            if(!netIdentity.hasAuthority)
-            {
-                GameObject player = GameObject.FindGameObjectWithTag("LocalPlayer");
-                NetworkIdentity playerId = player.GetComponent<NetworkIdentity>();
-                player.GetComponent<Player>().CmdSetAuth(netId, playerId);
             }
         }
     }
+
+    [ClientRpc]
+    private void RpcSendSplit()
+    {
+        Messenger<string>.Broadcast(NetworkEvent.SPLIT, gameScene);
+    }
+
+    IEnumerator GetAuthority()
+    {
+        if (!isServer)
+        {
+            GameObject player = null;
+            NetworkIdentity netIdentity = GetComponent<NetworkIdentity>();
+            while (!netIdentity.hasAuthority)
+            {
+                while (player == null)
+                {
+                    Debug.Log("Looking for the local player...");
+                    player = GameObject.FindGameObjectWithTag("LocalPlayer");
+                    yield return new WaitForSeconds(0.01f);
+                }
+                Debug.Log("Local player found, asking for authority.");
+                NetworkIdentity playerId = player.GetComponent<NetworkIdentity>();
+                player.GetComponent<Player>().CmdSetAuth(netId, playerId);
+                yield return new WaitForSeconds(0.01f);
+            }
+            Debug.Log("Authority received.");
+        }
+    }
+
+    private Coroutine RequestAuthority() => StartCoroutine(GetAuthority());
+
+    private Coroutine RunCmdUpdateNumberOfReadyPlayers() => StartCoroutine(WaitAuthority());
+
+    IEnumerator WaitAuthority()
+    {
+        if (!isServer)
+        {
+            RequestAuthority();
+            while (!netIdentity.hasAuthority)
+            {
+                yield return new WaitForSeconds(0.01f);
+            }
+        }
+        CmdUpdateNumberOfReadyPlayers();
+    }
+
 }

@@ -32,36 +32,54 @@ public class PlayersManager : NetworkBehaviour
         if(!waitingForMatch)
         {
             waitingForMatch = true;
-            CmdPreparePlayerSplit(myPlayerId);
+            PrepareSplit();
         }
     }
 
     private void OnSplit(string newScene)
     {
-        if(waitingForMatch) CmdOnSplit(newScene);
+        if(iAmServer) CmdOnSplit(newScene);
     }
 
-    [Command]
+    //[Command]
     private void CmdOnSplit(string newScene)
     {
         Debug.Log("Processing split.");
+        bool isFirst = true;
+        int port = netManager.networkPort + 1;
         if (nextPlayerGroup.Contains(myPlayerId))
         {
-
+            Debug.Log("Host is in split.");
+            foreach (var player in currentPlayerGroup)
+            {
+                if(isFirst)
+                {
+                    Debug.Log("Setting up split's host");
+                    RpcBecomeHost(player, currentPlayerGroup.Count, port, false, "");
+                    isFirst = false;
+                } else
+                {
+                    Debug.Log("Reconnecting splitted clients to the new host.");
+                    RpcChangeClientConnection(player, port);
+                }
+            }
+            //new WaitForSeconds(0.1f);
+            netManager.ServerChangeScene(newScene);
         }
         else
         {
-            bool isFirst = true;
-            int port = netManager.networkPort + 1;
+            Debug.Log("Host is not in split");
             foreach (var player in nextPlayerGroup)
             {
-                if (isFirst)
+                if (isFirst) 
                 {
-                    RpcBecomeHost(player, newScene, nextPlayerGroup.Count, port);
+                    Debug.Log("Setting up a new host");
+                    RpcBecomeHost(player, nextPlayerGroup.Count, port, true, newScene);
                     isFirst = false;
                 }
                 else
                 {
+                    Debug.Log("Reconnecting clients to the new host.");
                     RpcChangeClientConnection(player, port);
                 }
             }
@@ -70,16 +88,17 @@ public class PlayersManager : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void RpcBecomeHost(uint nwId, string scene, int numOfPly, int port)
+    private void RpcBecomeHost(uint nwId, int numOfPly, int port, bool changeScene, string scene)
     {
         if (myPlayerId == nwId)
         {
             currentPlayerGroup.Clear();
             nextPlayerGroup.Clear();
             netManager.StopClient();
+            netManager.networkPort = port;
             netManager.StartHost(new ConnectionConfig(), numOfPly);
             numberOfPlayers = 0;
-            ChangeSceneWhenReady(numOfPly, scene);
+            if(changeScene) ChangeSceneWhenReady(numOfPly, scene);
         }
     }
 
@@ -156,6 +175,19 @@ public class PlayersManager : NetworkBehaviour
             }
             Debug.Log("Authority received.");
             myPlayerId = player.GetComponent<NetworkIdentity>().netId.Value;
+        }
+    }
+
+    IEnumerator WaitAuthorityAddPlayer()
+    {
+        RequestAuthority();
+        if(!iAmServer)
+        {
+            NetworkIdentity netIdentity = GetComponent<NetworkIdentity>();
+            while(!netIdentity.hasAuthority)
+            {
+                yield return new WaitForSeconds(0.01f);
+            }
             CmdAddPlayer(myPlayerId);
         }
     }
@@ -173,9 +205,27 @@ public class PlayersManager : NetworkBehaviour
         RegisterNewPlayer(myPlayerId);
     }
 
-    private Coroutine AddPlayer() => StartCoroutine(GetAuthority());
+    IEnumerator WaitAuthorityPrepareSplit()
+    {
+        RequestAuthority();
+        if (!iAmServer)
+        {
+            NetworkIdentity netIdentity = GetComponent<NetworkIdentity>();
+            while (!netIdentity.hasAuthority)
+            {
+                yield return new WaitForSeconds(0.01f);
+            }
+        }
+        CmdPreparePlayerSplit(myPlayerId);
+    }
+
+    private Coroutine RequestAuthority() => StartCoroutine(GetAuthority());
+
+    private Coroutine AddPlayer() => StartCoroutine(WaitAuthorityAddPlayer());
 
     private Coroutine AddServerPlayer() => StartCoroutine(RegisterLocalPlayer());
+
+    private Coroutine PrepareSplit() => StartCoroutine(WaitAuthorityPrepareSplit());
 
     public override void OnStartServer()
     {
