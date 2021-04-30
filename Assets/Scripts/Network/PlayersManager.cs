@@ -96,8 +96,9 @@ public class PlayersManager : NetworkBehaviour
             nextPlayerGroup.Clear();
             netManager.StopClient();
             netManager.networkPort = port;
-            netManager.StartHost(new ConnectionConfig(), numOfPly);
             numberOfPlayers = 0;
+            netManager.StartHost();
+            //AddServerPlayer();
             if(changeScene) ChangeSceneWhenReady(numOfPly, scene);
         }
     }
@@ -108,6 +109,7 @@ public class PlayersManager : NetworkBehaviour
         {
             yield return new WaitForSeconds(0.01f);
         }
+        yield return new WaitForSeconds(0.5f);
         netManager.ServerChangeScene(scene);
     }
 
@@ -120,7 +122,8 @@ public class PlayersManager : NetworkBehaviour
         {
             netManager.StopClient();
             numberOfPlayers = 0;
-            netManager.StartClient(null, new ConnectionConfig(), port);
+            netManager.networkPort = port;
+            netManager.StartClient();
         }
     }
 
@@ -148,9 +151,11 @@ public class PlayersManager : NetworkBehaviour
     {
         if(!iAmServer)
         {
+            Debug.Log("I'm not server, adding my player.");
             AddPlayer();
         } else
         {
+            Debug.Log("I'm the server, adding my player.");
             AddServerPlayer();
         }
     }

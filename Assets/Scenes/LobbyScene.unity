@@ -1990,6 +1990,8 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   netManager: {fileID: 1739939606}
+  currentPlayerGroup: 
+  nextPlayerGroup: 
 --- !u!114 &2144061216
 MonoBehaviour:
   m_ObjectHideFlags: 0
