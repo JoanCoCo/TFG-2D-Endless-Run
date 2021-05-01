@@ -92,6 +92,8 @@ public class PlayersManager : NetworkBehaviour
     {
         if (myPlayerId == nwId)
         {
+            Debug.Log("Becoming host...");
+            NetworkServer.Destroy(GameObject.FindWithTag("LocalPlayer"));
             currentPlayerGroup.Clear();
             nextPlayerGroup.Clear();
             netManager.StopClient();
@@ -105,7 +107,8 @@ public class PlayersManager : NetworkBehaviour
 
     IEnumerator WaitAndTransit(int n, string scene)
     {
-        while(numberOfPlayers < n)
+        Debug.Log("Waiting for the rest of players.");
+        while (numberOfPlayers < n)
         {
             yield return new WaitForSeconds(0.01f);
         }
@@ -120,8 +123,10 @@ public class PlayersManager : NetworkBehaviour
     {
         if (myPlayerId == nwId)
         {
+            Debug.Log("Changing connection to host.");
+            NetworkServer.Destroy(GameObject.FindWithTag("LocalPlayer"));
             netManager.StopClient();
-            numberOfPlayers = 0;
+            //numberOfPlayers = 0;
             netManager.networkPort = port;
             netManager.StartClient();
         }
@@ -234,6 +239,7 @@ public class PlayersManager : NetworkBehaviour
 
     public override void OnStartServer()
     {
+        Debug.Log("Starting the server...");
         iAmServer = true;
         numberOfPlayers = 0;
     }

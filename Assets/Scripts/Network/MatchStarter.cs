@@ -18,12 +18,14 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
     [SerializeField] private float matchCountdown = 60;
     [SerializeField] private string gameScene;
     private NetworkIdentity netIdentity;
+    private float currentCountdown = 0; 
 
     private void Start()
     {
         if (netManager == null) netManager = GameObject.FindWithTag("NetManager").GetComponent<NetworkManager>();
         netIdentity = GetComponent<NetworkIdentity>();
         RequestAuthority();
+        currentCountdown = matchCountdown;
     }
 
     public KeyCode GetKey()
@@ -71,7 +73,7 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
     {
         if(gameIsStarting)
         {
-            matchCountdown = countdown;
+            currentCountdown = countdown;
             Messenger<int>.Broadcast(LobbyEvent.MATCH_COUNTDOWN_UPDATE, (int) countdown);
         }
     }
@@ -88,9 +90,9 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
 
             if (gameIsStarting)
             {
-                if (matchCountdown > 0.0f)
+                if (currentCountdown > 0.0f)
                 {
-                    RpcUpdateCountdown(matchCountdown - Time.deltaTime);
+                    RpcUpdateCountdown(currentCountdown - Time.deltaTime);
                 }
                 else
                 {
@@ -99,6 +101,9 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
                     RpcSendSplit();
                     currNumberOfPlayers = 0;
                     readyConfirmationPending = true;
+                    gameIsStarting = false;
+                    currentCountdown = matchCountdown;
+                    RpcUpdateCountdown(currentCountdown);
                 }
             }
         }
