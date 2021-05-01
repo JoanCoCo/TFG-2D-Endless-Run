@@ -10,6 +10,7 @@ TagManager:
   - CameraSet
   - LocalPlayer
   - NetManager
+  - PlayersManager
   layers:
   - Default
   - TransparentFX

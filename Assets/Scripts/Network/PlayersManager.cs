@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
+using UnityEngine.SceneManagement;
 
 public class PlayersManager : NetworkBehaviour
 {
@@ -24,6 +25,7 @@ public class PlayersManager : NetworkBehaviour
     {
         Messenger.AddListener(LobbyEvent.WAITING_FOR_MATCH, OnWaitingForMatch);
         Messenger<string>.AddListener(NetworkEvent.SPLIT, OnSplit);
+        Messenger.AddListener(GameEvent.FINISHED_SCREEN_IS_OUT, OnFinishedScreenOut);
         DontDestroyOnLoad(gameObject);
     }
 
@@ -41,12 +43,19 @@ public class PlayersManager : NetworkBehaviour
         if(iAmServer) CmdOnSplit(newScene);
     }
 
+    private void RemoveOwnership()
+    {
+        var owner = GetComponent<NetworkIdentity>().clientAuthorityOwner;
+        if (owner != null) GetComponent<NetworkIdentity>().RemoveClientAuthority(owner);
+    }
+
     //[Command]
     private void CmdOnSplit(string newScene)
     {
         Debug.Log("Processing split.");
         bool isFirst = true;
         int port = netManager.networkPort + 1;
+        RemoveOwnership();
         if (nextPlayerGroup.Contains(myPlayerId))
         {
             Debug.Log("Host is in split.");
@@ -92,17 +101,22 @@ public class PlayersManager : NetworkBehaviour
     {
         if (myPlayerId == nwId)
         {
-            Debug.Log("Becoming host...");
-            NetworkServer.Destroy(GameObject.FindWithTag("LocalPlayer"));
-            currentPlayerGroup.Clear();
-            nextPlayerGroup.Clear();
-            netManager.StopClient();
-            netManager.networkPort = port;
-            numberOfPlayers = 0;
-            netManager.StartHost();
-            //AddServerPlayer();
-            if(changeScene) ChangeSceneWhenReady(numOfPly, scene);
+            BecomeHost(numOfPly, port, changeScene, scene);
         }
+    }
+
+    private void BecomeHost(int numOfPly, int port, bool changeScene, string scene)
+    {
+        Debug.Log("Becoming host...");
+        NetworkServer.Destroy(GameObject.FindWithTag("LocalPlayer"));
+        currentPlayerGroup.Clear();
+        nextPlayerGroup.Clear();
+        netManager.StopClient();
+        netManager.networkPort = port;
+        numberOfPlayers = 0;
+        netManager.StartHost();
+        //AddServerPlayer();
+        if (changeScene) ChangeSceneWhenReady(numOfPly, scene);
     }
 
     IEnumerator WaitAndTransit(int n, string scene)
@@ -261,5 +275,32 @@ public class PlayersManager : NetworkBehaviour
     {
         Messenger.RemoveListener(LobbyEvent.WAITING_FOR_MATCH, OnWaitingForMatch);
         Messenger<string>.RemoveListener(NetworkEvent.SPLIT, OnSplit);
+        Messenger.RemoveListener(GameEvent.FINISHED_SCREEN_IS_OUT, OnFinishedScreenOut);
     }
+
+    private void OnFinishedScreenOut()
+    {
+        if (iAmServer)
+        {
+            RemoveOwnership();
+            CloseHost();
+        }
+        else
+        {
+            RemoveOwnership();
+            netManager.StopClient();
+        }
+    }
+
+    IEnumerator WaitBeforeClosing()
+    {
+        while(netManager.numPlayers > 1)
+        {
+            Debug.Log("Waiting, currently connected players: " + netManager.numPlayers);
+            yield return new WaitForSeconds(0.01f);
+        }
+        netManager.StopHost();
+    }
+
+    private Coroutine CloseHost() => StartCoroutine(WaitBeforeClosing());
 }

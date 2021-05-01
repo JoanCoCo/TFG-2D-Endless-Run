@@ -72,6 +72,7 @@ public class CourseUI : MonoBehaviour
     private void OnGameFinished()
     {
         finishedScreen.SetActive(true);
+        Messenger.Broadcast(GameEvent.FINISHED_SCREEN_IS_OUT);
     }
 
     private void OnDestroy()

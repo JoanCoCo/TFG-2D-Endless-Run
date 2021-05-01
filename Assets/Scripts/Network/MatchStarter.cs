@@ -112,6 +112,8 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
     [ClientRpc]
     private void RpcSendSplit()
     {
+        var owner = netIdentity.clientAuthorityOwner;
+        if (owner != null) netIdentity.RemoveClientAuthority(owner);
         Messenger<string>.Broadcast(NetworkEvent.SPLIT, gameScene);
     }
 

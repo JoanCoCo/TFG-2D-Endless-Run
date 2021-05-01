@@ -2,6 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.SceneManagement;
 
 public class ScoreScreen : MonoBehaviour
 {
@@ -22,6 +23,13 @@ public class ScoreScreen : MonoBehaviour
         } else
         {
             scoreText.text = "Score: " + GetScoreString();
+        }
+
+        if (Input.GetKeyDown(KeyCode.Return))
+        {
+            Destroy(GameObject.FindWithTag("NetManager"));
+            Destroy(GameObject.FindWithTag("PlayersManager"));
+            SceneManager.LoadScene("LobbyScene");
         }
     }
 
