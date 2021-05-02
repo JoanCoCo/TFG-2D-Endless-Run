@@ -49,6 +49,62 @@ public class PlayersManager : NetworkBehaviour
         if (owner != null) GetComponent<NetworkIdentity>().RemoveClientAuthority(owner);
     }
 
+    public void IsolateHost()
+    {
+        if(iAmServer)
+        {
+            Debug.Log("Isolating host...");
+            bool isFirst = true;
+            int port = netManager.networkPort + 1;
+            RemoveOwnership();
+            foreach (var player in currentPlayerGroup)
+            {
+                if (player != myPlayerId)
+                {
+                    if (isFirst)
+                    {
+                        Debug.Log("Setting up split's host");
+                        RpcBecomeHost(player, currentPlayerGroup.Count, port, false, "");
+                        isFirst = false;
+                    }
+                    else
+                    {
+                        Debug.Log("Reconnecting splitted clients to the new host.");
+                        RpcChangeClientConnection(player, port);
+                    }
+                }
+            }
+            foreach (var player in nextPlayerGroup)
+            {
+                if (player != myPlayerId)
+                {
+                    if (isFirst)
+                    {
+                        Debug.Log("Setting up split's host");
+                        RpcBecomeHost(player, currentPlayerGroup.Count, port, false, "");
+                        isFirst = false;
+                    }
+                    else
+                    {
+                        Debug.Log("Reconnecting splitted clients to the new host.");
+                        RpcChangeClientConnection(player, port);
+                    }
+                }
+            }
+            GameObject.FindWithTag("PlayersFinder").GetComponent<NetworkDiscovery>().StopBroadcast();
+            Destroy(gameObject);
+        }
+    }
+
+    public void IsolateClient(LobbyCloser closer)
+    {
+        if(!iAmServer)
+        {
+            Debug.Log("Isolating client...");
+            Unregister(myPlayerId, closer);
+        }
+    }
+
     //[Command]
     private void CmdOnSplit(string newScene)
     {
@@ -73,7 +129,9 @@ public class PlayersManager : NetworkBehaviour
                 }
             }
             //new WaitForSeconds(0.1f);
-            GameObject.FindWithTag("PlayersFinder").GetComponent<NetworkDiscovery>().StopBroadcast();
+            var playersFinder = GameObject.FindWithTag("PlayersFinder");
+            playersFinder.GetComponent<NetworkDiscovery>().StopBroadcast();
+            Destroy(playersFinder);
             netManager.ServerChangeScene(newScene);
         }
         else
@@ -184,7 +242,7 @@ public class PlayersManager : NetworkBehaviour
     IEnumerator GetAuthority() {
         if (!iAmServer)
         {
-            GameObject player = null;
+            GameObject player = GameObject.FindGameObjectWithTag("LocalPlayer");
             NetworkIdentity netIdentity = GetComponent<NetworkIdentity>();
             while (!netIdentity.hasAuthority)
             {
@@ -244,6 +302,41 @@ public class PlayersManager : NetworkBehaviour
         }
         CmdPreparePlayerSplit(myPlayerId);
     }
+
+    IEnumerator WaitAuthorityUnregister(uint id, LobbyCloser closer)
+    {
+        RequestAuthority();
+        if(!iAmServer)
+        {
+            NetworkIdentity netIdentity = GetComponent<NetworkIdentity>();
+            while (!netIdentity.hasAuthority)
+            {
+                yield return new WaitForSeconds(0.01f);
+            }
+        }
+        CmdUnregister(id);
+        Debug.Log("Client has been unregistered.");
+        StartCoroutine(WaitToAuthorityRemoval(closer));
+    }
+
+    IEnumerator WaitToAuthorityRemoval(LobbyCloser closer)
+    {
+        if (!iAmServer)
+        {
+            NetworkIdentity netIdentity = GetComponent<NetworkIdentity>();
+            while (netIdentity.hasAuthority)
+            {
+                yield return new WaitForSeconds(0.01f);
+            }
+            NetworkServer.Destroy(GameObject.FindWithTag("LocalPlayer"));
+            netManager.StopClient();
+            Debug.Log("Closing game...");
+            Destroy(gameObject);
+            closer.Close();
+        }
+    }
+
+    private Coroutine Unregister(uint id, LobbyCloser closer) => StartCoroutine(WaitAuthorityUnregister(id, closer));
 
     private Coroutine RequestAuthority() => StartCoroutine(GetAuthority());
 
@@ -307,4 +400,25 @@ public class PlayersManager : NetworkBehaviour
     }
 
     private Coroutine CloseHost() => StartCoroutine(WaitBeforeClosing());
+
+    [Command]
+    private void CmdUnregister(uint id)
+    {
+        Debug.Log("Unregistering " + id);
+        if(currentPlayerGroup.Contains(id))
+        {
+            currentPlayerGroup.Remove(id);
+            numberOfPlayers -= 1;
+            RemoveOwnership();
+            return;
+        }
+
+        if(nextPlayerGroup.Contains(id))
+        {
+            nextPlayerGroup.Remove(id);
+            numberOfPlayers -= 1;
+            RemoveOwnership();
+            return;
+        }
+    }
 }

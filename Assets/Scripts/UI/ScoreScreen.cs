@@ -37,7 +37,7 @@ public class ScoreScreen : MonoBehaviour
                 NetworkManager.networkSceneName = "";
 
                 NetworkManager.Shutdown();
-                NetworkTransport.Shutdown();
+                //NetworkTransport.Shutdown();
             }
             GameObject playersManager = GameObject.FindWithTag("PlayersManager");
             if(playersManager != null) Destroy(playersManager);
