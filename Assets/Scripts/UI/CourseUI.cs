@@ -42,7 +42,7 @@ public class CourseUI : MonoBehaviour
         if(finishedScreen.activeSelf && Input.GetKey(KeyCode.Return))
         {
             Time.timeScale = 1;
-            NetworkManager netManager = GameObject.FindWithTag("NetManager").GetComponent<NetworkManager>();
+            //NetworkManager netManager = GameObject.FindWithTag("NetManager").GetComponent<NetworkManager>();
             //netManager.ServerChangeScene("LobbyScene");
         }
     }

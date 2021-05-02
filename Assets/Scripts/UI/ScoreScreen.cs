@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.SceneManagement;
+using UnityEngine.Networking;
 
 public class ScoreScreen : MonoBehaviour
 {
@@ -27,8 +28,23 @@ public class ScoreScreen : MonoBehaviour
 
         if (Input.GetKeyDown(KeyCode.Return))
         {
-            Destroy(GameObject.FindWithTag("NetManager"));
-            Destroy(GameObject.FindWithTag("PlayersManager"));
+            GameObject netManager = GameObject.FindWithTag("NetManager");
+            if (netManager != null)
+            {
+                Destroy(netManager);
+
+                //Necessary to reset the online scene. If not, clients will try to change again to the GameScene when connecting to host.
+                NetworkManager.networkSceneName = "";
+
+                NetworkManager.Shutdown();
+                NetworkTransport.Shutdown();
+            }
+            GameObject playersManager = GameObject.FindWithTag("PlayersManager");
+            if(playersManager != null) Destroy(playersManager);
+            GameObject playersFinder = GameObject.FindWithTag("PlayersFinder");
+            if (playersFinder != null) Destroy(playersFinder);
+            GameObject player = GameObject.FindWithTag("LocalPlayer");
+            if (player != null) Destroy(player);
             SceneManager.LoadScene("LobbyScene");
         }
     }

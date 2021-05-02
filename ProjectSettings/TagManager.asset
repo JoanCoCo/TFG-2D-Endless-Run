@@ -11,6 +11,7 @@ TagManager:
   - LocalPlayer
   - NetManager
   - PlayersManager
+  - PlayersFinder
   layers:
   - Default
   - TransparentFX

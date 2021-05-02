@@ -73,6 +73,7 @@ public class PlayersManager : NetworkBehaviour
                 }
             }
             //new WaitForSeconds(0.1f);
+            GameObject.FindWithTag("PlayersFinder").GetComponent<NetworkDiscovery>().StopBroadcast();
             netManager.ServerChangeScene(newScene);
         }
         else
@@ -114,6 +115,7 @@ public class PlayersManager : NetworkBehaviour
         netManager.StopClient();
         netManager.networkPort = port;
         numberOfPlayers = 0;
+        GameObject.FindWithTag("PlayersFinder").GetComponent<PlayersFinder>().SetUpAsHost();
         netManager.StartHost();
         //AddServerPlayer();
         if (changeScene) ChangeSceneWhenReady(numOfPly, scene);
@@ -289,6 +291,7 @@ public class PlayersManager : NetworkBehaviour
         {
             RemoveOwnership();
             netManager.StopClient();
+            Destroy(gameObject);
         }
     }
 
@@ -300,6 +303,7 @@ public class PlayersManager : NetworkBehaviour
             yield return new WaitForSeconds(0.01f);
         }
         netManager.StopHost();
+        Destroy(gameObject);
     }
 
     private Coroutine CloseHost() => StartCoroutine(WaitBeforeClosing());

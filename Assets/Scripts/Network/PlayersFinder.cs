@@ -7,11 +7,13 @@ using UnityEngine.Networking;
 [RequireComponent(typeof(NetworkDiscovery))]
 public class PlayersFinder : MonoBehaviour
 {
-    [SerializeField] private float waitSecondsForServer = 10.0f;
+    [SerializeField] private float maxWaitSecondsForServer = 10.0f;
     [SerializeField] private NetworkManager netManager;
+    [SerializeField] private GameObject connectingWindow;
     private NetworkDiscovery netDiscovery;
     private float elapsedTime = 0.0f;
     private bool isConnected = false;
+    private float waitSecondsForServer;
 
     // Start is called before the first frame update
     void Start()
@@ -21,6 +23,8 @@ public class PlayersFinder : MonoBehaviour
         netDiscovery.StartAsClient();
         if (netManager == null) netManager = GameObject.FindWithTag("NetManager").GetComponent<NetworkManager>();
         Debug.Log("Network discovery started listening for hosts.");
+        waitSecondsForServer = Random.Range(2, maxWaitSecondsForServer);
+        if (connectingWindow != null) connectingWindow.SetActive(true);
     }
 
     // Update is called once per frame
@@ -37,6 +41,7 @@ public class PlayersFinder : MonoBehaviour
                     netDiscovery.StartAsServer();
                     netManager.StartHost();
                     Debug.Log("No hosts were found, setting up as a host.");
+                    if (connectingWindow != null) connectingWindow.SetActive(false);
                 }
             } else if(!isConnected)
             {
@@ -48,7 +53,14 @@ public class PlayersFinder : MonoBehaviour
                 netManager.StartClient();
                 isConnected = true;
                 netDiscovery.StopBroadcast();
+                if (connectingWindow != null) connectingWindow.SetActive(false);
+                //netDiscovery.broadcastsReceived.Clear();
             }
         }
+    }
+
+    public void SetUpAsHost()
+    {
+        netDiscovery.StartAsServer();
     }
 }
