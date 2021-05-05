@@ -21,6 +21,10 @@ public class Player : NetworkBehaviour
     [SerializeField] private GameObject healthBar;
     [SerializeField] private GameObject textCanvas;
     [SerializeField] private TextMeshProUGUI distanceText;
+    [SerializeField] private TextMeshProUGUI nameText;
+
+    [SyncVar]
+    private string playerName;
 
     private InteractableObject _currentInteractable;
 
@@ -43,16 +47,33 @@ public class Player : NetworkBehaviour
             vcamera.Follow = transform;
             healthBarObject.SetActive(false);
             textCanvas.SetActive(false);
+            nameText.text = "";
+            CmdSetUpName(PlayerPrefs.GetString("Name"));
             if (!isInLobby) Messenger<int>.AddListener(GameEvent.DISTANCE_INCREASED, OnDistanceIncreased);
         } else
         {
+            nameText.text = playerName;
             arrow.SetActive(false);
             if(isInLobby)
             {
                 healthBarObject.SetActive(false);
                 textCanvas.SetActive(false);
             }
+            
         }
+    }
+
+    [Command]
+    private void CmdSetUpName(string pName)
+    {
+        playerName = pName;
+        RpcSetUpName(pName);
+    }
+
+    [ClientRpc]
+    private void RpcSetUpName(string pName)
+    {
+        if(!isLocalPlayer) nameText.text = playerName;
     }
 
     // Update is called once per frame
