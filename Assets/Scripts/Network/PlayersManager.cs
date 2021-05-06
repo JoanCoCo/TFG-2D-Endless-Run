@@ -211,6 +211,7 @@ public class PlayersManager : NetworkBehaviour
     {
         currentPlayerGroup.Remove(nwId);
         nextPlayerGroup.Add(nwId);
+        RemoveOwnership();
     }
 
     private void Start()
@@ -357,6 +358,7 @@ public class PlayersManager : NetworkBehaviour
     private void CmdAddPlayer(uint nwId)
     {
         RegisterNewPlayer(nwId);
+        RemoveOwnership();
     }
 
     private void RegisterNewPlayer(uint nwId)

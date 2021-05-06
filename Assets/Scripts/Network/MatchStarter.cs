@@ -53,6 +53,7 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
             if (gameIsStarting) RpcGetReadyForMatch();
             Debug.Log("Server Ready Players: " + currNumberOfPlayers.ToString());
         }
+        RemoveOwnership();
     }
 
     [ClientRpc]
@@ -109,11 +110,16 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
         }
     }
 
-    [ClientRpc]
-    private void RpcSendSplit()
+    private void RemoveOwnership()
     {
         var owner = netIdentity.clientAuthorityOwner;
         if (owner != null) netIdentity.RemoveClientAuthority(owner);
+    }
+
+    [ClientRpc]
+    private void RpcSendSplit()
+    {
+        RemoveOwnership();
         Messenger<string>.Broadcast(NetworkEvent.SPLIT, gameScene);
     }
 
