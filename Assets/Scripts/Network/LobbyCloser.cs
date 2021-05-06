@@ -28,9 +28,9 @@ public class LobbyCloser : NetworkBehaviour, InteractableObject
         {
             if(isServer)
             {
-                GameObject.FindWithTag("PlayersManager").GetComponent<PlayersManager>().IsolateHost();
-                netManager.StopHost();
-                Close();
+                GameObject.FindWithTag("PlayersManager").GetComponent<PlayersManager>().IsolateHost(this);
+                //netManager.StopHost();
+                //Close();
             } else
             {
                 GameObject.FindWithTag("PlayersManager").GetComponent<PlayersManager>().IsolateClient(this);

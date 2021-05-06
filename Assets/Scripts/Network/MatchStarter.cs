@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 
-public class MatchStarter : NetworkBehaviour, InteractableObject
+public class MatchStarter : DistributedEntitieBehaviour, InteractableObject
 {
     [SerializeField] private KeyCode interactionKey = KeyCode.Z;
     [SerializeField] private NetworkManager netManager;
@@ -24,7 +24,6 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
     {
         if (netManager == null) netManager = GameObject.FindWithTag("NetManager").GetComponent<NetworkManager>();
         netIdentity = GetComponent<NetworkIdentity>();
-        RequestAuthority();
         currentCountdown = matchCountdown;
     }
 
@@ -39,8 +38,13 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
         {
             readyConfirmationPending = false;
             Messenger.Broadcast(LobbyEvent.WAITING_FOR_MATCH);
-            RunCmdUpdateNumberOfReadyPlayers();
+            RunCommand(UpdateNumberOfPlayersCommandCapsule);
         }
+    }
+
+    private void UpdateNumberOfPlayersCommandCapsule()
+    {
+        CmdUpdateNumberOfReadyPlayers();
     }
 
     [Command]
@@ -110,57 +114,10 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
         }
     }
 
-    private void RemoveOwnership()
-    {
-        var owner = netIdentity.clientAuthorityOwner;
-        if (owner != null) netIdentity.RemoveClientAuthority(owner);
-    }
-
     [ClientRpc]
     private void RpcSendSplit()
     {
         RemoveOwnership();
         Messenger<string>.Broadcast(NetworkEvent.SPLIT, gameScene);
     }
-
-    IEnumerator GetAuthority()
-    {
-        if (!isServer)
-        {
-            GameObject player = null;
-            NetworkIdentity netIdentity = GetComponent<NetworkIdentity>();
-            while (!netIdentity.hasAuthority)
-            {
-                while (player == null)
-                {
-                    Debug.Log("Looking for the local player...");
-                    player = GameObject.FindGameObjectWithTag("LocalPlayer");
-                    yield return new WaitForSeconds(0.01f);
-                }
-                Debug.Log("Local player found, asking for authority.");
-                NetworkIdentity playerId = player.GetComponent<NetworkIdentity>();
-                player.GetComponent<Player>().CmdSetAuth(netId, playerId);
-                yield return new WaitForSeconds(0.01f);
-            }
-            Debug.Log("Authority received.");
-        }
-    }
-
-    private Coroutine RequestAuthority() => StartCoroutine(GetAuthority());
-
-    private Coroutine RunCmdUpdateNumberOfReadyPlayers() => StartCoroutine(WaitAuthority());
-
-    IEnumerator WaitAuthority()
-    {
-        if (!isServer)
-        {
-            RequestAuthority();
-            while (!netIdentity.hasAuthority)
-            {
-                yield return new WaitForSeconds(0.01f);
-            }
-        }
-        CmdUpdateNumberOfReadyPlayers();
-    }
-
 }

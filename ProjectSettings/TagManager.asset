@@ -12,6 +12,7 @@ TagManager:
   - NetManager
   - PlayersManager
   - PlayersFinder
+  - Chat
   layers:
   - Default
   - TransparentFX

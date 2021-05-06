@@ -1,23 +1,42 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using TMPro;
+using UnityEngine.UI;
 
 public class ChatDisplay : MonoBehaviour
 {
-    // Start is called before the first frame update
-    void Start()
+    [SerializeField] private GameObject contentBox;
+    [SerializeField] private GameObject chatBox;
+    [SerializeField] private GameObject inputBox;
+    [SerializeField] private GameObject messagePrefab;
+    private string myPlayer;
+    private bool isHidden = false;
+    private KeyCode hideKey = KeyCode.M;
+
+    private void Start()
     {
-        
+        myPlayer = PlayerPrefs.GetString("Name");
+        chatBox.SetActive(!isHidden);
+        inputBox.SetActive(!isHidden);
     }
 
-    // Update is called once per frame
-    void Update()
+    private void Update()
     {
-        
+        if(Input.GetKeyDown(hideKey))
+        {
+            isHidden = !isHidden;
+            chatBox.SetActive(!isHidden);
+            inputBox.SetActive(!isHidden);
+        }
     }
 
-    public void AddMessage(string msg)
+    public void AddMessage(string msg, string player)
     {
-        Debug.Log(msg);
+        GameObject omsg = Instantiate(messagePrefab, contentBox.transform);
+        TextMeshProUGUI tmsg = omsg.GetComponent<TextMeshProUGUI>();
+        tmsg.text = msg;
+        if (myPlayer.Equals(player)) tmsg.alignment = TextAlignmentOptions.MidlineRight;
+        omsg.transform.SetAsLastSibling();
     }
 }

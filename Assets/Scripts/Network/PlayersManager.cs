@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 
-public class PlayersManager : NetworkBehaviour
+public class PlayersManager : DistributedEntitieBehaviour
 {
     [SerializeField]
     private NetworkManager netManager;
@@ -34,8 +34,13 @@ public class PlayersManager : NetworkBehaviour
         if(!waitingForMatch)
         {
             waitingForMatch = true;
-            PrepareSplit();
+            RunCommand(PrepareSplitCommandCapsule, myPlayerId);
         }
+    }
+
+    private void PrepareSplitCommandCapsule(uint nwId)
+    {
+        CmdPreparePlayerSplit(nwId);
     }
 
     private void OnSplit(string newScene)
@@ -43,13 +48,7 @@ public class PlayersManager : NetworkBehaviour
         if(iAmServer) CmdOnSplit(newScene);
     }
 
-    private void RemoveOwnership()
-    {
-        var owner = GetComponent<NetworkIdentity>().clientAuthorityOwner;
-        if (owner != null) GetComponent<NetworkIdentity>().RemoveClientAuthority(owner);
-    }
-
-    public void IsolateHost()
+    public void IsolateHost(LobbyCloser closer)
     {
         if(iAmServer)
         {
@@ -92,7 +91,7 @@ public class PlayersManager : NetworkBehaviour
                 }
             }
             GameObject.FindWithTag("PlayersFinder").GetComponent<NetworkDiscovery>().StopBroadcast();
-            Destroy(gameObject);
+            CloseHost(closer);
         }
     }
 
@@ -105,7 +104,6 @@ public class PlayersManager : NetworkBehaviour
         }
     }
 
-    //[Command]
     private void CmdOnSplit(string newScene)
     {
         Debug.Log("Processing split.");
@@ -232,7 +230,7 @@ public class PlayersManager : NetworkBehaviour
         if(!iAmServer)
         {
             Debug.Log("I'm not server, adding my player.");
-            AddPlayer();
+            StartCoroutine(FindPlayer());
         } else
         {
             Debug.Log("I'm the server, adding my player.");
@@ -240,41 +238,9 @@ public class PlayersManager : NetworkBehaviour
         }
     }
 
-    IEnumerator GetAuthority() {
-        if (!iAmServer)
-        {
-            GameObject player = GameObject.FindGameObjectWithTag("LocalPlayer");
-            NetworkIdentity netIdentity = GetComponent<NetworkIdentity>();
-            while (!netIdentity.hasAuthority)
-            {
-                while (player == null)
-                {
-                    Debug.Log("Looking for the local player...");
-                    player = GameObject.FindGameObjectWithTag("LocalPlayer");
-                    yield return new WaitForSeconds(0.01f);
-                }
-                Debug.Log("Local player found, asking for authority.");
-                NetworkIdentity playerId = player.GetComponent<NetworkIdentity>();
-                player.GetComponent<Player>().CmdSetAuth(netId, playerId);
-                yield return new WaitForSeconds(0.01f);
-            }
-            Debug.Log("Authority received.");
-            myPlayerId = player.GetComponent<NetworkIdentity>().netId.Value;
-        }
-    }
-
-    IEnumerator WaitAuthorityAddPlayer()
+    private void AddPlayerCommandCapsule(uint nwId)
     {
-        RequestAuthority();
-        if(!iAmServer)
-        {
-            NetworkIdentity netIdentity = GetComponent<NetworkIdentity>();
-            while(!netIdentity.hasAuthority)
-            {
-                yield return new WaitForSeconds(0.01f);
-            }
-            CmdAddPlayer(myPlayerId);
-        }
+        CmdAddPlayer(nwId);
     }
 
     IEnumerator RegisterLocalPlayer()
@@ -290,23 +256,22 @@ public class PlayersManager : NetworkBehaviour
         RegisterNewPlayer(myPlayerId);
     }
 
-    IEnumerator WaitAuthorityPrepareSplit()
+    IEnumerator FindPlayer()
     {
-        RequestAuthority();
-        if (!iAmServer)
+        GameObject player = null;
+        while (player == null)
         {
-            NetworkIdentity netIdentity = GetComponent<NetworkIdentity>();
-            while (!netIdentity.hasAuthority)
-            {
-                yield return new WaitForSeconds(0.01f);
-            }
+            Debug.Log("Looking for the local player...");
+            player = GameObject.FindGameObjectWithTag("LocalPlayer");
+            yield return new WaitForSeconds(0.01f);
         }
-        CmdPreparePlayerSplit(myPlayerId);
+        myPlayerId = player.GetComponent<NetworkIdentity>().netId.Value;
+        RunCommand(AddPlayerCommandCapsule, myPlayerId);
     }
 
     IEnumerator WaitAuthorityUnregister(uint id, LobbyCloser closer)
     {
-        RequestAuthority();
+        GetAuthority();
         if(!iAmServer)
         {
             NetworkIdentity netIdentity = GetComponent<NetworkIdentity>();
@@ -339,13 +304,7 @@ public class PlayersManager : NetworkBehaviour
 
     private Coroutine Unregister(uint id, LobbyCloser closer) => StartCoroutine(WaitAuthorityUnregister(id, closer));
 
-    private Coroutine RequestAuthority() => StartCoroutine(GetAuthority());
-
-    private Coroutine AddPlayer() => StartCoroutine(WaitAuthorityAddPlayer());
-
     private Coroutine AddServerPlayer() => StartCoroutine(RegisterLocalPlayer());
-
-    private Coroutine PrepareSplit() => StartCoroutine(WaitAuthorityPrepareSplit());
 
     public override void OnStartServer()
     {
@@ -390,7 +349,7 @@ public class PlayersManager : NetworkBehaviour
         }
     }
 
-    IEnumerator WaitBeforeClosing()
+    IEnumerator WaitBeforeClosing(LobbyCloser closer)
     {
         while(netManager.numPlayers > 1)
         {
@@ -399,9 +358,10 @@ public class PlayersManager : NetworkBehaviour
         }
         netManager.StopHost();
         Destroy(gameObject);
+        if (closer != null) closer.Close();
     }
 
-    private Coroutine CloseHost() => StartCoroutine(WaitBeforeClosing());
+    private Coroutine CloseHost(LobbyCloser closer = null) => StartCoroutine(WaitBeforeClosing(closer));
 
     [Command]
     private void CmdUnregister(uint id)

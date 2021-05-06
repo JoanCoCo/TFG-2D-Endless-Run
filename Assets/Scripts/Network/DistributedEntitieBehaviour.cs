@@ -7,6 +7,7 @@ public class DistributedEntitieBehaviour : NetworkBehaviour
 {
     public delegate void CommandNoArguments();
     public delegate void CommandOneArgument<T>(T arg1);
+    public delegate void CommandTwoArguments<T, D>(T arg1, D arg2);
 
     public void RemoveAuthority()
     {
@@ -52,8 +53,9 @@ public class DistributedEntitieBehaviour : NetworkBehaviour
             {
                 yield return new WaitForSeconds(0.01f);
             }
-            cmd();
+            
         }
+        cmd();
     }
 
     IEnumerator WaitForAuthority<T>(CommandOneArgument<T> cmd, T arg)
@@ -66,11 +68,27 @@ public class DistributedEntitieBehaviour : NetworkBehaviour
             {
                 yield return new WaitForSeconds(0.01f);
             }
-            cmd(arg);
         }
+        cmd(arg);
+    }
+
+    IEnumerator WaitForAuthority<T,D>(CommandTwoArguments<T,D> cmd, T arg1, D arg2)
+    {
+        if (!isServer)
+        {
+            GetAuthority();
+            NetworkIdentity netIdentity = GetComponent<NetworkIdentity>();
+            while (!netIdentity.hasAuthority)
+            {
+                yield return new WaitForSeconds(0.01f);
+            }
+        }
+        cmd(arg1, arg2);
     }
 
     public Coroutine RunCommand(CommandNoArguments cmd) => StartCoroutine(WaitForAuthority(cmd));
 
     public Coroutine RunCommand<T>(CommandOneArgument<T> cmd, T arg) => StartCoroutine(WaitForAuthority(cmd, arg));
+
+    public Coroutine RunCommand<T, D>(CommandTwoArguments<T, D> cmd, T arg1, D arg2) => StartCoroutine(WaitForAuthority(cmd, arg1, arg2));
 }
