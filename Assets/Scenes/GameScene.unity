@@ -276,20 +276,6 @@ Transform:
   m_Father: {fileID: 0}
   m_RootOrder: 6
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
---- !u!115 &396381237
-MonoScript:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_Name: 
-  serializedVersion: 5
-  m_Script: 
-  m_DefaultReferences: {}
-  m_Icon: {fileID: 0}
-  m_ExecutionOrder: 0
-  m_ClassName: DynamicLimiter2D
-  m_Namespace: Cinemachine
 --- !u!1 &558589454
 GameObject:
   m_ObjectHideFlags: 0
@@ -415,7 +401,7 @@ GameObject:
     type: 3}
   m_PrefabInstance: {fileID: 1255541398364935258}
   m_PrefabAsset: {fileID: 0}
---- !u!114 &1186317244
+--- !u!114 &1186317245
 MonoBehaviour:
   m_ObjectHideFlags: 0
   m_CorrespondingSourceObject: {fileID: 0}
@@ -424,7 +410,7 @@ MonoBehaviour:
   m_GameObject: {fileID: 1186317243}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 396381237}
+  m_Script: {fileID: 11500000, guid: 1bce8447e0fad4ab0b2f31abca3d0303, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
   leftLimit: {fileID: 198547016}
@@ -1016,12 +1002,12 @@ PrefabInstance:
     - target: {fileID: 1255541398554838848, guid: f40a0fba558f74a38a6754c4d954c43b,
         type: 3}
       propertyPath: m_LocalPosition.x
-      value: -803.4299
+      value: -798.46094
       objectReference: {fileID: 0}
     - target: {fileID: 1255541398554838848, guid: f40a0fba558f74a38a6754c4d954c43b,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: -212.4385
+      value: -212.48082
       objectReference: {fileID: 0}
     - target: {fileID: 5162437775394149940, guid: f40a0fba558f74a38a6754c4d954c43b,
         type: 3}
