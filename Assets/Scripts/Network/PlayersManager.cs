@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 
-public class PlayersManager : DistributedEntitieBehaviour
+public class PlayersManager : DistributedEntityBehaviour
 {
     [SerializeField]
     private NetworkManager netManager;
@@ -20,6 +20,8 @@ public class PlayersManager : DistributedEntitieBehaviour
     private uint myPlayerId = 0;
 
     private bool waitingForMatch = false;
+
+    private Dictionary<uint, string> playersIpAddresses = new Dictionary<uint, string>();
 
     private void Awake()
     {
@@ -55,6 +57,7 @@ public class PlayersManager : DistributedEntitieBehaviour
             Debug.Log("Isolating host...");
             bool isFirst = true;
             int port = netManager.networkPort + 1;
+            string address = "";
             RemoveOwnership();
             foreach (var player in currentPlayerGroup)
             {
@@ -65,11 +68,12 @@ public class PlayersManager : DistributedEntitieBehaviour
                         Debug.Log("Setting up split's host");
                         RpcBecomeHost(player, currentPlayerGroup.Count, port, false, "");
                         isFirst = false;
+                        address = playersIpAddresses[player];
                     }
                     else
                     {
                         Debug.Log("Reconnecting splitted clients to the new host.");
-                        RpcChangeClientConnection(player, port);
+                        RpcChangeClientConnection(player, port, address);
                     }
                 }
             }
@@ -82,11 +86,12 @@ public class PlayersManager : DistributedEntitieBehaviour
                         Debug.Log("Setting up split's host");
                         RpcBecomeHost(player, currentPlayerGroup.Count, port, false, "");
                         isFirst = false;
+                        address = playersIpAddresses[player];
                     }
                     else
                     {
                         Debug.Log("Reconnecting splitted clients to the new host.");
-                        RpcChangeClientConnection(player, port);
+                        RpcChangeClientConnection(player, port, address);
                     }
                 }
             }
@@ -109,6 +114,7 @@ public class PlayersManager : DistributedEntitieBehaviour
         Debug.Log("Processing split.");
         bool isFirst = true;
         int port = netManager.networkPort + 1;
+        string address = "";
         RemoveOwnership();
         if (nextPlayerGroup.Contains(myPlayerId))
         {
@@ -120,10 +126,11 @@ public class PlayersManager : DistributedEntitieBehaviour
                     Debug.Log("Setting up split's host");
                     RpcBecomeHost(player, currentPlayerGroup.Count, port, false, "");
                     isFirst = false;
+                    address = playersIpAddresses[player];
                 } else
                 {
                     Debug.Log("Reconnecting splitted clients to the new host.");
-                    RpcChangeClientConnection(player, port);
+                    RpcChangeClientConnection(player, port, address);
                 }
             }
             //new WaitForSeconds(0.1f);
@@ -142,12 +149,14 @@ public class PlayersManager : DistributedEntitieBehaviour
                     Debug.Log("Setting up a new host");
                     RpcBecomeHost(player, nextPlayerGroup.Count, port, true, newScene);
                     isFirst = false;
+                    address = playersIpAddresses[player];
                 }
                 else
                 {
                     Debug.Log("Reconnecting clients to the new host.");
-                    RpcChangeClientConnection(player, port);
+                    RpcChangeClientConnection(player, port, address);
                 }
+                playersIpAddresses.Remove(player);
             }
             nextPlayerGroup.Clear();
         }
@@ -168,6 +177,7 @@ public class PlayersManager : DistributedEntitieBehaviour
         NetworkServer.Destroy(GameObject.FindWithTag("LocalPlayer"));
         currentPlayerGroup.Clear();
         nextPlayerGroup.Clear();
+        playersIpAddresses.Clear();
         netManager.StopClient();
         netManager.networkPort = port;
         numberOfPlayers = 0;
@@ -191,7 +201,7 @@ public class PlayersManager : DistributedEntitieBehaviour
     private Coroutine ChangeSceneWhenReady(int n, string scene) => StartCoroutine(WaitAndTransit(n, scene));
 
     [ClientRpc]
-    private void RpcChangeClientConnection(uint nwId, int port)
+    private void RpcChangeClientConnection(uint nwId, int port, string address)
     {
         if (myPlayerId == nwId)
         {
@@ -200,6 +210,7 @@ public class PlayersManager : DistributedEntitieBehaviour
             netManager.StopClient();
             //numberOfPlayers = 0;
             netManager.networkPort = port;
+            netManager.networkAddress = address;
             netManager.StartClient();
         }
     }
@@ -253,6 +264,7 @@ public class PlayersManager : DistributedEntitieBehaviour
             yield return new WaitForSeconds(0.01f);
         }
         myPlayerId = player.GetComponent<NetworkIdentity>().netId.Value;
+        //playersIpAddresses.Add(myPlayerId, player.GetComponent<NetworkIdentity>().connectionToClient.address);
         RegisterNewPlayer(myPlayerId);
     }
 
@@ -266,6 +278,7 @@ public class PlayersManager : DistributedEntitieBehaviour
             yield return new WaitForSeconds(0.01f);
         }
         myPlayerId = player.GetComponent<NetworkIdentity>().netId.Value;
+        //Debug.Log("Connection with server IP: " + player.GetComponent<NetworkIdentity>().connectionToServer.address);
         RunCommand(AddPlayerCommandCapsule, myPlayerId);
     }
 
@@ -317,6 +330,9 @@ public class PlayersManager : DistributedEntitieBehaviour
     private void CmdAddPlayer(uint nwId)
     {
         RegisterNewPlayer(nwId);
+        GameObject nwPlayer = NetworkServer.FindLocalObject(new NetworkInstanceId(nwId));
+        playersIpAddresses.Add(nwId, nwPlayer.GetComponent<NetworkIdentity>().connectionToClient.address);
+        //Debug.Log("Connection with client IP: " + nwPlayer.GetComponent<NetworkIdentity>().connectionToClient.address);
         RemoveOwnership();
     }
 

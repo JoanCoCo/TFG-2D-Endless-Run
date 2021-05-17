@@ -4,13 +4,14 @@ using UnityEngine;
 using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
 
-public class MatchStarter : DistributedEntitieBehaviour, InteractableObject
+public class MatchStarter : DistributedEntityBehaviour, InteractableObject
 {
     [SerializeField] private KeyCode interactionKey = KeyCode.Z;
     [SerializeField] private NetworkManager netManager;
     [SerializeField] private int minNumberOfPlayers;
     [SerializeField] private int maxNumberOfPlayers;
 
+    [SyncVar]
     int currNumberOfPlayers = 0;
 
     private bool readyConfirmationPending = true;
@@ -34,7 +35,7 @@ public class MatchStarter : DistributedEntitieBehaviour, InteractableObject
 
     public void Interact()
     {
-        if (readyConfirmationPending)
+        if (readyConfirmationPending && currNumberOfPlayers < maxNumberOfPlayers)
         {
             readyConfirmationPending = false;
             Messenger.Broadcast(LobbyEvent.WAITING_FOR_MATCH);
@@ -53,19 +54,19 @@ public class MatchStarter : DistributedEntitieBehaviour, InteractableObject
         if (currNumberOfPlayers < maxNumberOfPlayers)
         {
             currNumberOfPlayers += 1;
-            RpcUpdateNumberOfReadyPlayers(currNumberOfPlayers);
+            //RpcUpdateNumberOfReadyPlayers(currNumberOfPlayers);
             if (gameIsStarting) RpcGetReadyForMatch();
             Debug.Log("Server Ready Players: " + currNumberOfPlayers.ToString());
         }
         RemoveOwnership();
     }
 
-    [ClientRpc]
+    /*[ClientRpc]
     private void RpcUpdateNumberOfReadyPlayers(int n)
     {
         currNumberOfPlayers = n;
         Debug.Log("Ready players: " + currNumberOfPlayers);
-    }
+    }*/
 
     [ClientRpc]
     private void RpcGetReadyForMatch()

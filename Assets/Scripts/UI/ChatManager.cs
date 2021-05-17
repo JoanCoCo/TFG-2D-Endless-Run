@@ -5,7 +5,7 @@ using UnityEngine.Networking;
 using TMPro;
 
 [RequireComponent(typeof(ChatDisplay))]
-public class ChatManager : DistributedEntitieBehaviour
+public class ChatManager : DistributedEntityBehaviour
 {
     [SerializeField] private TMP_InputField inputText;
     private ChatDisplay display;

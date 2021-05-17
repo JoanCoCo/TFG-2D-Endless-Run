@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class DistributedEntitieBehaviour : NetworkBehaviour
+public class DistributedEntityBehaviour : NetworkBehaviour
 {
     public delegate void CommandNoArguments();
     public delegate void CommandOneArgument<T>(T arg1);

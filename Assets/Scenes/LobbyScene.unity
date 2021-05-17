@@ -2421,6 +2421,31 @@ PrefabInstance:
       propertyPath: m_AnchorMax.y
       value: 0
       objectReference: {fileID: 0}
+    - target: {fileID: 3140912726088212038, guid: def5de2e876b34810be02f605d94e3d7,
+        type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -11.720718
+      objectReference: {fileID: 0}
+    - target: {fileID: 3140912726140557107, guid: def5de2e876b34810be02f605d94e3d7,
+        type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: 0.062561035
+      objectReference: {fileID: 0}
+    - target: {fileID: 3140912726140557107, guid: def5de2e876b34810be02f605d94e3d7,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0.12805176
+      objectReference: {fileID: 0}
+    - target: {fileID: 3140912726335622281, guid: def5de2e876b34810be02f605d94e3d7,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -9.908447
+      objectReference: {fileID: 0}
+    - target: {fileID: 3140912726664514875, guid: def5de2e876b34810be02f605d94e3d7,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 0.1270752
+      objectReference: {fileID: 0}
     - target: {fileID: 3140912726820173701, guid: def5de2e876b34810be02f605d94e3d7,
         type: 3}
       propertyPath: m_Pivot.x
@@ -2610,6 +2635,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_AssetId.i15
       value: 215
+      objectReference: {fileID: 0}
+    - target: {fileID: 3140912727284414901, guid: def5de2e876b34810be02f605d94e3d7,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: 57.131958
       objectReference: {fileID: 0}
     m_RemovedComponents: []
   m_SourcePrefab: {fileID: 100100000, guid: def5de2e876b34810be02f605d94e3d7, type: 3}
