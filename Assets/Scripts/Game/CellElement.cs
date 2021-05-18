@@ -1,9 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking;
 
-public class CellElement : NetworkBehaviour
+public class CellElement : MonoBehaviour
 {
     [SerializeField] private float relativeXPosition;
     [SerializeField] private float relativeYPosition;
