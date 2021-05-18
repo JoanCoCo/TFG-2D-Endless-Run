@@ -44,4 +44,20 @@ public class DynamicDelimiter2D : CinemachineExtension
             }
         }
     }
+
+    private void OnDrawGizmosSelected()
+    {
+        if (leftLimit != null && rightLimit != null && upperLimit != null && lowerLimit != null)
+        {
+            Gizmos.color = Color.magenta;
+            Gizmos.DrawSphere(leftLimit.position, 0.5f);
+            Gizmos.DrawSphere(rightLimit.position, 0.5f);
+            Gizmos.DrawSphere(upperLimit.position, 0.5f);
+            Gizmos.DrawSphere(lowerLimit.position, 0.5f);
+            Gizmos.DrawWireCube(new Vector3((rightLimit.position.x - leftLimit.position.x) * 0.5f + leftLimit.position.x,
+                (upperLimit.position.y - lowerLimit.position.y) * 0.5f + lowerLimit.position.y, 0.0f),
+                new Vector3((rightLimit.position.x - leftLimit.position.x),
+                (upperLimit.position.y - lowerLimit.position.y), 1.0f));
+        }
+    }
 }

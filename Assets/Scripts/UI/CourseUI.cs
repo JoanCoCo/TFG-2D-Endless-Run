@@ -10,12 +10,12 @@ public class CourseUI : MonoBehaviour
 {
     [SerializeField] private GameObject health;
     [SerializeField] private GameObject healthBar;
-    private RectTransform healthBarInitialTransform;
+    //private RectTransform healthBarInitialTransform;
     [SerializeField] private TextMeshProUGUI chronoText;
     [SerializeField] private TextMeshProUGUI distaceText;
     [SerializeField] private GameObject pausedScreen;
     [SerializeField] private GameObject finishedScreen;
-    private bool playerIsDead = false;
+    //private bool playerIsDead = false;
 
     private void Awake()
     {
@@ -31,7 +31,7 @@ public class CourseUI : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        healthBarInitialTransform = healthBar.GetComponent<RectTransform>();
+        //healthBarInitialTransform = healthBar.GetComponent<RectTransform>();
         pausedScreen.SetActive(false);
         finishedScreen.SetActive(false);
     }

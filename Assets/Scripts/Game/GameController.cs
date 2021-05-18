@@ -33,11 +33,11 @@ public class GameController : NetworkBehaviour
     // Update is called once per frame
     void Update()
     {
+        elapsedTime += Time.deltaTime;
+        Messenger<int>.Broadcast(GameEvent.TIME_PASSED, (int)elapsedTime);
+
         if (!playerDied)
         {
-            elapsedTime += Time.deltaTime;
-            Messenger<int>.Broadcast(GameEvent.TIME_PASSED, (int)elapsedTime);
-
             if (Input.GetKeyDown(KeyCode.Tab))
             {
                 gameIsPaused = !gameIsPaused;

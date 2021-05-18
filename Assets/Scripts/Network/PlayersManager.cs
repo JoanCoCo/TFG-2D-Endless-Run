@@ -47,7 +47,7 @@ public class PlayersManager : DistributedEntityBehaviour
 
     private void OnSplit(string newScene)
     {
-        if(iAmServer) CmdOnSplit(newScene);
+        if(iAmServer) RunSplit(newScene);
     }
 
     public void IsolateHost(LobbyCloser closer)
@@ -109,7 +109,7 @@ public class PlayersManager : DistributedEntityBehaviour
         }
     }
 
-    private void CmdOnSplit(string newScene)
+    private void RunSplit(string newScene)
     {
         Debug.Log("Processing split.");
         bool isFirst = true;
@@ -386,6 +386,7 @@ public class PlayersManager : DistributedEntityBehaviour
         if(currentPlayerGroup.Contains(id))
         {
             currentPlayerGroup.Remove(id);
+            playersIpAddresses.Remove(id);
             numberOfPlayers -= 1;
             RemoveOwnership();
             return;
@@ -394,6 +395,7 @@ public class PlayersManager : DistributedEntityBehaviour
         if(nextPlayerGroup.Contains(id))
         {
             nextPlayerGroup.Remove(id);
+            playersIpAddresses.Remove(id);
             numberOfPlayers -= 1;
             RemoveOwnership();
             return;

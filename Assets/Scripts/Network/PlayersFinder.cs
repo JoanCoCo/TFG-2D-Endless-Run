@@ -25,6 +25,7 @@ public class PlayersFinder : MonoBehaviour
         Debug.Log("Network discovery started listening for hosts.");
         waitSecondsForServer = Random.Range(2, maxWaitSecondsForServer);
         if (connectingWindow != null) connectingWindow.SetActive(true);
+        if (netDiscovery.broadcastsReceived.Count > 0) netDiscovery.broadcastsReceived.Clear();
     }
 
     // Update is called once per frame
@@ -48,7 +49,10 @@ public class PlayersFinder : MonoBehaviour
                 var brdReceived = netDiscovery.broadcastsReceived;
                 var brdKeys = brdReceived.Keys.ToArray();
                 NetworkBroadcastResult invitation = brdReceived[brdKeys[0]];
-                Debug.Log("Broadcast from host at " + invitation.serverAddress + " was received: " + NetworkDiscovery.BytesToString(invitation.broadcastData));
+                string msg = NetworkDiscovery.BytesToString(invitation.broadcastData);
+                Debug.Log("Broadcast from host at " + invitation.serverAddress + " was received: " + msg);
+                Debug.Log("Port: " + msg.Split(':')[2]);
+                netManager.networkPort = int.Parse(msg.Split(':').Last()); //NetworkManager:address:port
                 netManager.networkAddress = invitation.serverAddress;
                 netManager.StartClient();
                 isConnected = true;
@@ -61,6 +65,9 @@ public class PlayersFinder : MonoBehaviour
 
     public void SetUpAsHost()
     {
+        Debug.Log("Setting up discovery system as host...");
+        //netDiscovery.broadcastPort += 1;
+        netDiscovery.Initialize();
         netDiscovery.StartAsServer();
     }
 }
