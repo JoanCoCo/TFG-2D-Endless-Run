@@ -181,7 +181,7 @@ public class PlayersManager : DistributedEntityBehaviour
         netManager.StopClient();
         netManager.networkPort = port;
         numberOfPlayers = 0;
-        GameObject.FindWithTag("PlayersFinder").GetComponent<PlayersFinder>().SetUpAsHost();
+        if(!changeScene) GameObject.FindWithTag("PlayersFinder").GetComponent<PlayersFinder>().SetUpAsHost();
         netManager.StartHost();
         //AddServerPlayer();
         if (changeScene) ChangeSceneWhenReady(numOfPly, scene);
