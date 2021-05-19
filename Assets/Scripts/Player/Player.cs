@@ -214,16 +214,16 @@ public class Player : NetworkBehaviour
         this.health = health;
         if (health == 0)
         {
-            RpcHidePlayer();
+            //RpcHidePlayer();
             NetworkServer.Destroy(gameObject);
         }
         RpcUpdateHealthBar(health);
     }
 
-    private void RpcHidePlayer()
+    /*private void RpcHidePlayer()
     {
         gameObject.SetActive(false);
-    }
+    }*/
 
     [Command]
     public void CmdSetAuth(NetworkInstanceId objectId, NetworkIdentity player)
