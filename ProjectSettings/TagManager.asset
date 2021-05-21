@@ -13,6 +13,7 @@ TagManager:
   - PlayersManager
   - PlayersFinder
   - Chat
+  - CamManager
   layers:
   - Default
   - TransparentFX

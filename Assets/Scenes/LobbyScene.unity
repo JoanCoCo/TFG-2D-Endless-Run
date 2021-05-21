@@ -1701,17 +1701,17 @@ RectTransform:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1434113867}
-  m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
-  m_LocalPosition: {x: 0, y: 0, z: 0}
+  m_LocalRotation: {x: -0, y: -0, z: -0, w: 1}
+  m_LocalPosition: {x: 0, y: 0, z: 0.41947004}
   m_LocalScale: {x: 0, y: 0, z: 0}
   m_Children:
   - {fileID: 1825556759}
-  m_Father: {fileID: 0}
-  m_RootOrder: 18
+  m_Father: {fileID: 2118900503}
+  m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0}
   m_AnchorMax: {x: 0, y: 0}
-  m_AnchoredPosition: {x: 0, y: 0}
+  m_AnchoredPosition: {x: 4.0763617, y: 2.6562717}
   m_SizeDelta: {x: 0, y: 0}
   m_Pivot: {x: 0, y: 0}
 --- !u!1 &1528015967
@@ -1886,8 +1886,8 @@ MonoBehaviour:
   - {fileID: 7350454985027971671, guid: 0314384c87f0b40439166050221c1680, type: 3}
   - {fileID: 7350454985027971671, guid: 3b73fa430d16249b68aa167bd0f073bd, type: 3}
   - {fileID: 7350454985027971671, guid: 62239cf4401e743b7be0db28f536d679, type: 3}
-  m_CustomConfig: 0
-  m_MaxConnections: 4
+  m_CustomConfig: 1
+  m_MaxConnections: 8
   m_ConnectionConfig:
     m_PacketSize: 1440
     m_FragmentSize: 500
@@ -1919,8 +1919,8 @@ MonoBehaviour:
   m_GlobalConfig:
     m_ThreadAwakeTimeout: 1
     m_ReactorModel: 0
-    m_ReactorMaximumReceivedMessages: 1024
-    m_ReactorMaximumSentMessages: 1024
+    m_ReactorMaximumReceivedMessages: 2048
+    m_ReactorMaximumSentMessages: 2048
     m_MaxPacketSize: 2000
     m_MaxHosts: 16
     m_ThreadPoolSize: 1
@@ -1928,7 +1928,7 @@ MonoBehaviour:
     m_MaxTimerTimeout: 12000
     m_MinNetSimulatorTimeout: 1
     m_MaxNetSimulatorTimeout: 12000
-  m_Channels: 0500000000000000
+  m_Channels: 050000000000000004000000
   m_UseWebSockets: 0
   m_UseSimulator: 0
   m_SimulatedLatency: 1
@@ -2320,7 +2320,8 @@ Transform:
   m_LocalRotation: {x: 0, y: 0, z: 0, w: 1}
   m_LocalPosition: {x: -4.0763617, y: -2.6562717, z: -0.41947004}
   m_LocalScale: {x: 1, y: 1, z: 1}
-  m_Children: []
+  m_Children:
+  - {fileID: 1434113871}
   m_Father: {fileID: 0}
   m_RootOrder: 11
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
@@ -2459,7 +2460,7 @@ PrefabInstance:
     - target: {fileID: 3140912726820173701, guid: def5de2e876b34810be02f605d94e3d7,
         type: 3}
       propertyPath: m_RootOrder
-      value: 19
+      value: 18
       objectReference: {fileID: 0}
     - target: {fileID: 3140912726820173701, guid: def5de2e876b34810be02f605d94e3d7,
         type: 3}

@@ -705,7 +705,7 @@ namespace UnityEngine.Networking
         {
             if (writer.AsArraySegment().Count > short.MaxValue)
             {
-                throw new UnityException("NetworkWriter used buffer is too big!");
+                throw new UnityException("NetworkWriter used buffer is too big! (" + writer.AsArraySegment().Count + ")");
             }
             SendBytesToReady(contextObj, writer.AsArraySegment().Array, writer.AsArraySegment().Count, channelId);
         }

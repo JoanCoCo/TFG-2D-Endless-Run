@@ -317,7 +317,7 @@ PlayerSettings:
   enableInternalProfiler: 0
   logObjCUncaughtExceptions: 1
   enableCrashReportAPI: 0
-  cameraUsageDescription: 
+  cameraUsageDescription: This game uses webcame to improve interaction with friends.
   locationUsageDescription: 
   microphoneUsageDescription: 
   switchNMETAOverride: 
