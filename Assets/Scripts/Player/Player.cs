@@ -28,7 +28,7 @@ public class Player : NetworkBehaviour
 
     private InteractableObject _currentInteractable;
 
-    [SerializeField] private CamManager camManager;
+    //[SerializeField] private CamManager camManager;
 
     private void Awake()
     {

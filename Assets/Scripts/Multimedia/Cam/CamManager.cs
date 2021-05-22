@@ -42,6 +42,7 @@ public class CamManager : DistributedEntityBehaviour
         public int width;
         public int height;
         public int chunkSize;
+        public long timeStamp;
 
         public TextureHeaderMessage() { }
 
@@ -52,6 +53,7 @@ public class CamManager : DistributedEntityBehaviour
             width = w;
             height = h;
             chunkSize = s;
+            timeStamp = System.DateTime.Now.ToUniversalTime().Ticks;
         }
     }
 
@@ -78,15 +80,16 @@ public class CamManager : DistributedEntityBehaviour
     private WebCamTexture cam;
     private Texture2D lastCapturedFrame;
     [SerializeField] private int framesPerSecond = 20;
+    [SerializeField] private int resolution = 128;
     private float elapsedTime = 0.0f;
 
-    private const int MAX_CHUNK_SIZE = short.MaxValue;
+    private const int MAX_CHUNK_SIZE = 40000;
 
     private uint nextId = 0;
 
     private Dictionary<uint, bool> textWasFullyReceived = new Dictionary<uint, bool>();
     private Dictionary<uint, TextureStruc> textData = new Dictionary<uint, TextureStruc>();
-    private List<uint> textIdsReceived = new List<uint>();
+    private KeySortedList<uint, long> textIdsReceived = new KeySortedList<uint, long>();
     private List<TextureChunkMessage> unheadedChunks = new List<TextureChunkMessage>();
     private Dictionary<uint, int> amountOfEarlyChunks = new Dictionary<uint, int>();
 
@@ -95,6 +98,8 @@ public class CamManager : DistributedEntityBehaviour
     private NetworkIdentity networkIdentity;
 
     private TextureMsgType textureMsgType = new TextureMsgType();
+
+    private long lastShownTimestamp = System.DateTime.Now.ToUniversalTime().Ticks;
 
     private void Start()
     {
@@ -131,7 +136,7 @@ public class CamManager : DistributedEntityBehaviour
     // Update is called once per frame
     private void Update()
     {
-        //if (cam != null && cam.isPlaying)
+        if (cam != null && cam.isPlaying)
         {
             elapsedTime += Time.deltaTime;
             if (elapsedTime >= 1.0f / framesPerSecond)
@@ -147,7 +152,15 @@ public class CamManager : DistributedEntityBehaviour
             {
                 if (textWasFullyReceived[textIdsReceived[0]])
                 {
-                    RegenerateTextureFromReceivedData(textIdsReceived[0]);
+                    if(textIdsReceived.KeyAt(0) > lastShownTimestamp)
+                    {
+                        lastShownTimestamp = textIdsReceived.KeyAt(0);
+                        Debug.Log("Last timestamp: " + lastShownTimestamp);
+                        RegenerateTextureFromReceivedData(textIdsReceived[0]);
+                    } else
+                    {
+                        RemoveTexture(textIdsReceived[0]);
+                    }
                 }
             }
         }
@@ -164,10 +177,14 @@ public class CamManager : DistributedEntityBehaviour
         uint textId = nextId;
         nextId += 1;
         Debug.Log("Sending snapshoot with ID " + textId + ".");
-        Texture2D texture = Paint(128);
-        //Texture2D texture = new Texture2D(cam.width, cam.height);
-        //texture.SetPixels(cam.GetPixels());
-        //texture.Apply(true);
+        //Texture2D texture = Paint(1000);
+        int minTexSide = Mathf.Min(cam.width, cam.height);
+        int x = minTexSide == cam.width ? 0 : (cam.width - minTexSide) / 2;
+        int y = minTexSide == cam.height ? 0 : (cam.height - minTexSide) / 2;
+        Texture2D texture = new Texture2D(minTexSide, minTexSide);
+        texture.SetPixels(cam.GetPixels(x, y, minTexSide, minTexSide));
+        texture.Apply(true);
+        TextureScale.Bilinear(texture, resolution, resolution);
         //lastCapturedFrame = texture;
         Color32[] pixelData = texture.GetPixels32(0);
         int size = Mathf.FloorToInt(pixelData.Length / Mathf.Ceil(pixelData.Length * 4.0f / MAX_CHUNK_SIZE));
@@ -257,7 +274,6 @@ public class CamManager : DistributedEntityBehaviour
         TextureStruc textS = new TextureStruc(header.width, header.height, header.chunkSize);
         textData[header.id] = textS;
         textWasFullyReceived[header.id] = false;
-        textIdsReceived.Add(header.id);
         if(amountOfEarlyChunks.ContainsKey(header.id))
         {
             int i = 0;
@@ -279,7 +295,14 @@ public class CamManager : DistributedEntityBehaviour
             }
             amountOfEarlyChunks.Remove(header.id);
         }
-        StartCoroutine(WaitTillReceiveAllTheTexture(header.id));
+        if(textIdsReceived.Count > 0 && textIdsReceived.KeyAt(0) >= header.timeStamp)
+        {
+            RemoveTexture(header.id);
+        } else
+        {
+            textIdsReceived.Add(header.id, header.timeStamp);
+            StartCoroutine(WaitTillReceiveAllTheTexture(header.id));
+        }
     }
 
     private void OnTextureRowReceived(TextureChunkMessage row)
@@ -374,12 +397,12 @@ public class CamManager : DistributedEntityBehaviour
         Debug.Log("Turning camera on.");
         if (cam == null)
         {
-            //cam = new WebCamTexture();
+            cam = new WebCamTexture();
         }
 
         if (cam != null && !cam.isPlaying)
         {
-            //cam.Play();
+            cam.Play();
         }
     }
 
@@ -401,7 +424,27 @@ public class CamManager : DistributedEntityBehaviour
 
     private void OnDestroy()
     {
-        //NetworkServer.UnregisterHandler(TextureMsgType.Chunk);
-        //NetworkServer.UnregisterHandler(TextureMsgType.Header);
+        if (isServer)
+        {
+            if (NetworkServer.handlers.ContainsKey(textureMsgType.Header))
+            {
+                NetworkServer.UnregisterHandler(textureMsgType.Header);
+            }
+            if (NetworkServer.handlers.ContainsKey(textureMsgType.Chunk))
+            {
+                NetworkServer.UnregisterHandler(textureMsgType.Chunk);
+            }
+        }
+        if (isClient)
+        {
+            if (NetworkManager.singleton.client.handlers.ContainsKey(textureMsgType.Header))
+            {
+                NetworkManager.singleton.client.UnregisterHandler(textureMsgType.Header);
+            }
+            if (NetworkManager.singleton.client.handlers.ContainsKey(textureMsgType.Chunk))
+            {
+                NetworkManager.singleton.client.UnregisterHandler(textureMsgType.Chunk);
+            }
+        }
     }
 }
