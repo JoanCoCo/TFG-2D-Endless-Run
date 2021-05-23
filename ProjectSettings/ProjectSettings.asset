@@ -319,7 +319,8 @@ PlayerSettings:
   enableCrashReportAPI: 0
   cameraUsageDescription: This game uses webcame to improve interaction with friends.
   locationUsageDescription: 
-  microphoneUsageDescription: 
+  microphoneUsageDescription: This game uses microphone to improve interaction with
+    friends.
   switchNMETAOverride: 
   switchNetLibKey: 
   switchSocketMemoryPoolSize: 6144
