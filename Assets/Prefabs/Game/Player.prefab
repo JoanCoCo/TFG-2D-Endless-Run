@@ -911,7 +911,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d246c198749d44b5da016f4a119de7df, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  clipsPerSecond: 20
+  clipsPerSecond: 1
   frequency: 44100
   clipTimeout: 1
 --- !u!1 &6304467527013659464

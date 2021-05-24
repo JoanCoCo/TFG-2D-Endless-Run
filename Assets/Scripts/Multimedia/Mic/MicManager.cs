@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class MicManager : NetworkBehaviour
+public class MicManager : NetworkBehaviour, IMediaInputManager
 {
     private struct AudioStruc
     {
@@ -138,7 +138,6 @@ public class MicManager : NetworkBehaviour
                 NetworkManager.singleton.client.RegisterHandler(textureMsgType.Chunk, OnAudioChunkMessageFromServer);
             }
         }
-        if (isLocalPlayer) StartRecording();
     }
 
     private void Update()
@@ -400,13 +399,33 @@ public class MicManager : NetworkBehaviour
 
     public void StartRecording()
     {
-        if (Microphone.devices.Length > 0)
+        if (isLocalPlayer)
         {
-            Debug.Log("Turning mic on.");
-            if (voiceClip == null)
+            if (Microphone.devices.Length > 0)
             {
-                voiceClip = Microphone.Start("Built-in Microphone", true, 1, frequency);
+                Debug.Log("Turning mic on.");
+                if (voiceClip == null)
+                {
+                    voiceClip = Microphone.Start(Microphone.devices[0], true, 1, frequency);
+                }
             }
+        }
+    }
+
+    public void StopRecording()
+    {
+        if (isLocalPlayer)
+        {
+            if (Microphone.devices.Length > 0)
+            {
+                Debug.Log("Turning mic off.");
+                Microphone.End(Microphone.devices[0]);
+                if (voiceClip != null)
+                {
+                    voiceClip = null;
+                }
+            }
+            lastCapturedClip = null;
         }
     }
 

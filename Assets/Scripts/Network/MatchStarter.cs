@@ -39,17 +39,17 @@ public class MatchStarter : DistributedEntityBehaviour, InteractableObject
         {
             readyConfirmationPending = false;
             Messenger.Broadcast(LobbyEvent.WAITING_FOR_MATCH);
-            RunCommand(UpdateNumberOfPlayersCommandCapsule);
+            RunCommand(UpdateNumberOfPlayersCommandCapsule, PlayerPrefs.GetString("Name"));
         }
     }
 
-    private void UpdateNumberOfPlayersCommandCapsule()
+    private void UpdateNumberOfPlayersCommandCapsule(string player)
     {
-        CmdUpdateNumberOfReadyPlayers();
+        CmdUpdateNumberOfReadyPlayers(player);
     }
 
     [Command]
-    private void CmdUpdateNumberOfReadyPlayers()
+    private void CmdUpdateNumberOfReadyPlayers(string player)
     {
         if (currNumberOfPlayers < maxNumberOfPlayers)
         {
@@ -58,6 +58,7 @@ public class MatchStarter : DistributedEntityBehaviour, InteractableObject
             if (gameIsStarting) RpcGetReadyForMatch();
             Debug.Log("Server Ready Players: " + currNumberOfPlayers.ToString());
         }
+        RpcNewPlayerReadyForMatch(player);
         RemoveOwnership();
     }
 
@@ -71,7 +72,16 @@ public class MatchStarter : DistributedEntityBehaviour, InteractableObject
     [ClientRpc]
     private void RpcGetReadyForMatch()
     {
-        gameIsStarting = true;
+        if (!readyConfirmationPending)
+        {
+            gameIsStarting = true;
+        }
+    }
+
+    [ClientRpc]
+    private void RpcNewPlayerReadyForMatch(string player)
+    {
+        Messenger<string>.Broadcast(LobbyEvent.NEW_PLAYER_READY_FOR_MATCH, player);
     }
 
     [ClientRpc]

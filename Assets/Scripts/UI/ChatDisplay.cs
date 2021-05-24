@@ -10,15 +10,15 @@ public class ChatDisplay : MonoBehaviour
     [SerializeField] private GameObject chatBox;
     [SerializeField] private GameObject inputBox;
     [SerializeField] private GameObject messagePrefab;
+    [SerializeField] private GameObject chatIcon;
     private string myPlayer;
-    private bool isHidden = false;
+    [SerializeField] private bool isHidden = false;
     private KeyCode hideKey = KeyCode.M;
 
     private void Start()
     {
         myPlayer = PlayerPrefs.GetString("Name");
-        chatBox.SetActive(!isHidden);
-        inputBox.SetActive(!isHidden);
+        UpdateDisplay();
     }
 
     private void Update()
@@ -26,9 +26,15 @@ public class ChatDisplay : MonoBehaviour
         if(Input.GetKeyDown(hideKey))
         {
             isHidden = !isHidden;
-            chatBox.SetActive(!isHidden);
-            inputBox.SetActive(!isHidden);
+            UpdateDisplay();
         }
+    }
+
+    private void UpdateDisplay()
+    {
+        chatBox.SetActive(!isHidden);
+        inputBox.SetActive(!isHidden);
+        chatIcon.SetActive(isHidden);
     }
 
     public void AddMessage(string msg, string player)

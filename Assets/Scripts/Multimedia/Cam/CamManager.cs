@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class CamManager : DistributedEntityBehaviour
+public class CamManager : NetworkBehaviour, IMediaInputManager
 {
     private struct TextureStruc
     {
@@ -101,6 +101,8 @@ public class CamManager : DistributedEntityBehaviour
 
     private long lastShownTimestamp = System.DateTime.Now.ToUniversalTime().Ticks;
 
+    private bool isCameraOn = false;
+
     private void Start()
     {
         networkIdentity = GetComponent<NetworkIdentity>();
@@ -130,7 +132,6 @@ public class CamManager : DistributedEntityBehaviour
                 NetworkManager.singleton.client.RegisterHandler(textureMsgType.Chunk, OnTextureRowMessageFromServer);
             }
         }
-        if (isLocalPlayer) StartRecording();
     }
 
     // Update is called once per frame
@@ -146,27 +147,31 @@ public class CamManager : DistributedEntityBehaviour
             }
         }
 
-        try
+        if (isCameraOn)
         {
-            if (textIdsReceived.Count > 0)
+            try
             {
-                if (textWasFullyReceived[textIdsReceived[0]])
+                if (textIdsReceived.Count > 0)
                 {
-                    if(textIdsReceived.KeyAt(0) > lastShownTimestamp)
+                    if (textWasFullyReceived[textIdsReceived[0]])
                     {
-                        lastShownTimestamp = textIdsReceived.KeyAt(0);
-                        Debug.Log("Last timestamp: " + lastShownTimestamp);
-                        RegenerateTextureFromReceivedData(textIdsReceived[0]);
-                    } else
-                    {
-                        RemoveTexture(textIdsReceived[0]);
+                        if (textIdsReceived.KeyAt(0) > lastShownTimestamp)
+                        {
+                            lastShownTimestamp = textIdsReceived.KeyAt(0);
+                            Debug.Log("Last timestamp: " + lastShownTimestamp);
+                            RegenerateTextureFromReceivedData(textIdsReceived[0]);
+                        }
+                        else
+                        {
+                            RemoveTexture(textIdsReceived[0]);
+                        }
                     }
                 }
             }
-        }
-        catch 
-        {
-            textIdsReceived.RemoveAt(0);
+            catch
+            {
+                textIdsReceived.RemoveAt(0);
+            }
         }
     }
 
@@ -394,16 +399,34 @@ public class CamManager : DistributedEntityBehaviour
 
     public void StartRecording()
     {
-        Debug.Log("Turning camera on.");
-        if (cam == null)
+        if (isLocalPlayer)
         {
-            cam = new WebCamTexture();
-        }
+            Debug.Log("Turning camera on.");
+            if (cam == null)
+            {
+                cam = new WebCamTexture();
+            }
 
-        if (cam != null && !cam.isPlaying)
-        {
-            cam.Play();
+            if (cam != null && !cam.isPlaying)
+            {
+                cam.Play();
+            }
         }
+        CmdCameraIsOn();
+    }
+
+    public void StopRecording()
+    {
+        if (isLocalPlayer)
+        {
+            Debug.Log("Turning camera off");
+            if (cam != null && cam.isPlaying)
+            {
+                cam.Stop();
+            }
+        }
+        lastCapturedFrame = null;
+        CmdCameraIsOff();
     }
 
     private Texture2D Paint(int size)
@@ -446,5 +469,34 @@ public class CamManager : DistributedEntityBehaviour
                 NetworkManager.singleton.client.UnregisterHandler(textureMsgType.Chunk);
             }
         }
+    }
+
+    [ClientRpc]
+    private void RpcCameraIsOff()
+    {
+        isCameraOn = false;
+        for(int i = 0; i < textIdsReceived.Count; i++)
+        {
+            RemoveTexture(textIdsReceived[0]);
+        }
+        lastCapturedFrame = null;
+    }
+
+    [ClientRpc]
+    private void RpcCameraIsOn()
+    {
+        isCameraOn = true;
+    }
+
+    [Command]
+    private void CmdCameraIsOn()
+    {
+        RpcCameraIsOn();
+    }
+
+    [Command]
+    private void CmdCameraIsOff()
+    {
+        RpcCameraIsOff();
     }
 }
