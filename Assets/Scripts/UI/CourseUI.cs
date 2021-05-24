@@ -16,6 +16,7 @@ public class CourseUI : MonoBehaviour
     [SerializeField] private GameObject pausedScreen;
     [SerializeField] private GameObject finishedScreen;
     //private bool playerIsDead = false;
+    private List<(string, int)> scores = new List<(string, int)>();
 
     private void Awake()
     {
@@ -26,6 +27,7 @@ public class CourseUI : MonoBehaviour
         Messenger.AddListener(GameEvent.GAME_FINISHED, OnGameFinished);
         Messenger<int>.AddListener(GameEvent.DISTANCE_INCREASED, OnDistanceIncreased);
         Messenger.AddListener(GameEvent.PLAYER_DIED, OnPlayerDeath);
+        Messenger<(string, int)>.AddListener(GameEvent.PLAYER_SCORE_OBTAINED, OnPlayerScoreObtained);
     }
 
     // Start is called before the first frame update
@@ -72,6 +74,10 @@ public class CourseUI : MonoBehaviour
     private void OnGameFinished()
     {
         finishedScreen.SetActive(true);
+        for(int i = 0; i < scores.Count; i++)
+        {
+            finishedScreen.GetComponent<ScoreScreen>().AddScore(scores[i].Item2, scores[i].Item1);
+        }
         Messenger.Broadcast(GameEvent.FINISHED_SCREEN_IS_OUT);
     }
 
@@ -84,10 +90,16 @@ public class CourseUI : MonoBehaviour
         Messenger.RemoveListener(GameEvent.GAME_FINISHED, OnGameFinished);
         Messenger<int>.RemoveListener(GameEvent.DISTANCE_INCREASED, OnDistanceIncreased);
         Messenger.RemoveListener(GameEvent.PLAYER_DIED, OnPlayerDeath);
+        Messenger<(string, int)>.RemoveListener(GameEvent.PLAYER_SCORE_OBTAINED, OnPlayerScoreObtained);
     }
 
     private void OnDistanceIncreased(int d)
     {
         distaceText.text = d.ToString() + " m";
+    }
+
+    private void OnPlayerScoreObtained((string, int) pair)
+    {
+        scores.Add(pair);
     }
 }

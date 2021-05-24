@@ -17,4 +17,5 @@ public class GameEvent
     public const string FIRST_PLAYER_POSITION_CHANGED = "FIRST_PLAYER_POSITION_CHANGED";
     public const string GAME_FINISHED = "GAME_FINISHED";
     public const string FINISHED_SCREEN_IS_OUT = "FINISHED_SCREEN_IS_OUT";
+    public const string PLAYER_SCORE_OBTAINED = "PLAYER_SCORE_OBTAINED";
 }

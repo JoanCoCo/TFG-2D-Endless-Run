@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using Cinemachine;
 
-public class GameController : NetworkBehaviour
+public class GameController : DistributedEntityBehaviour
 {
     private float elapsedTime = 0.0f;
     private bool gameIsPaused = false;
@@ -16,6 +16,9 @@ public class GameController : NetworkBehaviour
     private float firstMaxX;
     private CinemachineVirtualCamera cameraSet;
     private int currentPlayerWatching = 0;
+    private bool scoreWasUpdated = false;
+
+    private string myLocalPlayer;
 
     private void Awake()
     {
@@ -28,6 +31,7 @@ public class GameController : NetworkBehaviour
     void Start()
     {
         cameraSet = GameObject.FindWithTag("CameraSet").GetComponent<CinemachineVirtualCamera>();
+        myLocalPlayer = PlayerPrefs.GetString("Name");
     }
 
     // Update is called once per frame
@@ -56,13 +60,17 @@ public class GameController : NetworkBehaviour
         {
             float pastScore = PlayerPrefs.GetFloat("HighScore", 0.0f);
             float diff = playerFurthestPos - playerInitPos;
-            if (diff > pastScore)
+            if (diff > pastScore && !scoreWasUpdated)
             {
                 PlayerPrefs.SetFloat("HighScore", diff);
                 Messenger.Broadcast(GameEvent.NEW_HIGHSCORE_REACHED);
-            } else
+                scoreWasUpdated = true;
+                RunCommand(RegisterScoreCommandCapsule, PlayerPrefs.GetString("Name"), (int)diff);
+            } else if(!scoreWasUpdated)
             {
                 PlayerPrefs.SetFloat("LastScore", diff);
+                scoreWasUpdated = true;
+                RunCommand(RegisterScoreCommandCapsule, PlayerPrefs.GetString("Name"), (int)diff);
             }
             //gameFinished = true;
             //Time.timeScale = 0;
@@ -86,7 +94,6 @@ public class GameController : NetworkBehaviour
                     cameraSet.Follow = players[currentPlayerWatching].transform;
                 }
             }
-            gameFinished = players.Length == 0;
             Debug.Log(players.Length.ToString() + " still alive.");
         } else
         {
@@ -158,5 +165,24 @@ public class GameController : NetworkBehaviour
         playerFurthestPos = playerInitPos;
         lastMinX = playerInitPos;
         firstMaxX = playerInitPos;
+    }
+
+    private void RegisterScoreCommandCapsule(string player, int score)
+    {
+        CmdRegisterScore(player, score);
+    }
+
+    [Command]
+    private void CmdRegisterScore(string player, int score)
+    {
+        RpcRegisterScore(player, score);
+        RemoveAuthority();
+    }
+
+    [ClientRpc]
+    private void RpcRegisterScore(string player, int score)
+    {
+        Messenger<(string, int)>.Broadcast(GameEvent.PLAYER_SCORE_OBTAINED, (player, score));
+        if (player == myLocalPlayer) NetworkServer.Destroy(GameObject.FindWithTag("LocalPlayer"));
     }
 }
