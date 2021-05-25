@@ -59,7 +59,6 @@ public class ScoreScreen : MonoBehaviour
         GameObject omsg = Instantiate(scorePrefab, scoresBox.transform);
         TextMeshProUGUI tmsg = omsg.GetComponent<TextMeshProUGUI>();
         tmsg.text = player + ": " + d + "m";
-        //if (myPlayer.Equals(player)) tmsg.font.boldStyle = 1.0f;
         omsg.transform.SetAsLastSibling();
     }
 }
