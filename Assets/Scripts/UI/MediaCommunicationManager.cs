@@ -1,15 +1,29 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
+using UnityEngine.SceneManagement;
 
 public class MediaCommunicationManager : MonoBehaviour
 {
     [SerializeField] private MediaInputController camController;
     [SerializeField] private MediaInputController micController;
 
+    private string lastScene;
+
     private void Start()
     {
         StartCoroutine(FindPlayer());
+        lastScene = GetCurrentlyActiveSceneName();
+    }
+
+    private string GetCurrentlyActiveSceneName() => SceneManager.GetActiveScene().name;
+
+    private void Update()
+    {
+        if(!lastScene.Equals(GetCurrentlyActiveSceneName()))
+        {
+            StartCoroutine(FindPlayer());
+        }
     }
 
     IEnumerator FindPlayer()

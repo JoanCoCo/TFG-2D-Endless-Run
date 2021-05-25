@@ -10,15 +10,8 @@ public class ScoreScreen : MonoBehaviour
     [SerializeField] private TextMeshProUGUI scoreText;
     [SerializeField] private GameObject scoresBox;
     [SerializeField] private GameObject scorePrefab;
-    private string myPlayer;
 
-    private bool isNewHighscore = false;
-    // Start is called before the first frame update
-    void Start()
-    {
-        Messenger.AddListener(GameEvent.NEW_HIGHSCORE_REACHED, OnNewHighscore);
-        myPlayer = PlayerPrefs.GetString("Name");
-    }
+    public bool isNewHighscore = false;
 
     // Update is called once per frame
     void Update()
@@ -54,11 +47,6 @@ public class ScoreScreen : MonoBehaviour
         }
     }
 
-    private void OnNewHighscore()
-    {
-        isNewHighscore = true;
-    }
-
     private string GetScoreString()
     {
         int d = (int) PlayerPrefs.GetFloat( (isNewHighscore) ? "HighScore" : "LastScore", 0.0f);
@@ -66,17 +54,12 @@ public class ScoreScreen : MonoBehaviour
         return d.ToString() + " m";
     }
 
-    private void OnDestroy()
-    {
-        Messenger.RemoveListener(GameEvent.NEW_HIGHSCORE_REACHED, OnNewHighscore);
-    }
-
-    public void AddScore(int d, string player)
+    public void AddScore(string player, int d)
     {
         GameObject omsg = Instantiate(scorePrefab, scoresBox.transform);
         TextMeshProUGUI tmsg = omsg.GetComponent<TextMeshProUGUI>();
         tmsg.text = player + ": " + d + "m";
-        if (myPlayer.Equals(player)) tmsg.font.boldStyle = 1.0f;
+        //if (myPlayer.Equals(player)) tmsg.font.boldStyle = 1.0f;
         omsg.transform.SetAsLastSibling();
     }
 }

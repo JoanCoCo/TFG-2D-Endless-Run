@@ -13,18 +13,22 @@ public class MediaInputController : MonoBehaviour
     [SerializeField] private KeyCode interactionKey;
     private enum State { On, Off };
     [SerializeField] private State state = State.Off;
+    private InputAvailabilityManager inputAvailabilityManager;
 
     // Start is called before the first frame update
     void Start()
     {
         keyText.text = interactionKey.ToString();
+        inputAvailabilityManager = GameObject.FindWithTag("InputAvailabilityManager").GetComponent<InputAvailabilityManager>();
         UpdateState();
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (Input.GetKeyDown(interactionKey)) ChangeState();
+        if (Input.GetKeyDown(interactionKey)
+            && (inputAvailabilityManager == null
+            || !inputAvailabilityManager.UserIsTyping)) { ChangeState(); }
     }
 
     private void UpdateState()

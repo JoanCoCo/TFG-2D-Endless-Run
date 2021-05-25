@@ -4,7 +4,7 @@ using UnityEngine;
 using UnityEngine.Networking;
 using Cinemachine;
 
-public class GameController : DistributedEntityBehaviour
+public class GameController : NetworkBehaviour
 {
     private float elapsedTime = 0.0f;
     private bool gameIsPaused = false;
@@ -65,12 +65,12 @@ public class GameController : DistributedEntityBehaviour
                 PlayerPrefs.SetFloat("HighScore", diff);
                 Messenger.Broadcast(GameEvent.NEW_HIGHSCORE_REACHED);
                 scoreWasUpdated = true;
-                RunCommand(RegisterScoreCommandCapsule, PlayerPrefs.GetString("Name"), (int)diff);
+                Messenger<(string, int)>.Broadcast(GameEvent.PLAYER_SCORE_OBTAINED, (myLocalPlayer, (int) diff));
             } else if(!scoreWasUpdated)
             {
                 PlayerPrefs.SetFloat("LastScore", diff);
                 scoreWasUpdated = true;
-                RunCommand(RegisterScoreCommandCapsule, PlayerPrefs.GetString("Name"), (int)diff);
+                Messenger<(string, int)>.Broadcast(GameEvent.PLAYER_SCORE_OBTAINED, (myLocalPlayer, (int) diff));
             }
             //gameFinished = true;
             //Time.timeScale = 0;
@@ -97,7 +97,7 @@ public class GameController : DistributedEntityBehaviour
             Debug.Log(players.Length.ToString() + " still alive.");
         } else
         {
-            Messenger.Broadcast(GameEvent.GAME_FINISHED);
+            //Messenger.Broadcast(GameEvent.GAME_FINISHED);
         }
 
         if(isServer)
@@ -165,24 +165,5 @@ public class GameController : DistributedEntityBehaviour
         playerFurthestPos = playerInitPos;
         lastMinX = playerInitPos;
         firstMaxX = playerInitPos;
-    }
-
-    private void RegisterScoreCommandCapsule(string player, int score)
-    {
-        CmdRegisterScore(player, score);
-    }
-
-    [Command]
-    private void CmdRegisterScore(string player, int score)
-    {
-        RpcRegisterScore(player, score);
-        RemoveAuthority();
-    }
-
-    [ClientRpc]
-    private void RpcRegisterScore(string player, int score)
-    {
-        Messenger<(string, int)>.Broadcast(GameEvent.PLAYER_SCORE_OBTAINED, (player, score));
-        if (player == myLocalPlayer) NetworkServer.Destroy(GameObject.FindWithTag("LocalPlayer"));
     }
 }

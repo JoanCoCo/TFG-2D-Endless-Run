@@ -1,0 +1,79 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!687078895 &4343727234628468602
+SpriteAtlas:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_Name: Candy Atlas
+  m_EditorData:
+    serializedVersion: 2
+    textureSettings:
+      serializedVersion: 2
+      anisoLevel: 1
+      compressionQuality: 50
+      maxTextureSize: 2048
+      textureCompression: 0
+      filterMode: 1
+      generateMipMaps: 1
+      readable: 0
+      crunchedCompression: 0
+      sRGB: 1
+    platformSettings:
+    - serializedVersion: 3
+      m_BuildTarget: DefaultTexturePlatform
+      m_MaxTextureSize: 8192
+      m_ResizeAlgorithm: 0
+      m_TextureFormat: -1
+      m_TextureCompression: 1
+      m_CompressionQuality: 50
+      m_CrunchedCompression: 0
+      m_AllowsAlphaSplitting: 0
+      m_Overridden: 0
+      m_AndroidETC2FallbackOverride: 0
+      m_ForceMaximumCompressionQuality_BC6H_BC7: 0
+    packingSettings:
+      serializedVersion: 2
+      padding: 8
+      blockOffset: 1
+      allowAlphaSplitting: 0
+      enableRotation: 1
+      enableTightPacking: 1
+    secondaryTextureSettings: {}
+    variantMultiplier: 1
+    packables:
+    - {fileID: 2800000, guid: 279a92465d05d4be8a70f3a92480781f, type: 3}
+    - {fileID: 2800000, guid: 21f89afacfb9a482e877c3c95347e816, type: 3}
+    - {fileID: 2800000, guid: 9cc1b576e28d1448682304843e6a33b5, type: 3}
+    - {fileID: 2800000, guid: ea959ad74f6834759917295edd04f7e8, type: 3}
+    - {fileID: 2800000, guid: 6bfd2dc1c4c6846288a2aeb666621dfb, type: 3}
+    - {fileID: 2800000, guid: b6e736d9da74c4434a1cf1f665f7c078, type: 3}
+    - {fileID: 2800000, guid: 1c734862549ea4d7f876e5c1716fddf7, type: 3}
+    - {fileID: 2800000, guid: 4e636001f6a08426e82954cdedddb835, type: 3}
+    totalSpriteSurfaceArea: 33554432
+    bindAsDefault: 1
+    isAtlasV2: 0
+    cachedData: {fileID: 0}
+  m_MasterAtlas: {fileID: 0}
+  m_PackedSprites:
+  - {fileID: 21300000, guid: 4e636001f6a08426e82954cdedddb835, type: 3}
+  - {fileID: 21300000, guid: 6bfd2dc1c4c6846288a2aeb666621dfb, type: 3}
+  - {fileID: 21300000, guid: 1c734862549ea4d7f876e5c1716fddf7, type: 3}
+  - {fileID: 21300000, guid: 279a92465d05d4be8a70f3a92480781f, type: 3}
+  - {fileID: 21300000, guid: 9cc1b576e28d1448682304843e6a33b5, type: 3}
+  - {fileID: 21300000, guid: ea959ad74f6834759917295edd04f7e8, type: 3}
+  - {fileID: 21300000, guid: b6e736d9da74c4434a1cf1f665f7c078, type: 3}
+  - {fileID: 21300000, guid: 21f89afacfb9a482e877c3c95347e816, type: 3}
+  m_PackedSpriteNamesToIndex:
+  - candy_arrow
+  - candy_slope
+  - candy_z_button
+  - candy_exit_door
+  - candy_ui_background
+  - candy_spikes
+  - candy_ground
+  - candy_game_door
+  m_RenderDataMap: {}
+  m_Tag: Candy Atlas
+  m_IsVariant: 0

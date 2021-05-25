@@ -28,6 +28,8 @@ public class Player : NetworkBehaviour
 
     private InteractableObject _currentInteractable;
 
+    private InputAvailabilityManager inputAvailabilityManager;
+
     //[SerializeField] private CamManager camManager;
 
     private void Awake()
@@ -52,6 +54,7 @@ public class Player : NetworkBehaviour
             nameText.text = "";
             CmdSetUpName(PlayerPrefs.GetString("Name"));
             if (!isInLobby) Messenger<int>.AddListener(GameEvent.DISTANCE_INCREASED, OnDistanceIncreased);
+            inputAvailabilityManager = GameObject.FindWithTag("InputAvailabilityManager").GetComponent<InputAvailabilityManager>();
         } else
         {
             nameText.text = playerName;
@@ -81,10 +84,14 @@ public class Player : NetworkBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (isLocalPlayer)
+        if (isLocalPlayer && health > 0)
         {
             Vector2 currentSpeed = _body.velocity;
-            currentSpeed.x = speed * Input.GetAxisRaw("Horizontal");
+            if (inputAvailabilityManager == null || !inputAvailabilityManager.UserIsTyping)
+            {
+                currentSpeed.x = speed * Input.GetAxisRaw("Horizontal");
+                ManageInteraction();
+            }
 
             if (Mathf.Sign(currentSpeed.y) < 0 && !IsTouchingGround())
             {
@@ -97,14 +104,13 @@ public class Player : NetworkBehaviour
 
             _body.velocity = currentSpeed;
 
-            if (Input.GetKeyDown(KeyCode.Space) && IsTouchingGround())
+            if (Input.GetKeyDown(KeyCode.Space) && IsTouchingGround() &&
+                (inputAvailabilityManager == null || !inputAvailabilityManager.UserIsTyping))
             {
                 //Debug.Log("Jumping");
                 _body.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
                 _body.AddTorque(Mathf.Sign(_body.velocity.x) * -10.0f, ForceMode2D.Impulse);
             }
-
-            ManageInteraction();
         }
     }
 
@@ -112,7 +118,7 @@ public class Player : NetworkBehaviour
     {
         if (isLocalPlayer)
         {
-            if (!isInLobby) Messenger<float>.Broadcast(GameEvent.PLAYER_MOVED, gameObject.transform.position.x);
+            if (!isInLobby && health > 0) Messenger<float>.Broadcast(GameEvent.PLAYER_MOVED, gameObject.transform.position.x);
         }
     }
 
@@ -174,7 +180,7 @@ public class Player : NetworkBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if(isLocalPlayer && other.gameObject.CompareTag("Interactable"))
+        if(isLocalPlayer && other.gameObject.CompareTag("Interactable") && health > 0)
         {
             Debug.Log("Interactable in range.");
             _currentInteractable = other.gameObject.GetComponent<InteractableObject>();
@@ -183,7 +189,7 @@ public class Player : NetworkBehaviour
 
     private void OnTriggerExit2D(Collider2D other)
     {
-        if (isLocalPlayer && other.gameObject.CompareTag("Interactable"))
+        if (isLocalPlayer && other.gameObject.CompareTag("Interactable") && health > 0)
         {
             Debug.Log("Interactable out of range.");
             _currentInteractable = null;
@@ -192,7 +198,7 @@ public class Player : NetworkBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if(isLocalPlayer && collision.gameObject.CompareTag("Damage"))
+        if(isLocalPlayer && collision.gameObject.CompareTag("Damage") && health > 0)
         {
             ReceiveDamage(1);
         }
@@ -225,10 +231,11 @@ public class Player : NetworkBehaviour
     [ClientRpc]
     private void RpcHidePlayer()
     {
-        arrow.SetActive(true);
-        healthBarObject.SetActive(true);
+        arrow.SetActive(false);
+        healthBarObject.SetActive(false);
         nameText.text = "";
         textCanvas.SetActive(false);
+        GetComponent<SpriteRenderer>().sprite = null;
     }
 
     [Command]

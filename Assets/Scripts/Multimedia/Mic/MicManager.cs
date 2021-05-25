@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class MicManager : NetworkBehaviour, IMediaInputManager
+public class MicManager : StreamManager, IMediaInputManager
 {
     private struct AudioStruc
     {
@@ -25,12 +25,15 @@ public class MicManager : NetworkBehaviour, IMediaInputManager
         }
     }
 
-    private class AudioMsgType
+    private class AudioMsgType : StreamMsgType
     {
-        public short Header = MsgType.Highest + 3;
-        public short Chunk = MsgType.Highest + 4;
+        public AudioMsgType()
+        {
+            Header = MsgType.Highest + 3;
+            Chunk = MsgType.Highest + 4;
+        }
 
-        public void UpdateTypes(int n)
+        public override void UpdateTypes(int n)
         {
             Header += (short)(n * 10);
             Chunk += (short)(n * 10);
@@ -103,7 +106,7 @@ public class MicManager : NetworkBehaviour, IMediaInputManager
 
     private NetworkIdentity networkIdentity;
 
-    private AudioMsgType textureMsgType = new AudioMsgType();
+    private AudioMsgType clipMsgType = new AudioMsgType();
 
     private long lastPlayedTimestamp = System.DateTime.Now.ToUniversalTime().Ticks;
 
@@ -112,32 +115,13 @@ public class MicManager : NetworkBehaviour, IMediaInputManager
     private void Start()
     {
         networkIdentity = GetComponent<NetworkIdentity>();
-        textureMsgType.UpdateTypes((short)networkIdentity.netId.Value);
+        clipMsgType.UpdateTypes((int)networkIdentity.netId.Value);
 
-        if (isServer)
-        {
-            Debug.Log("Registering server handlers.");
-            if (!NetworkServer.handlers.ContainsKey(textureMsgType.Header))
-            {
-                NetworkServer.RegisterHandler(textureMsgType.Header, OnAudioHeaderMessageFromClient);
-            }
-            if (!NetworkServer.handlers.ContainsKey(textureMsgType.Chunk))
-            {
-                NetworkServer.RegisterHandler(textureMsgType.Chunk, OnAudioChunkMessageFromClient);
-            }
-        }
-        if (isClient)
-        {
-            Debug.Log("Registering client handlers.");
-            if (!NetworkManager.singleton.client.handlers.ContainsKey(textureMsgType.Header))
-            {
-                NetworkManager.singleton.client.RegisterHandler(textureMsgType.Header, OnAudioHeaderMessageFromServer);
-            }
-            if (!NetworkManager.singleton.client.handlers.ContainsKey(textureMsgType.Chunk))
-            {
-                NetworkManager.singleton.client.RegisterHandler(textureMsgType.Chunk, OnAudioChunkMessageFromServer);
-            }
-        }
+        CreateHandlers(clipMsgType,
+            OnAudioHeaderMessageFromClient,
+            OnAudioChunkMessageFromClient,
+            OnAudioHeaderMessageFromServer,
+            OnAudioChunkMessageFromServer);
     }
 
     private void Update()
@@ -194,12 +178,12 @@ public class MicManager : NetworkBehaviour, IMediaInputManager
             clipId, voiceClip.samples, voiceClip.channels, frequency, size);
         if (isServer)
         {
-            NetworkServer.SendByChannelToReady(gameObject, textureMsgType.Header, headerMessage, 2);
+            NetworkServer.SendByChannelToReady(gameObject, clipMsgType.Header, headerMessage, 2);
             //NetworkServer.SendToReady(gameObject, TextureMsgType.Header, headerMessage);
         }
         else
         {
-            NetworkManager.singleton.client.SendByChannel(textureMsgType.Header, headerMessage, 2);
+            NetworkManager.singleton.client.SendByChannel(clipMsgType.Header, headerMessage, 2);
             //NetworkManager.singleton.client.Send(TextureMsgType.Header, headerMessage);
         }
         int order = 0;
@@ -210,12 +194,12 @@ public class MicManager : NetworkBehaviour, IMediaInputManager
             {
                 if (isServer)
                 {
-                    NetworkServer.SendByChannelToReady(gameObject, textureMsgType.Chunk, rowMessage, 2);
+                    NetworkServer.SendByChannelToReady(gameObject, clipMsgType.Chunk, rowMessage, 2);
                     //NetworkServer.SendToReady(gameObject, TextureMsgType.Chunk, rowMessage);
                 }
                 else
                 {
-                    NetworkManager.singleton.client.SendByChannel(textureMsgType.Chunk, rowMessage, 2);
+                    NetworkManager.singleton.client.SendByChannel(clipMsgType.Chunk, rowMessage, 2);
                     //NetworkManager.singleton.client.Send(TextureMsgType.Chunk, rowMessage);
                 }
                 if (i == samplesData.Length) break;
@@ -236,7 +220,7 @@ public class MicManager : NetworkBehaviour, IMediaInputManager
         if (header.netId == networkIdentity.netId.Value)
         {
             Debug.Log("Received clip header on server.");
-            NetworkServer.SendByChannelToReady(gameObject, textureMsgType.Header, header, 2);
+            NetworkServer.SendByChannelToReady(gameObject, clipMsgType.Header, header, 2);
         }
         //NetworkServer.SendToReady(gameObject, TextureMsgType.Header, header);
     }
@@ -247,7 +231,7 @@ public class MicManager : NetworkBehaviour, IMediaInputManager
         if (row.netId == networkIdentity.netId.Value)
         {
             Debug.Log("Received clip row on server.");
-            NetworkServer.SendByChannelToReady(gameObject, textureMsgType.Chunk, row, 2);
+            NetworkServer.SendByChannelToReady(gameObject, clipMsgType.Chunk, row, 2);
         }
         //NetworkServer.SendToReady(gameObject, TextureMsgType.Chunk, row);
     }
@@ -431,27 +415,6 @@ public class MicManager : NetworkBehaviour, IMediaInputManager
 
     private void OnDestroy()
     {
-        if (isServer)
-        {
-            if (NetworkServer.handlers.ContainsKey(textureMsgType.Header))
-            {
-                NetworkServer.UnregisterHandler(textureMsgType.Header);
-            }
-            if (NetworkServer.handlers.ContainsKey(textureMsgType.Chunk))
-            {
-                NetworkServer.UnregisterHandler(textureMsgType.Chunk);
-            }
-        }
-        if (isClient)
-        {
-            if (NetworkManager.singleton.client.handlers.ContainsKey(textureMsgType.Header))
-            {
-                NetworkManager.singleton.client.UnregisterHandler(textureMsgType.Header);
-            }
-            if (NetworkManager.singleton.client.handlers.ContainsKey(textureMsgType.Chunk))
-            {
-                NetworkManager.singleton.client.UnregisterHandler(textureMsgType.Chunk);
-            }
-        }
+        DestroyHandlers(clipMsgType);
     }
 }

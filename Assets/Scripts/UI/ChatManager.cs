@@ -32,30 +32,32 @@ public class ChatManager : DistributedEntityBehaviour
         if(isServer)
         {
             Debug.Log("I'm server, running rpc.");
-            RpcSendMessage(pmsg, myPlayerName);
+            RpcSendMessage(pmsg,
+                GameObject.FindWithTag("LocalPlayer").GetComponent<NetworkIdentity>().netId.Value);
         } else
         {
             Debug.Log("I'm client, running command.");
-            RunCommand(SendMessageCommandCapsule, pmsg, myPlayerName);
+            RunCommand(SendMessageCommandCapsule, pmsg,
+                GameObject.FindWithTag("LocalPlayer").GetComponent<NetworkIdentity>().netId.Value);
         }
         inputText.text = "";
     }
 
-    private void SendMessageCommandCapsule(string msg, string player)
+    private void SendMessageCommandCapsule(string msg, uint id)
     {
-        CmdSendMessage(msg, player);
+        CmdSendMessage(msg, id);
     }
 
     [Command]
-    private void CmdSendMessage(string msg, string player)
+    private void CmdSendMessage(string msg, uint id)
     {
-        RpcSendMessage(msg, player);
+        RpcSendMessage(msg, id);
         RemoveAuthority();
     }
 
     [ClientRpc]
-    private void RpcSendMessage(string msg, string player)
+    private void RpcSendMessage(string msg, uint id)
     {
-        display.AddMessage(msg, player);
+        display.AddMessage(msg, id);
     }
 }

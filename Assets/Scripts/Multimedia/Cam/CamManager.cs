@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class CamManager : NetworkBehaviour, IMediaInputManager
+public class CamManager : StreamManager, IMediaInputManager
 {
     private struct TextureStruc
     {
@@ -23,12 +23,15 @@ public class CamManager : NetworkBehaviour, IMediaInputManager
         }
     }
 
-    private class TextureMsgType
+    private class TextureMsgType : StreamMsgType
     {
-        public short Header = MsgType.Highest + 1;
-        public short Chunk = MsgType.Highest + 2;
+        public TextureMsgType()
+        {
+            Header = MsgType.Highest + 1;
+            Chunk = MsgType.Highest + 2;
+        }
 
-        public void UpdateTypes(int n)
+        public override void UpdateTypes(int n)
         {
             Header += (short) (n * 10);
             Chunk += (short) (n * 10);
@@ -106,32 +109,13 @@ public class CamManager : NetworkBehaviour, IMediaInputManager
     private void Start()
     {
         networkIdentity = GetComponent<NetworkIdentity>();
-        textureMsgType.UpdateTypes((short)networkIdentity.netId.Value);
+        textureMsgType.UpdateTypes((int)networkIdentity.netId.Value);
 
-        if (isServer)
-        {
-            Debug.Log("Registering server handlers.");
-            if(!NetworkServer.handlers.ContainsKey(textureMsgType.Header))
-            {
-                NetworkServer.RegisterHandler(textureMsgType.Header, OnTextureHeaderMessageFromClient);
-            }
-            if(!NetworkServer.handlers.ContainsKey(textureMsgType.Chunk))
-            {
-                NetworkServer.RegisterHandler(textureMsgType.Chunk, OnTextureRowMessageFromClient);
-            }
-        }
-        if(isClient)
-        {
-            Debug.Log("Registering client handlers.");
-            if (!NetworkManager.singleton.client.handlers.ContainsKey(textureMsgType.Header))
-            {
-                NetworkManager.singleton.client.RegisterHandler(textureMsgType.Header, OnTextureHeaderMessageFromServer);
-            }
-            if (!NetworkManager.singleton.client.handlers.ContainsKey(textureMsgType.Chunk))
-            {
-                NetworkManager.singleton.client.RegisterHandler(textureMsgType.Chunk, OnTextureRowMessageFromServer);
-            }
-        }
+        CreateHandlers(textureMsgType,
+            OnTextureHeaderMessageFromClient,
+            OnTextureChunkMessageFromClient,
+            OnTextureHeaderMessageFromServer,
+            OnTextureChunkMessageFromServer);
     }
 
     // Update is called once per frame
@@ -243,7 +227,7 @@ public class CamManager : NetworkBehaviour, IMediaInputManager
         //NetworkServer.SendToReady(gameObject, TextureMsgType.Header, header);
     }
 
-    private void OnTextureRowMessageFromClient(NetworkMessage msg)
+    private void OnTextureChunkMessageFromClient(NetworkMessage msg)
     {
         var row = msg.ReadMessage<TextureChunkMessage>();
         if (row.netId == networkIdentity.netId.Value)
@@ -264,7 +248,7 @@ public class CamManager : NetworkBehaviour, IMediaInputManager
         }
     }
 
-    private void OnTextureRowMessageFromServer(NetworkMessage msg)
+    private void OnTextureChunkMessageFromServer(NetworkMessage msg)
     {
         var row = msg.ReadMessage<TextureChunkMessage>();
         if(row.netId == networkIdentity.netId.Value)
@@ -447,28 +431,7 @@ public class CamManager : NetworkBehaviour, IMediaInputManager
 
     private void OnDestroy()
     {
-        if (isServer)
-        {
-            if (NetworkServer.handlers.ContainsKey(textureMsgType.Header))
-            {
-                NetworkServer.UnregisterHandler(textureMsgType.Header);
-            }
-            if (NetworkServer.handlers.ContainsKey(textureMsgType.Chunk))
-            {
-                NetworkServer.UnregisterHandler(textureMsgType.Chunk);
-            }
-        }
-        if (isClient)
-        {
-            if (NetworkManager.singleton.client.handlers.ContainsKey(textureMsgType.Header))
-            {
-                NetworkManager.singleton.client.UnregisterHandler(textureMsgType.Header);
-            }
-            if (NetworkManager.singleton.client.handlers.ContainsKey(textureMsgType.Chunk))
-            {
-                NetworkManager.singleton.client.UnregisterHandler(textureMsgType.Chunk);
-            }
-        }
+        DestroyHandlers(textureMsgType);
     }
 
     [ClientRpc]

@@ -9,6 +9,8 @@ public class DistributedEntityBehaviour : NetworkBehaviour
     public delegate void CommandOneArgument<T>(T arg1);
     public delegate void CommandTwoArguments<T, D>(T arg1, D arg2);
 
+    public delegate void Command(params object[] args);
+
     public void RemoveAuthority()
     {
         var owner = GetComponent<NetworkIdentity>().clientAuthorityOwner;
@@ -53,13 +55,13 @@ public class DistributedEntityBehaviour : NetworkBehaviour
             {
                 yield return new WaitForSeconds(0.01f);
             }
-            
+
         }
         cmd();
     }
 
     IEnumerator WaitForAuthority<T>(CommandOneArgument<T> cmd, T arg)
-    { 
+    {
         if (!isServer)
         {
             GetAuthority();
@@ -72,7 +74,7 @@ public class DistributedEntityBehaviour : NetworkBehaviour
         cmd(arg);
     }
 
-    IEnumerator WaitForAuthority<T,D>(CommandTwoArguments<T,D> cmd, T arg1, D arg2)
+    IEnumerator WaitForAuthority<T, D>(CommandTwoArguments<T, D> cmd, T arg1, D arg2)
     {
         if (!isServer)
         {
@@ -91,4 +93,5 @@ public class DistributedEntityBehaviour : NetworkBehaviour
     public Coroutine RunCommand<T>(CommandOneArgument<T> cmd, T arg) => StartCoroutine(WaitForAuthority(cmd, arg));
 
     public Coroutine RunCommand<T, D>(CommandTwoArguments<T, D> cmd, T arg1, D arg2) => StartCoroutine(WaitForAuthority(cmd, arg1, arg2));
+
 }

@@ -208,7 +208,7 @@ SpriteRenderer:
   m_SortingLayer: 3
   m_SortingOrder: 1
   m_Sprite: {fileID: 21300000, guid: b6e736d9da74c4434a1cf1f665f7c078, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.2861699, g: 0.24701852, b: 0.5754717, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -337,7 +337,7 @@ SpriteRenderer:
   m_SortingLayer: 3
   m_SortingOrder: 0
   m_Sprite: {fileID: 21300000, guid: b6e736d9da74c4434a1cf1f665f7c078, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.2861699, g: 0.24701852, b: 0.5754717, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -1193,7 +1193,7 @@ SpriteRenderer:
   m_SortingLayer: 3
   m_SortingOrder: 1
   m_Sprite: {fileID: 21300000, guid: b6e736d9da74c4434a1cf1f665f7c078, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Color: {r: 0.2861699, g: 0.24701852, b: 0.5754717, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -1279,10 +1279,10 @@ RectTransform:
   m_Father: {fileID: 809121475}
   m_RootOrder: 0
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
-  m_AnchoredPosition: {x: 0, y: 482.46124}
-  m_SizeDelta: {x: -1341.4553, y: -1021.7511}
+  m_AnchorMin: {x: 0.5, y: 1}
+  m_AnchorMax: {x: 0.5, y: 1}
+  m_AnchoredPosition: {x: 0, y: -57.538757}
+  m_SizeDelta: {x: 578.5447, y: 58.2489}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &854406766
 MonoBehaviour:
@@ -1415,10 +1415,10 @@ RectTransform:
   m_Father: {fileID: 809121475}
   m_RootOrder: 1
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
-  m_AnchorMin: {x: 0, y: 0}
-  m_AnchorMax: {x: 1, y: 1}
+  m_AnchorMin: {x: 0.5, y: 0.5}
+  m_AnchorMax: {x: 0.5, y: 0.5}
   m_AnchoredPosition: {x: 0, y: 0}
-  m_SizeDelta: {x: -1167.8496, y: -915.1761}
+  m_SizeDelta: {x: 752.1504, y: 164.82391}
   m_Pivot: {x: 0.5, y: 0.5}
 --- !u!114 &857542136
 MonoBehaviour:
@@ -2551,6 +2551,11 @@ PrefabInstance:
   m_Modification:
     m_TransformParent: {fileID: 0}
     m_Modifications:
+    - target: {fileID: 42357587247711286, guid: def5de2e876b34810be02f605d94e3d7,
+        type: 3}
+      propertyPath: m_TagString
+      value: InputAvailabilityManager
+      objectReference: {fileID: 0}
     - target: {fileID: 3140912726081323957, guid: def5de2e876b34810be02f605d94e3d7,
         type: 3}
       propertyPath: m_AnchorMax.x
