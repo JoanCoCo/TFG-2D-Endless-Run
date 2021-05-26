@@ -88,27 +88,19 @@ public class MicManager : StreamManager, IMediaInputManager
     private AudioClip voiceClip;
     private AudioClip lastCapturedClip;
 
-    [SerializeField] private int clipsPerSecond = 20;
     [SerializeField] private int frequency = 44100;
-    private float elapsedTime = 0.0f;
 
-    private const int MAX_CHUNK_SIZE = 40000;
-
-    private uint nextId = 0;
+    private const int MAX_CHUNK_SIZE = short.MaxValue;
 
     private Dictionary<uint, bool> clipWasFullyReceived = new Dictionary<uint, bool>();
     private Dictionary<uint, AudioStruc> clipData = new Dictionary<uint, AudioStruc>();
     private KeySortedList<uint, long> clipIdsReceived = new KeySortedList<uint, long>();
-    private List<AudioChunkMessage> unheadedChunks = new List<AudioChunkMessage>();
+    private List<(AudioChunkMessage, float)> unheadedChunks = new List<(AudioChunkMessage, float)>();
     private Dictionary<uint, int> amountOfEarlyChunks = new Dictionary<uint, int>();
-
-    [SerializeField] private float clipTimeout = 1.0f;
-
-    private NetworkIdentity networkIdentity;
 
     private AudioMsgType clipMsgType = new AudioMsgType();
 
-    private long lastPlayedTimestamp = System.DateTime.Now.ToUniversalTime().Ticks;
+    private bool isMicOn = false;
 
     //[SerializeField] private AudioSource audioSource;
 
@@ -129,35 +121,58 @@ public class MicManager : StreamManager, IMediaInputManager
         if (voiceClip != null)
         {
             elapsedTime += Time.deltaTime;
-            if (elapsedTime >= 1.0f / clipsPerSecond)
+            if (elapsedTime >= 1.0f / transmissionsPerSecond)
             {
                 SendSnapShoot();
                 elapsedTime = 0.0f;
             }
         }
 
-        try
+        if (isMicOn)
         {
-            if (clipIdsReceived.Count > 0)
+            try
             {
-                if (clipWasFullyReceived[clipIdsReceived[0]])
+                if (clipIdsReceived.Count > 0)
                 {
-                    if (clipIdsReceived.KeyAt(0) > lastPlayedTimestamp)
+                    if (clipWasFullyReceived[clipIdsReceived[0]])
                     {
-                        lastPlayedTimestamp = clipIdsReceived.KeyAt(0);
-                        Debug.Log("Last timestamp: " + lastPlayedTimestamp);
-                        RegenerateClipFromReceivedData(clipIdsReceived[0]);
-                    }
-                    else
-                    {
-                        RemoveClip(clipIdsReceived[0]);
+                        if (clipIdsReceived.KeyAt(0) > lastStreamTimestamp)
+                        {
+                            lastStreamTimestamp = clipIdsReceived.KeyAt(0);
+                            Debug.Log("Last timestamp: " + lastStreamTimestamp);
+                            RegenerateClipFromReceivedData(clipIdsReceived[0]);
+                        }
+                        else
+                        {
+                            RemoveClip(clipIdsReceived[0]);
+                        }
                     }
                 }
             }
+            catch
+            {
+                clipIdsReceived.RemoveAt(0);
+            }
         }
-        catch
+
+        if (unheadedChunks.Count > 0)
         {
-            clipIdsReceived.RemoveAt(0);
+            for (int i = 0; i < unheadedChunks.Count; i++)
+            {
+                var chunk = unheadedChunks[i];
+                chunk.Item2 += Time.deltaTime;
+                if (chunk.Item2 > pendingHeadersTimeout)
+                {
+                    uint id = chunk.Item1.id;
+                    unheadedChunks.RemoveAt(i);
+                    i -= 1;
+                    if (amountOfEarlyChunks.ContainsKey(id)) amountOfEarlyChunks.Remove(id);
+                }
+                else
+                {
+                    unheadedChunks[i] = chunk;
+                }
+            }
         }
     }
 
@@ -171,7 +186,7 @@ public class MicManager : StreamManager, IMediaInputManager
         //Texture2D texture = Paint(1000);
         float[] samplesData = new float[voiceClip.samples * voiceClip.channels];
         voiceClip.GetData(samplesData, 0);
-        int size = Mathf.FloorToInt(samplesData.Length / Mathf.Ceil(samplesData.Length * 4.0f / MAX_CHUNK_SIZE));
+        int size = Mathf.FloorToInt(samplesData.Length / Mathf.Ceil(samplesData.Length * (float)sizeof(float) / MAX_CHUNK_SIZE));
         Debug.Log("Chunk size " + size);
         //lastCapturedClip = voiceClip;
         var headerMessage = new AudioHeaderMessage(networkIdentity.netId.Value,
@@ -267,7 +282,7 @@ public class MicManager : StreamManager, IMediaInputManager
             int count = 0;
             while (i < amountOfEarlyChunks[header.id] && i < unheadedChunks.Count)
             {
-                var row = unheadedChunks[i];
+                var row = unheadedChunks[i].Item1;
                 if (row.id == header.id)
                 {
                     SaveChunk(row);
@@ -301,7 +316,7 @@ public class MicManager : StreamManager, IMediaInputManager
         }
         else
         {
-            unheadedChunks.Add(row);
+            unheadedChunks.Add((row, 0.0f));
             if (amountOfEarlyChunks.ContainsKey(row.id))
             {
                 amountOfEarlyChunks[row.id] += 1;
@@ -335,13 +350,13 @@ public class MicManager : StreamManager, IMediaInputManager
         {
             yield return new WaitForSecondsRealtime(0.01f);
             elapsedTime += 0.01f;
-            if (elapsedTime > clipTimeout)
+            if (elapsedTime > streamTimeout)
             {
                 RemoveClip(waitingId);
                 yield break;
             }
         }
-        if (clipData.ContainsKey(waitingId) && elapsedTime <= clipTimeout)
+        if (clipData.ContainsKey(waitingId) && elapsedTime <= streamTimeout)
         {
             clipWasFullyReceived[waitingId] = true;
         }
@@ -367,6 +382,7 @@ public class MicManager : StreamManager, IMediaInputManager
         if (clipIdsReceived.Contains(id)) clipIdsReceived.Remove(id);
         if (clipWasFullyReceived.ContainsKey(id)) clipWasFullyReceived.Remove(id);
         if (clipData.ContainsKey(id)) clipData.Remove(id);
+        if (amountOfEarlyChunks.ContainsKey(id)) amountOfEarlyChunks.Remove(id);
     }
 
     public AudioClip ObtainMicrophoneClip()
@@ -391,9 +407,11 @@ public class MicManager : StreamManager, IMediaInputManager
                 if (voiceClip == null)
                 {
                     voiceClip = Microphone.Start(Microphone.devices[0], true, 1, frequency);
+                    while (!(Microphone.GetPosition(Microphone.devices[0]) > 0)) { }
                 }
             }
         }
+        CmdMicIsOn();
     }
 
     public void StopRecording()
@@ -411,10 +429,42 @@ public class MicManager : StreamManager, IMediaInputManager
             }
             lastCapturedClip = null;
         }
+        CmdMicIsOff();
     }
 
     private void OnDestroy()
     {
         DestroyHandlers(clipMsgType);
+    }
+
+    [ClientRpc]
+    private void RpcMicIsOff()
+    {
+        //isMicOn = false;
+        for (int i = 0; i < clipIdsReceived.Count; i++)
+        {
+            RemoveClip(clipIdsReceived[0]);
+        }
+        lastCapturedClip = null;
+    }
+
+    /*[ClientRpc]
+    private void RpcMicIsOn()
+    {
+        isMicOn = true;
+    }*/
+
+    [Command]
+    private void CmdMicIsOn()
+    {
+        //RpcMicIsOn();
+        isMicOn = true;
+    }
+
+    [Command]
+    private void CmdMicIsOff()
+    {
+        isMicOn = false;
+        RpcMicIsOff();
     }
 }

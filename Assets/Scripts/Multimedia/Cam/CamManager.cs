@@ -82,29 +82,19 @@ public class CamManager : StreamManager, IMediaInputManager
 
     private WebCamTexture cam;
     private Texture2D lastCapturedFrame;
-    [SerializeField] private int framesPerSecond = 20;
     [SerializeField] private int resolution = 128;
-    private float elapsedTime = 0.0f;
 
-    private const int MAX_CHUNK_SIZE = 40000;
-
-    private uint nextId = 0;
+    private const int MAX_CHUNK_SIZE = short.MaxValue;
 
     private Dictionary<uint, bool> textWasFullyReceived = new Dictionary<uint, bool>();
     private Dictionary<uint, TextureStruc> textData = new Dictionary<uint, TextureStruc>();
     private KeySortedList<uint, long> textIdsReceived = new KeySortedList<uint, long>();
-    private List<TextureChunkMessage> unheadedChunks = new List<TextureChunkMessage>();
+    private List<(TextureChunkMessage, float)> unheadedChunks = new List<(TextureChunkMessage, float)>();
     private Dictionary<uint, int> amountOfEarlyChunks = new Dictionary<uint, int>();
-
-    [SerializeField] private float textureTimeout = 1.0f;
-
-    private NetworkIdentity networkIdentity;
 
     private TextureMsgType textureMsgType = new TextureMsgType();
 
-    private long lastShownTimestamp = System.DateTime.Now.ToUniversalTime().Ticks;
-
-    private bool isCameraOn = false;
+    [SyncVar] private bool isCameraOn = false;
 
     private void Start()
     {
@@ -124,7 +114,7 @@ public class CamManager : StreamManager, IMediaInputManager
         if (cam != null && cam.isPlaying)
         {
             elapsedTime += Time.deltaTime;
-            if (elapsedTime >= 1.0f / framesPerSecond)
+            if (elapsedTime >= 1.0f / transmissionsPerSecond)
             {
                 SendSnapShoot();
                 elapsedTime = 0.0f;
@@ -139,10 +129,10 @@ public class CamManager : StreamManager, IMediaInputManager
                 {
                     if (textWasFullyReceived[textIdsReceived[0]])
                     {
-                        if (textIdsReceived.KeyAt(0) > lastShownTimestamp)
+                        if (textIdsReceived.KeyAt(0) > lastStreamTimestamp)
                         {
-                            lastShownTimestamp = textIdsReceived.KeyAt(0);
-                            Debug.Log("Last timestamp: " + lastShownTimestamp);
+                            lastStreamTimestamp = textIdsReceived.KeyAt(0);
+                            Debug.Log("Last timestamp: " + lastStreamTimestamp);
                             RegenerateTextureFromReceivedData(textIdsReceived[0]);
                         }
                         else
@@ -155,6 +145,25 @@ public class CamManager : StreamManager, IMediaInputManager
             catch
             {
                 textIdsReceived.RemoveAt(0);
+            }
+        }
+
+        if(unheadedChunks.Count > 0)
+        {
+            for (int i = 0; i < unheadedChunks.Count; i++) 
+            {
+                var chunk = unheadedChunks[i];
+                chunk.Item2 += Time.deltaTime;
+                if(chunk.Item2 > pendingHeadersTimeout)
+                {
+                    uint id = chunk.Item1.id;
+                    unheadedChunks.RemoveAt(i);
+                    i -= 1;
+                    if (amountOfEarlyChunks.ContainsKey(id)) amountOfEarlyChunks.Remove(id);
+                } else
+                {
+                    unheadedChunks[i] = chunk;
+                }
             }
         }
     }
@@ -269,7 +278,7 @@ public class CamManager : StreamManager, IMediaInputManager
             int count = 0;
             while(i < amountOfEarlyChunks[header.id] && i < unheadedChunks.Count)
             {
-                var row = unheadedChunks[i];
+                var row = unheadedChunks[i].Item1;
                 if(row.id == header.id)
                 {
                     SaveChunk(row);
@@ -301,7 +310,7 @@ public class CamManager : StreamManager, IMediaInputManager
             SaveChunk(row);
         } else
         {
-            unheadedChunks.Add(row);
+            unheadedChunks.Add((row, 0.0f));
             if(amountOfEarlyChunks.ContainsKey(row.id))
             {
                 amountOfEarlyChunks[row.id] += 1;
@@ -334,13 +343,13 @@ public class CamManager : StreamManager, IMediaInputManager
         {
             yield return new WaitForSecondsRealtime(0.01f);
             elapsedTime += 0.01f;
-            if(elapsedTime > textureTimeout)
+            if(elapsedTime > streamTimeout)
             {
                 RemoveTexture(waitingId);
                 yield break;
             }
         }
-        if (textData.ContainsKey(waitingId) && elapsedTime <= textureTimeout)
+        if (textData.ContainsKey(waitingId) && elapsedTime <= streamTimeout)
         {
             textWasFullyReceived[waitingId] = true;
         } else
@@ -365,6 +374,7 @@ public class CamManager : StreamManager, IMediaInputManager
         if(textIdsReceived.Contains(id)) textIdsReceived.Remove(id);
         if(textWasFullyReceived.ContainsKey(id)) textWasFullyReceived.Remove(id);
         if(textData.ContainsKey(id)) textData.Remove(id);
+        if(amountOfEarlyChunks.ContainsKey(id)) amountOfEarlyChunks.Remove(id);
     }
 
     public Sprite ObtainWebcamImage()
@@ -389,6 +399,7 @@ public class CamManager : StreamManager, IMediaInputManager
             if (cam == null)
             {
                 cam = new WebCamTexture();
+                cam.requestedFPS = transmissionsPerSecond + 5;
             }
 
             if (cam != null && !cam.isPlaying)
@@ -413,22 +424,6 @@ public class CamManager : StreamManager, IMediaInputManager
         CmdCameraIsOff();
     }
 
-    private Texture2D Paint(int size)
-    {
-        int width = size;
-        int height = size;
-        Texture2D drawing = new Texture2D(width, height);
-        Color[] colors = new Color[width * height];
-        Color c = Random.ColorHSV();
-        for (var i = 0; i < width * height; i++)
-        {
-            colors[i] = c;
-        }
-        drawing.SetPixels(colors);
-        drawing.Apply(false);
-        return drawing;
-    }
-
     private void OnDestroy()
     {
         DestroyHandlers(textureMsgType);
@@ -437,7 +432,7 @@ public class CamManager : StreamManager, IMediaInputManager
     [ClientRpc]
     private void RpcCameraIsOff()
     {
-        isCameraOn = false;
+        //isCameraOn = false;
         for(int i = 0; i < textIdsReceived.Count; i++)
         {
             RemoveTexture(textIdsReceived[0]);
@@ -445,21 +440,23 @@ public class CamManager : StreamManager, IMediaInputManager
         lastCapturedFrame = null;
     }
 
-    [ClientRpc]
+    /*[ClientRpc]
     private void RpcCameraIsOn()
     {
         isCameraOn = true;
-    }
+    }*/
 
     [Command]
     private void CmdCameraIsOn()
     {
-        RpcCameraIsOn();
+        //RpcCameraIsOn();
+        isCameraOn = true;
     }
 
     [Command]
     private void CmdCameraIsOff()
     {
+        isCameraOn = false;
         RpcCameraIsOff();
     }
 }

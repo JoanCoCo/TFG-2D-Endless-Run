@@ -13,6 +13,19 @@ public class StreamManager : NetworkBehaviour
         public abstract void UpdateTypes(int n);
     }
 
+    [SerializeField] protected float streamTimeout = 1.0f;
+    [SerializeField] protected float pendingHeadersTimeout = 5.0f;
+    [SerializeField] protected int transmissionsPerSecond = 20;
+
+    protected float elapsedTime = 0.0f;
+
+    protected NetworkIdentity networkIdentity;
+    protected uint nextId = 0;
+
+    protected long lastStreamTimestamp = System.DateTime.Now.ToUniversalTime().Ticks;
+
+    protected int channel;
+
     protected void CreateHandlers(StreamMsgType msgType,
         NetworkMessageDelegate headerMessageFromClient,
         NetworkMessageDelegate chunkMessagerFromClient,

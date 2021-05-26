@@ -2058,8 +2058,8 @@ MonoBehaviour:
   m_GlobalConfig:
     m_ThreadAwakeTimeout: 1
     m_ReactorModel: 0
-    m_ReactorMaximumReceivedMessages: 2048
-    m_ReactorMaximumSentMessages: 2048
+    m_ReactorMaximumReceivedMessages: 1024
+    m_ReactorMaximumSentMessages: 1024
     m_MaxPacketSize: 2000
     m_MaxHosts: 16
     m_ThreadPoolSize: 1
@@ -2565,6 +2565,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_AnchorMin.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3140912726088212038, guid: def5de2e876b34810be02f605d94e3d7,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -114.482056
       objectReference: {fileID: 0}
     - target: {fileID: 3140912726820173701, guid: def5de2e876b34810be02f605d94e3d7,
         type: 3}

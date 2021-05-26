@@ -897,9 +897,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 07f1c3dfa6c4f4e74b74211a73402b25, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  framesPerSecond: 20
+  streamTimeout: 1
+  pendingHeadersTimeout: 5
+  transmissionsPerSecond: 20
   resolution: 100
-  textureTimeout: 1
 --- !u!114 &4668935782603991683
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -912,9 +913,10 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d246c198749d44b5da016f4a119de7df, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  clipsPerSecond: 1
+  streamTimeout: 2
+  pendingHeadersTimeout: 5
+  transmissionsPerSecond: 1
   frequency: 44100
-  clipTimeout: 1
 --- !u!1 &6304467527013659464
 GameObject:
   m_ObjectHideFlags: 0
