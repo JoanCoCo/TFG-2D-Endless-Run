@@ -8,6 +8,7 @@ public class ForwardHorizontalDisplacement : NetworkBehaviour
     private float lastPos = 0.0f;
     private float initialDiff = 0.0f;
     private bool hasBeenInit = false;
+    private bool iWasServer;
 
     private void Start()
     {
@@ -16,6 +17,7 @@ public class ForwardHorizontalDisplacement : NetworkBehaviour
             Messenger<float>.AddListener(GameEvent.PLAYER_STARTS, OnPlayersStarts);
             Messenger<float>.AddListener(GameEvent.LAST_PLAYER_POSITION_CHANGED, OnLastPlayerPositionChanged);
         }
+        iWasServer = isServer;
     }
 
     private void OnPlayersStarts(float posX)
@@ -42,7 +44,7 @@ public class ForwardHorizontalDisplacement : NetworkBehaviour
 
     private void OnDestroy()
     {
-        if (isServer)
+        if (iWasServer)
         {
             Messenger<float>.RemoveListener(GameEvent.PLAYER_STARTS, OnPlayersStarts);
             Messenger<float>.RemoveListener(GameEvent.LAST_PLAYER_POSITION_CHANGED, OnLastPlayerPositionChanged);

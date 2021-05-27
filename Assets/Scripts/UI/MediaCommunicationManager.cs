@@ -22,6 +22,7 @@ public class MediaCommunicationManager : MonoBehaviour
     {
         if(!lastScene.Equals(GetCurrentlyActiveSceneName()))
         {
+            lastScene = GetCurrentlyActiveSceneName();
             StartCoroutine(FindPlayer());
         }
     }

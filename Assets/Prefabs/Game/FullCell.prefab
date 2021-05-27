@@ -229,5 +229,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   relativeXPosition: 0.5
   relativeYPosition: 0.5
-  cornerUp: {x: 0, y: 0}
-  cornerDown: {x: 1, y: 1}
+  cornerUp: {x: -0.01, y: -0.01}
+  cornerDown: {x: 1.01, y: 1.01}
