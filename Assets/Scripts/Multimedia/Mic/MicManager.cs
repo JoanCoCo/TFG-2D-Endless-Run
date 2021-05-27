@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class MicManager : StreamManager, IMediaInputManager
+public class MicManager : StreamManager
 {
     private struct AudioStruc
     {
@@ -397,7 +397,7 @@ public class MicManager : StreamManager, IMediaInputManager
         }
     }
 
-    public void StartRecording()
+    public override void StartRecording()
     {
         if (isLocalPlayer)
         {
@@ -414,7 +414,7 @@ public class MicManager : StreamManager, IMediaInputManager
         CmdMicIsOn();
     }
 
-    public void StopRecording()
+    public override void StopRecording()
     {
         if (isLocalPlayer)
         {

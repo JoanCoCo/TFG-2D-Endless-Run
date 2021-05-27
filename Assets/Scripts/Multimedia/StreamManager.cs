@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class StreamManager : NetworkBehaviour
+public class StreamManager : NetworkBehaviour, IMediaInputManager
 {
     protected abstract class StreamMsgType
     {
@@ -83,4 +83,7 @@ public class StreamManager : NetworkBehaviour
             }
         }
     }
+
+    public virtual void StartRecording() { }
+    public virtual void StopRecording() { }
 }

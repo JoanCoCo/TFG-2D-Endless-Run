@@ -34,6 +34,7 @@ public class MicPlayer : MonoBehaviour
         {
             Debug.Log("Playing mic.");
             audioSource.clip = micManager.ObtainMicrophoneClip();
+            audioSource.time = 0;
             previousClipName = audioSource.clip.name;
             //if (!audioSource.loop) audioSource.loop = true;
             if (!audioSource.isPlaying) audioSource.Play();

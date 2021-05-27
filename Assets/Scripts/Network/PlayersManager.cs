@@ -23,6 +23,13 @@ public class PlayersManager : DistributedEntityBehaviour
 
     private Dictionary<uint, string> playersIpAddresses = new Dictionary<uint, string>();
 
+    public int NumberOfPlayers {
+        get
+        {
+            return numberOfPlayers;
+        }
+    }
+
     private void Awake()
     {
         Messenger.AddListener(LobbyEvent.WAITING_FOR_MATCH, OnWaitingForMatch);
@@ -134,6 +141,7 @@ public class PlayersManager : DistributedEntityBehaviour
                 }
             }
             //new WaitForSeconds(0.1f);
+            numberOfPlayers = nextPlayerGroup.Count;
             var playersFinder = GameObject.FindWithTag("PlayersFinder");
             playersFinder.GetComponent<NetworkDiscovery>().StopBroadcast();
             Destroy(playersFinder);
@@ -157,6 +165,7 @@ public class PlayersManager : DistributedEntityBehaviour
                     RpcChangeClientConnection(player, port, address);
                 }
                 playersIpAddresses.Remove(player);
+                numberOfPlayers -= 1;
             }
             nextPlayerGroup.Clear();
         }

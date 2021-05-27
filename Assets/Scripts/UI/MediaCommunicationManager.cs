@@ -7,6 +7,7 @@ public class MediaCommunicationManager : MonoBehaviour
 {
     [SerializeField] private MediaInputController camController;
     [SerializeField] private MediaInputController micController;
+    private bool searching = false;
 
     private string lastScene;
 
@@ -14,13 +15,20 @@ public class MediaCommunicationManager : MonoBehaviour
     {
         StartCoroutine(FindPlayer());
         lastScene = GetCurrentlyActiveSceneName();
+        Messenger<string>.AddListener(NetworkEvent.SPLIT, OnSplit);
+    }
+
+    private void OnSplit(string s)
+    {
+        camController.SetMedia(null);
+        micController.SetMedia(null);
     }
 
     private string GetCurrentlyActiveSceneName() => SceneManager.GetActiveScene().name;
 
     private void Update()
     {
-        if(!lastScene.Equals(GetCurrentlyActiveSceneName()))
+        if(!searching && (!lastScene.Equals(GetCurrentlyActiveSceneName()) || camController.IsNotSet() || micController.IsNotSet()))
         {
             lastScene = GetCurrentlyActiveSceneName();
             StartCoroutine(FindPlayer());
@@ -29,6 +37,7 @@ public class MediaCommunicationManager : MonoBehaviour
 
     IEnumerator FindPlayer()
     {
+        searching = true;
         GameObject localPlayer = GameObject.FindWithTag("LocalPlayer");
         while(localPlayer == null)
         {
@@ -37,5 +46,11 @@ public class MediaCommunicationManager : MonoBehaviour
         }
         camController.SetMedia(localPlayer.GetComponent<CamManager>());
         micController.SetMedia(localPlayer.GetComponent<MicManager>());
+        searching = false;
+    }
+
+    private void OnDestroy()
+    {
+        Messenger<string>.RemoveListener(NetworkEvent.SPLIT, OnSplit);
     }
 }

@@ -17,7 +17,7 @@ public class ScoresManager : DistributedEntityBehaviour
     private void Start()
     {
         Messenger<(string, int)>.AddListener(GameEvent.PLAYER_SCORE_OBTAINED, OnPlayerScoreObtained);
-        if(isServer) numOfScoresNeeded = GameObject.FindWithTag("NetManager").GetComponent<NetworkManager>().numPlayers;
+        if(isServer) numOfScoresNeeded = GameObject.FindWithTag("PlayersManager").GetComponent<PlayersManager>().NumberOfPlayers;
     }
 
     private void Update()

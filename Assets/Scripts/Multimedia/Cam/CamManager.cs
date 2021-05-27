@@ -3,7 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
-public class CamManager : StreamManager, IMediaInputManager
+public class CamManager : StreamManager
 {
     private struct TextureStruc
     {
@@ -391,7 +391,7 @@ public class CamManager : StreamManager, IMediaInputManager
         }
     }
 
-    public void StartRecording()
+    public override void StartRecording()
     {
         if (isLocalPlayer)
         {
@@ -410,7 +410,7 @@ public class CamManager : StreamManager, IMediaInputManager
         CmdCameraIsOn();
     }
 
-    public void StopRecording()
+    public override void StopRecording()
     {
         if (isLocalPlayer)
         {

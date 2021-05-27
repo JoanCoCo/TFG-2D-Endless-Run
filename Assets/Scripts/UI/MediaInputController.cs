@@ -6,7 +6,7 @@ using TMPro;
 
 public class MediaInputController : MonoBehaviour
 {
-    [SerializeField] private IMediaInputManager mediaInputManager;
+    [SerializeField] private StreamManager mediaInputManager;
     [SerializeField] private GameObject onImage;
     [SerializeField] private GameObject offImage;
     [SerializeField] private TextMeshProUGUI keyText;
@@ -50,9 +50,11 @@ public class MediaInputController : MonoBehaviour
         UpdateState();
     }
 
-    public void SetMedia(IMediaInputManager mediaInputManager)
+    public void SetMedia(StreamManager mediaInputManager)
     {
         this.mediaInputManager = mediaInputManager;
         UpdateState();
     }
+
+    public bool IsNotSet() { return mediaInputManager == null; }
 }
