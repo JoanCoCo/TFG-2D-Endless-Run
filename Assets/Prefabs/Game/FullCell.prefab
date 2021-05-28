@@ -10,6 +10,7 @@ GameObject:
   m_Component:
   - component: {fileID: 2585871502210841351}
   - component: {fileID: 3611790968118917497}
+  - component: {fileID: 2882915273076666326}
   m_Layer: 0
   m_Name: FullCell
   m_TagString: Untagged
@@ -49,9 +50,41 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 4efaba8871ea24c5c94cc026022c4c9c, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  _area: {fileID: 2585871502210841351}
   _margin: 10
   _conections: 01010101
+--- !u!114 &2882915273076666326
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 7350454985027971671}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: f8258ea15b8f74c4889ce485d21cbbb1, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  m_SceneId:
+    m_Value: 0
+  m_AssetId:
+    i0: 0
+    i1: 0
+    i2: 0
+    i3: 0
+    i4: 0
+    i5: 0
+    i6: 0
+    i7: 0
+    i8: 0
+    i9: 0
+    i10: 0
+    i11: 0
+    i12: 0
+    i13: 0
+    i14: 0
+    i15: 0
+  m_ServerOnly: 0
+  m_LocalPlayerAuthority: 0
 --- !u!1 &7819814163779509273
 GameObject:
   m_ObjectHideFlags: 0
@@ -126,8 +159,8 @@ SpriteRenderer:
   m_SortingLayerID: 0
   m_SortingLayer: 0
   m_SortingOrder: 0
-  m_Sprite: {fileID: 21300000, guid: a21a690b38a4548b4958ff85eec89409, type: 3}
-  m_Color: {r: 1, g: 1, b: 1, a: 1}
+  m_Sprite: {fileID: 21300000, guid: b6e736d9da74c4434a1cf1f665f7c078, type: 3}
+  m_Color: {r: 0.2861699, g: 0.24701852, b: 0.5754717, a: 1}
   m_FlipX: 0
   m_FlipY: 0
   m_DrawMode: 0
@@ -152,16 +185,16 @@ BoxCollider2D:
   m_UsedByComposite: 0
   m_Offset: {x: 0, y: 0}
   m_SpriteTilingProperty:
-    border: {x: 0, y: 0, z: 0, w: 0}
+    border: {x: 1.59, y: 1.6379999, z: 1.624, w: 1.59}
     pivot: {x: 0.5, y: 0.5}
-    oldSize: {x: 1.6533333, y: 1.6533333}
+    oldSize: {x: 4.96, y: 4.96}
     newSize: {x: 1.6533333, y: 1.6533333}
     adaptiveTilingThreshold: 0.5
     drawMode: 0
     adaptiveTiling: 0
   m_AutoTiling: 0
   serializedVersion: 2
-  m_Size: {x: 1.6533333, y: 1.6533333}
+  m_Size: {x: 4.96, y: 4.96}
   m_EdgeRadius: 0
 --- !u!251 &3592682432367715975
 PlatformEffector2D:
@@ -196,5 +229,5 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   relativeXPosition: 0.5
   relativeYPosition: 0.5
-  cornerUp: {x: 0, y: 0}
-  cornerDown: {x: 1, y: 1}
+  cornerUp: {x: -0.01, y: -0.01}
+  cornerDown: {x: 1.01, y: 1.01}

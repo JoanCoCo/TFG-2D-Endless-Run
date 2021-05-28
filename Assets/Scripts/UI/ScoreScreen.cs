@@ -2,16 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.SceneManagement;
+using UnityEngine.Networking;
 
 public class ScoreScreen : MonoBehaviour
 {
     [SerializeField] private TextMeshProUGUI scoreText;
-    private bool isNewHighscore = false;
-    // Start is called before the first frame update
-    void Start()
-    {
-        Messenger.AddListener(GameEvent.NEW_HIGHSCORE_REACHED, OnNewHighscore);
-    }
+    [SerializeField] private GameObject scoresBox;
+    [SerializeField] private GameObject scorePrefab;
+
+    public bool isNewHighscore = false;
 
     // Update is called once per frame
     void Update()
@@ -23,11 +23,28 @@ public class ScoreScreen : MonoBehaviour
         {
             scoreText.text = "Score: " + GetScoreString();
         }
-    }
 
-    private void OnNewHighscore()
-    {
-        isNewHighscore = true;
+        if (Input.GetKeyDown(KeyCode.Return))
+        {
+            GameObject netManager = GameObject.FindWithTag("NetManager");
+            if (netManager != null)
+            {
+                Destroy(netManager);
+
+                //Necessary to reset the online scene. If not, clients will try to change again to the GameScene when connecting to host.
+                NetworkManager.networkSceneName = "";
+
+                NetworkManager.Shutdown();
+                //NetworkTransport.Shutdown();
+            }
+            GameObject playersManager = GameObject.FindWithTag("PlayersManager");
+            if(playersManager != null) Destroy(playersManager);
+            GameObject playersFinder = GameObject.FindWithTag("PlayersFinder");
+            if (playersFinder != null) Destroy(playersFinder);
+            GameObject player = GameObject.FindWithTag("LocalPlayer");
+            if (player != null) Destroy(player);
+            SceneManager.LoadScene("LobbyScene");
+        }
     }
 
     private string GetScoreString()
@@ -37,8 +54,11 @@ public class ScoreScreen : MonoBehaviour
         return d.ToString() + " m";
     }
 
-    private void OnDestroy()
+    public void AddScore(string player, int d)
     {
-        Messenger.RemoveListener(GameEvent.NEW_HIGHSCORE_REACHED, OnNewHighscore);
+        GameObject omsg = Instantiate(scorePrefab, scoresBox.transform);
+        TextMeshProUGUI tmsg = omsg.GetComponent<TextMeshProUGUI>();
+        tmsg.text = player + ": " + d + "m";
+        omsg.transform.SetAsLastSibling();
     }
 }

@@ -5,15 +5,8 @@ using UnityEngine.SceneManagement;
 
 public class SceneLoader : MonoBehaviour, InteractableObject
 {
-    [SerializeField] private GameObject note;
     private KeyCode interactionKey = KeyCode.Z;
     public string scene;
-
-    // Start is called before the first frame update
-    void Start()
-    {
-        note.SetActive(false);
-    }
 
     public KeyCode GetKey()
     {
@@ -23,22 +16,5 @@ public class SceneLoader : MonoBehaviour, InteractableObject
     public void Interact()
     {
         SceneManager.LoadScene(scene);
-    }
-
-    private void OnTriggerEnter2D(Collider2D other)
-    {
-        Debug.Log("Someone in range.");
-        if(other.gameObject.CompareTag("Player"))
-        {
-            note.SetActive(true);
-        }
-    }
-
-    private void OnTriggerExit2D(Collider2D other)
-    {
-        if(other.gameObject.CompareTag("Player") && note.activeSelf)
-        {
-            note.SetActive(false);
-        }
     }
 }

@@ -4,26 +4,35 @@ using UnityEngine;
 using UnityEngine.UI;
 using TMPro;
 using UnityEngine.SceneManagement;
+using UnityEngine.Networking;
 
 public class CourseUI : MonoBehaviour
 {
+    [SerializeField] private GameObject health;
     [SerializeField] private GameObject healthBar;
-    private RectTransform healthBarInitialTransform;
+    //private RectTransform healthBarInitialTransform;
     [SerializeField] private TextMeshProUGUI chronoText;
     [SerializeField] private TextMeshProUGUI distaceText;
     [SerializeField] private GameObject pausedScreen;
     [SerializeField] private GameObject finishedScreen;
+    private bool isNewHighscore = false;
 
-    // Start is called before the first frame update
-    void Start()
+    private void Awake()
     {
-        healthBarInitialTransform = healthBar.GetComponent<RectTransform>();
         Messenger<float>.AddListener(GameEvent.PLAYER_HEALTH_CHANGED, OnHealthChange);
         Messenger<int>.AddListener(GameEvent.TIME_PASSED, OnTimePassed);
         Messenger.AddListener(GameEvent.PAUSE, OnChangeState);
         Messenger.AddListener(GameEvent.RESUME, OnChangeState);
-        Messenger.AddListener(GameEvent.PLAYER_DIED, OnPlayerDeath);
+        Messenger.AddListener(GameEvent.GAME_FINISHED, OnGameFinished);
         Messenger<int>.AddListener(GameEvent.DISTANCE_INCREASED, OnDistanceIncreased);
+        Messenger.AddListener(GameEvent.PLAYER_DIED, OnPlayerDeath);
+        Messenger.AddListener(GameEvent.NEW_HIGHSCORE_REACHED, OnNewHighscore);
+    }
+
+    // Start is called before the first frame update
+    void Start()
+    {
+        //healthBarInitialTransform = healthBar.GetComponent<RectTransform>();
         pausedScreen.SetActive(false);
         finishedScreen.SetActive(false);
     }
@@ -34,8 +43,15 @@ public class CourseUI : MonoBehaviour
         if(finishedScreen.activeSelf && Input.GetKey(KeyCode.Return))
         {
             Time.timeScale = 1;
-            SceneManager.LoadScene("LobbyScene");
+            //NetworkManager netManager = GameObject.FindWithTag("NetManager").GetComponent<NetworkManager>();
+            //netManager.ServerChangeScene("LobbyScene");
         }
+    }
+
+    private void OnPlayerDeath()
+    {
+        health.SetActive(false);
+        distaceText.text = "";
     }
 
     private void OnHealthChange(float health)
@@ -54,9 +70,11 @@ public class CourseUI : MonoBehaviour
         pausedScreen.SetActive(!pausedScreen.activeSelf);
     }
 
-    private void OnPlayerDeath()
+    private void OnGameFinished()
     {
         finishedScreen.SetActive(true);
+        finishedScreen.GetComponent<ScoreScreen>().isNewHighscore = isNewHighscore;
+        Messenger.Broadcast(GameEvent.FINISHED_SCREEN_IS_OUT);
     }
 
     private void OnDestroy()
@@ -65,8 +83,15 @@ public class CourseUI : MonoBehaviour
         Messenger<int>.RemoveListener(GameEvent.TIME_PASSED, OnTimePassed);
         Messenger.RemoveListener(GameEvent.PAUSE, OnChangeState);
         Messenger.RemoveListener(GameEvent.RESUME, OnChangeState);
-        Messenger.RemoveListener(GameEvent.PLAYER_DIED, OnPlayerDeath);
+        Messenger.RemoveListener(GameEvent.GAME_FINISHED, OnGameFinished);
         Messenger<int>.RemoveListener(GameEvent.DISTANCE_INCREASED, OnDistanceIncreased);
+        Messenger.RemoveListener(GameEvent.PLAYER_DIED, OnPlayerDeath);
+        Messenger.RemoveListener(GameEvent.NEW_HIGHSCORE_REACHED, OnNewHighscore);
+    }
+
+    private void OnNewHighscore()
+    {
+        isNewHighscore = true;
     }
 
     private void OnDistanceIncreased(int d)

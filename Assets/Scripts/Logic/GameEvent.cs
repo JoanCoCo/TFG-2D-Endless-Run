@@ -13,4 +13,9 @@ public class GameEvent
     public const string DISTANCE_INCREASED = "DISTANCE_INCREASED";
     public const string PLAYER_MOVED = "PLAYER_MOVED";
     public const string PLAYER_STARTS = "PLAYER_STARTS";
+    public const string LAST_PLAYER_POSITION_CHANGED = "LAST_PLAYER_POSITION_CHANGED";
+    public const string FIRST_PLAYER_POSITION_CHANGED = "FIRST_PLAYER_POSITION_CHANGED";
+    public const string GAME_FINISHED = "GAME_FINISHED";
+    public const string FINISHED_SCREEN_IS_OUT = "FINISHED_SCREEN_IS_OUT";
+    public const string PLAYER_SCORE_OBTAINED = "PLAYER_SCORE_OBTAINED";
 }
