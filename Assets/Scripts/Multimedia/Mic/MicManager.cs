@@ -35,8 +35,8 @@ public class MicManager : StreamManager
 
         public override void UpdateTypes(int n)
         {
-            Header += (short)(n * 10);
-            Chunk += (short)(n * 10);
+            Header += (short)(n * 100);
+            Chunk += (short)(n * 100);
         }
     }
 
