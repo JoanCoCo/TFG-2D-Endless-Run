@@ -100,7 +100,7 @@ public class MicManager : StreamManager
 
     private AudioMsgType clipMsgType = new AudioMsgType();
 
-    private bool isMicOn = false;
+    [SyncVar] private bool isMicOn = false;
 
     //[SerializeField] private AudioSource audioSource;
 
@@ -387,7 +387,7 @@ public class MicManager : StreamManager
 
     public AudioClip ObtainMicrophoneClip()
     {
-        if (lastCapturedClip != null)
+        if (!isLocalPlayer && lastCapturedClip != null)
         {
             return lastCapturedClip;
         }

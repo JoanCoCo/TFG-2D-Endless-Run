@@ -899,7 +899,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   streamTimeout: 1
   pendingHeadersTimeout: 5
-  transmissionsPerSecond: 20
+  transmissionsPerSecond: 10
   resolution: 100
 --- !u!114 &4668935782603991683
 MonoBehaviour:
