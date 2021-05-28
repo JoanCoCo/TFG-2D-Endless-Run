@@ -58,8 +58,23 @@ public class PlayersFinder : MonoBehaviour
                 isConnected = true;
                 netDiscovery.StopBroadcast();
                 if (connectingWindow != null) connectingWindow.SetActive(false);
+                NetworkManager.singleton.client.RegisterHandler(MsgType.Disconnect, OnNetworkDisconnect);
                 //netDiscovery.broadcastsReceived.Clear();
             }
+        }
+    }
+
+    private void OnNetworkDisconnect(NetworkMessage msg)
+    {
+        if (isConnected)
+        {
+            netManager.StopClient();
+            isConnected = false;
+            elapsedTime = 0;
+            netDiscovery.Initialize();
+            netDiscovery.StartAsClient();
+            if (connectingWindow != null) connectingWindow.SetActive(true);
+            if (netDiscovery.broadcastsReceived.Count > 0) netDiscovery.broadcastsReceived.Clear();
         }
     }
 

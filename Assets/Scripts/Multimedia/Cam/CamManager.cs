@@ -38,45 +38,62 @@ public class CamManager : StreamManager
         }
     }
 
-    private class TextureHeaderMessage : MessageBase
+    private class TextureHeaderMessage : StreamHeaderMessage
     {
-        public uint netId;
-        public uint id;
         public int width;
         public int height;
-        public int chunkSize;
-        public long timeStamp;
 
-        public TextureHeaderMessage() { }
+        public TextureHeaderMessage() : base() { }
 
-        public TextureHeaderMessage(uint netId, uint id, int w, int h, int s)
+        public TextureHeaderMessage(uint netId, uint id, int w, int h, int s) : base(netId, id, s)
         {
-            this.netId = netId;
-            this.id = id;
             width = w;
             height = h;
-            chunkSize = s;
-            timeStamp = System.DateTime.Now.ToUniversalTime().Ticks;
+        }
+
+        public override void Serialize(NetworkWriter writer)
+        {
+            base.Serialize(writer);
+            writer.Write(width);
+            writer.Write(height);
+        }
+
+        public override void Deserialize(NetworkReader reader)
+        {
+            base.Deserialize(reader);
+            width = reader.ReadInt32();
+            height = reader.ReadInt32();
         }
     }
 
-    private class TextureChunkMessage : MessageBase
+    private class TextureChunkMessage : StreamChunkMessage
     {
-        public uint netId;
-        public uint id;
-        public int order;
-        public int size;
         public Color32[] data;
 
-        public TextureChunkMessage() { }
+        public TextureChunkMessage() : base() { }
 
-        public TextureChunkMessage(uint netId, uint id, int o, int length)
+        public TextureChunkMessage(uint netId, uint id, int o, int length) : base(netId, id, o)
         {
-            this.netId = netId;
-            this.id = id;
-            order = o;
             data = new Color32[length];
-            size = 0;
+        }
+
+        public override void Serialize(NetworkWriter writer)
+        {
+            base.Serialize(writer);
+            for(int i = 0; i < size; i++)
+            {
+                writer.Write(data[i]);
+            }
+        }
+
+        public override void Deserialize(NetworkReader reader)
+        {
+            base.Deserialize(reader);
+            data = new Color32[size];
+            for(int i = 0; i < size; i++)
+            {
+                data[i] = reader.ReadColor32();
+            }
         }
     }
 
@@ -84,17 +101,9 @@ public class CamManager : StreamManager
     private Texture2D lastCapturedFrame;
     [SerializeField] private int resolution = 128;
 
-    private const int MAX_CHUNK_SIZE = short.MaxValue;
-
-    private Dictionary<uint, bool> textWasFullyReceived = new Dictionary<uint, bool>();
-    private Dictionary<uint, TextureStruc> textData = new Dictionary<uint, TextureStruc>();
-    private KeySortedList<uint, long> textIdsReceived = new KeySortedList<uint, long>();
-    private List<(TextureChunkMessage, float)> unheadedChunks = new List<(TextureChunkMessage, float)>();
-    private Dictionary<uint, int> amountOfEarlyChunks = new Dictionary<uint, int>();
-
     private TextureMsgType textureMsgType = new TextureMsgType();
 
-    [SyncVar] private bool isCameraOn = false;
+    private StreamMessageDataSupport<TextureStruc, TextureChunkMessage> msgData = new StreamMessageDataSupport<TextureStruc, TextureChunkMessage>();
 
     private void Start()
     {
@@ -121,51 +130,8 @@ public class CamManager : StreamManager
             }
         }
 
-        if (isCameraOn)
-        {
-            try
-            {
-                if (textIdsReceived.Count > 0)
-                {
-                    if (textWasFullyReceived[textIdsReceived[0]])
-                    {
-                        if (textIdsReceived.KeyAt(0) > lastStreamTimestamp)
-                        {
-                            lastStreamTimestamp = textIdsReceived.KeyAt(0);
-                            Debug.Log("Last timestamp: " + lastStreamTimestamp);
-                            RegenerateTextureFromReceivedData(textIdsReceived[0]);
-                        }
-                        else
-                        {
-                            RemoveTexture(textIdsReceived[0]);
-                        }
-                    }
-                }
-            }
-            catch
-            {
-                textIdsReceived.RemoveAt(0);
-            }
-        }
-
-        if(unheadedChunks.Count > 0)
-        {
-            for (int i = 0; i < unheadedChunks.Count; i++) 
-            {
-                var chunk = unheadedChunks[i];
-                chunk.Item2 += Time.deltaTime;
-                if(chunk.Item2 > pendingHeadersTimeout)
-                {
-                    uint id = chunk.Item1.id;
-                    unheadedChunks.RemoveAt(i);
-                    i -= 1;
-                    if (amountOfEarlyChunks.ContainsKey(id)) amountOfEarlyChunks.Remove(id);
-                } else
-                {
-                    unheadedChunks[i] = chunk;
-                }
-            }
-        }
+        UpdateStream(msgData, RegenerateTextureFromReceivedData);
+        ManageUnheadedChunks(msgData);
     }
 
     private Coroutine SendSnapShoot() => StartCoroutine(SendTexture());
@@ -185,34 +151,17 @@ public class CamManager : StreamManager
         TextureScale.Bilinear(texture, resolution, resolution);
         //lastCapturedFrame = texture;
         Color32[] pixelData = texture.GetPixels32(0);
-        int size = Mathf.FloorToInt(pixelData.Length / Mathf.Ceil(pixelData.Length * 4.0f / MAX_CHUNK_SIZE));
+        int size = Mathf.FloorToInt(pixelData.Length / Mathf.Ceil(pixelData.Length * 4.0f / maxChunkSize));
         Debug.Log("Chunk size " + size);
         var headerMessage = new TextureHeaderMessage(networkIdentity.netId.Value, textId, texture.width, texture.height, size);
-        if (isServer)
-        {
-            NetworkServer.SendByChannelToReady(gameObject, textureMsgType.Header, headerMessage, 2);
-            //NetworkServer.SendToReady(gameObject, TextureMsgType.Header, headerMessage);
-        } else
-        {
-            NetworkManager.singleton.client.SendByChannel(textureMsgType.Header, headerMessage, 2);
-            //NetworkManager.singleton.client.Send(TextureMsgType.Header, headerMessage);
-        }
+        SendHeaderMessage(textureMsgType, headerMessage);
         int order = 0;
         var rowMessage = new TextureChunkMessage(networkIdentity.netId.Value, textId, order, size);
         for (int i = 0; i <= pixelData.Length; i++)
         {
             if(i - size * (order + 1) >= 0 || i == pixelData.Length)
             {
-                if (isServer)
-                {
-                    NetworkServer.SendByChannelToReady(gameObject, textureMsgType.Chunk, rowMessage, 2);
-                    //NetworkServer.SendToReady(gameObject, TextureMsgType.Chunk, rowMessage);
-                }
-                else
-                {
-                    NetworkManager.singleton.client.SendByChannel(textureMsgType.Chunk, rowMessage, 2);
-                    //NetworkManager.singleton.client.Send(TextureMsgType.Chunk, rowMessage);
-                }
+                SendChunkMessage(textureMsgType, rowMessage);
                 if (i == pixelData.Length) break;
                 order += 1;
                 rowMessage = new TextureChunkMessage(networkIdentity.netId.Value, textId, order, size);
@@ -228,23 +177,13 @@ public class CamManager : StreamManager
     private void OnTextureHeaderMessageFromClient(NetworkMessage msg)
     {
         var header = msg.ReadMessage<TextureHeaderMessage>();
-        if (header.netId == networkIdentity.netId.Value)
-        {
-            Debug.Log("Received texture header on server.");
-            NetworkServer.SendByChannelToReady(gameObject, textureMsgType.Header, header, 2);
-        }
-        //NetworkServer.SendToReady(gameObject, TextureMsgType.Header, header);
+        OnStreamHeaderMessageFromClient(textureMsgType, header);
     }
 
     private void OnTextureChunkMessageFromClient(NetworkMessage msg)
     {
         var row = msg.ReadMessage<TextureChunkMessage>();
-        if (row.netId == networkIdentity.netId.Value)
-        {
-            Debug.Log("Received texture row on server.");
-            NetworkServer.SendByChannelToReady(gameObject, textureMsgType.Chunk, row, 2);
-        }
-        //NetworkServer.SendToReady(gameObject, TextureMsgType.Chunk, row);
+        OnStreamChunkMessageFromClient(textureMsgType, row);
     }
 
     private void OnTextureHeaderMessageFromServer(NetworkMessage msg)
@@ -263,74 +202,74 @@ public class CamManager : StreamManager
         if(row.netId == networkIdentity.netId.Value)
         {
             Debug.Log("Received texture row on client.");
-            OnTextureRowReceived(row);
+            OnTextureChunkReceived(row);
         }
     }
 
     private void OnTextureHeaderReceived(TextureHeaderMessage header)
     {
         TextureStruc textS = new TextureStruc(header.width, header.height, header.chunkSize);
-        textData[header.id] = textS;
-        textWasFullyReceived[header.id] = false;
-        if(amountOfEarlyChunks.ContainsKey(header.id))
+        msgData.streamData[header.id] = textS;
+        msgData.streamWasFullyReceived[header.id] = false;
+        if(msgData.amountOfEarlyChunks.ContainsKey(header.id))
         {
             int i = 0;
             int count = 0;
-            while(i < amountOfEarlyChunks[header.id] && i < unheadedChunks.Count)
+            while(i < msgData.amountOfEarlyChunks[header.id] && i < msgData.unheadedChunks.Count)
             {
-                var row = unheadedChunks[i].Item1;
+                var row = msgData.unheadedChunks[i].Item1;
                 if(row.id == header.id)
                 {
                     SaveChunk(row);
-                    unheadedChunks.RemoveAt(i);
+                    msgData.unheadedChunks.RemoveAt(i);
                     count += 1;
                 }
                 i += 1;
             }
-            if(amountOfEarlyChunks[header.id] != count)
+            if(msgData.amountOfEarlyChunks[header.id] != count)
             {
-                RemoveTexture(header.id);
+                msgData.RemoveStream(header.id);
             }
-            amountOfEarlyChunks.Remove(header.id);
+            msgData.amountOfEarlyChunks.Remove(header.id);
         }
-        if(textIdsReceived.Count > 0 && textIdsReceived.KeyAt(0) >= header.timeStamp)
+        if(msgData.streamIdsReceived.Count > 0 && msgData.streamIdsReceived.KeyAt(0) >= header.timeStamp)
         {
-            RemoveTexture(header.id);
+            msgData.RemoveStream(header.id);
         } else
         {
-            textIdsReceived.Add(header.id, header.timeStamp);
+            msgData.streamIdsReceived.Add(header.id, header.timeStamp);
             StartCoroutine(WaitTillReceiveAllTheTexture(header.id));
         }
     }
 
-    private void OnTextureRowReceived(TextureChunkMessage row)
+    private void OnTextureChunkReceived(TextureChunkMessage row)
     {
-        if (textData.ContainsKey(row.id))
+        if (msgData.streamData.ContainsKey(row.id))
         {
             SaveChunk(row);
         } else
         {
-            unheadedChunks.Add((row, 0.0f));
-            if(amountOfEarlyChunks.ContainsKey(row.id))
+            msgData.unheadedChunks.Add((row, 0.0f));
+            if(msgData.amountOfEarlyChunks.ContainsKey(row.id))
             {
-                amountOfEarlyChunks[row.id] += 1;
+                msgData.amountOfEarlyChunks[row.id] += 1;
             } else
             {
-                amountOfEarlyChunks[row.id] = 1;
+                msgData.amountOfEarlyChunks[row.id] = 1;
             }
-            Debug.Log(amountOfEarlyChunks[row.id] + " chunk(s) with our previous head received.");
+            Debug.Log(msgData.amountOfEarlyChunks[row.id] + " chunk(s) with our previous head received.");
         }
     }
 
     private void SaveChunk(TextureChunkMessage row)
     {
-        TextureStruc textureStruc = textData[row.id];
+        TextureStruc textureStruc = msgData.streamData[row.id];
         for (int i = 0; i < row.data.Length && i < row.size && textureStruc.pixelsReceived < textureStruc.data.Length; i++)
         {
             textureStruc.data[i + row.order * textureStruc.chunkSize] = row.data[i];
             textureStruc.pixelsReceived += 1;
         }
-        textData[row.id] = textureStruc;
+        msgData.streamData[row.id] = textureStruc;
         Debug.Log(textureStruc.pixelsReceived + "/" + textureStruc.data.Length
             + " pixels currently recived for ID " + row.id + ".");
     }
@@ -339,42 +278,34 @@ public class CamManager : StreamManager
     {
         uint waitingId = id;
         float elapsedTime = 0;
-        while(textData.ContainsKey(waitingId) && textData[waitingId].pixelsReceived < textData[waitingId].data.Length)
+        while(msgData.streamData.ContainsKey(waitingId) && msgData.streamData[waitingId].pixelsReceived < msgData.streamData[waitingId].data.Length)
         {
             yield return new WaitForSecondsRealtime(0.01f);
             elapsedTime += 0.01f;
             if(elapsedTime > streamTimeout)
             {
-                RemoveTexture(waitingId);
+                msgData.RemoveStream(waitingId);
                 yield break;
             }
         }
-        if (textData.ContainsKey(waitingId) && elapsedTime <= streamTimeout)
+        if (msgData.streamData.ContainsKey(waitingId) && elapsedTime <= streamTimeout)
         {
-            textWasFullyReceived[waitingId] = true;
+            msgData.streamWasFullyReceived[waitingId] = true;
         } else
         {
-            RemoveTexture(waitingId);
+            msgData.RemoveStream(waitingId);
         }
     }
 
     private void RegenerateTextureFromReceivedData(uint id)
     {
         Debug.Log("Regenerating texture from received data.");
-        TextureStruc textS = textData[id];
-        RemoveTexture(id);
+        TextureStruc textS = msgData.streamData[id];
+        msgData.RemoveStream(id);
         Texture2D texture = new Texture2D(textS.width, textS.height);
         texture.SetPixels32(textS.data);
         texture.Apply(true);
         lastCapturedFrame = texture;
-    }
-
-    private void RemoveTexture(uint id)
-    {
-        if(textIdsReceived.Contains(id)) textIdsReceived.Remove(id);
-        if(textWasFullyReceived.ContainsKey(id)) textWasFullyReceived.Remove(id);
-        if(textData.ContainsKey(id)) textData.Remove(id);
-        if(amountOfEarlyChunks.ContainsKey(id)) amountOfEarlyChunks.Remove(id);
     }
 
     public Sprite ObtainWebcamImage()
@@ -407,7 +338,7 @@ public class CamManager : StreamManager
                 cam.Play();
             }
         }
-        CmdCameraIsOn();
+        CmdStreamIsOn();
     }
 
     public override void StopRecording()
@@ -421,7 +352,7 @@ public class CamManager : StreamManager
             }
         }
         lastCapturedFrame = null;
-        CmdCameraIsOff();
+        CmdStreamIsOff();
     }
 
     private void OnDestroy()
@@ -429,34 +360,32 @@ public class CamManager : StreamManager
         DestroyHandlers(textureMsgType);
     }
 
-    [ClientRpc]
-    private void RpcCameraIsOff()
+    protected override void StreamIsOff()
     {
-        //isCameraOn = false;
-        for(int i = 0; i < textIdsReceived.Count; i++)
-        {
-            RemoveTexture(textIdsReceived[0]);
-        }
+        msgData.RemoveAllStreams();
         lastCapturedFrame = null;
     }
 
-    /*[ClientRpc]
-    private void RpcCameraIsOn()
-    {
-        isCameraOn = true;
-    }*/
-
     [Command]
-    private void CmdCameraIsOn()
+    protected void CmdStreamIsOn()
     {
         //RpcCameraIsOn();
-        isCameraOn = true;
+        Debug.Log("Stream is on.");
+        isStreamOn = true;
     }
 
     [Command]
-    private void CmdCameraIsOff()
+    protected void CmdStreamIsOff()
     {
-        isCameraOn = false;
-        RpcCameraIsOff();
+        isStreamOn = false;
+        Debug.Log("Stream is off.");
+        RpcStreamIsOff();
+    }
+
+    [ClientRpc]
+    protected void RpcStreamIsOff()
+    {
+        //isCameraOn = false;
+        StreamIsOff();
     }
 }
