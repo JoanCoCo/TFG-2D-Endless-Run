@@ -83,6 +83,16 @@ public class MicManager : StreamManager
             data = new float[length];
         }
 
+        public AudioChunkMessage(uint netId, uint id, int o, float[] data, int size) : base(netId, id, o)
+        {
+            this.data = new float[data.Length];
+            for (int i = 0; i < data.Length; i++)
+            {
+                this.data[i] = data[i];
+            }
+            this.size = size;
+        }
+
         public override void Serialize(NetworkWriter writer)
         {
             base.Serialize(writer);
@@ -110,12 +120,13 @@ public class MicManager : StreamManager
 
     private AudioMsgType clipMsgType = new AudioMsgType();
 
-    private StreamMessageDataSupport<AudioStruc, AudioChunkMessage> msgData = new StreamMessageDataSupport<AudioStruc, AudioChunkMessage>();
+    private StreamMessageDataSupport
+        <AudioStruc, AudioHeaderMessage, AudioChunkMessage>
+        msgData = new StreamMessageDataSupport<AudioStruc, AudioHeaderMessage, AudioChunkMessage>();
 
     private void Start()
     {
-        networkIdentity = GetComponent<NetworkIdentity>();
-        clipMsgType.UpdateTypes((int)networkIdentity.netId.Value);
+        Initialize(msgData, clipMsgType);
 
         CreateHandlers(clipMsgType,
             OnAudioHeaderMessageFromClient,
@@ -128,21 +139,14 @@ public class MicManager : StreamManager
     {
         if (voiceClip != null)
         {
-            elapsedTime += Time.deltaTime;
-            if (elapsedTime >= 1.0f / transmissionsPerSecond)
-            {
-                SendSnapShoot();
-                elapsedTime = 0.0f;
-            }
+            BroadcastStream();
         }
 
         UpdateStream(msgData, RegenerateClipFromReceivedData);
-        ManageUnheadedChunks(msgData);
+        msgData.ManageUnheadedChunks();
     }
 
-    private Coroutine SendSnapShoot() => StartCoroutine(SendClip());
-
-    IEnumerator SendClip()
+    protected override IEnumerator SendStream()
     {
         uint clipId = nextId;
         nextId += 1;
@@ -156,19 +160,12 @@ public class MicManager : StreamManager
         var headerMessage = new AudioHeaderMessage(networkIdentity.netId.Value,
             clipId, voiceClip.samples, voiceClip.channels, frequency, size);
         SendHeaderMessage(clipMsgType, headerMessage);
-        int order = 0;
-        var rowMessage = new AudioChunkMessage(networkIdentity.netId.Value, clipId, order, size);
-        for (int i = 0; i <= samplesData.Length; i++)
+
+        List<(int, float[], int)> chunks = DivideArrayInChunks(samplesData, size);
+        foreach (var chunk in chunks)
         {
-            if (i - size * (order + 1) >= 0 || i == samplesData.Length)
-            {
-                SendChunkMessage(clipMsgType, rowMessage);
-                if (i == samplesData.Length) break;
-                order += 1;
-                rowMessage = new AudioChunkMessage(networkIdentity.netId.Value, clipId, order, size);
-            }
-            rowMessage.data[i - size * order] = samplesData[i];
-            rowMessage.size += 1;
+            var chunkMessage = new AudioChunkMessage(networkIdentity.netId.Value, clipId, chunk.Item1, chunk.Item2, chunk.Item3);
+            SendChunkMessage(clipMsgType, chunkMessage);
         }
 
         Debug.Log("Clip for ID " + clipId + " has been sent.");
@@ -190,122 +187,51 @@ public class MicManager : StreamManager
     private void OnAudioHeaderMessageFromServer(NetworkMessage msg)
     {
         var header = msg.ReadMessage<AudioHeaderMessage>();
-        if (header.netId == networkIdentity.netId.Value)
-        {
-            Debug.Log("Received clip header on client.");
-            OnAudioHeaderReceived(header);
-        }
+        OnStreamHeaderMessageFromServer(header, OnAudioHeaderReceived);
     }
 
     private void OnAudioChunkMessageFromServer(NetworkMessage msg)
     {
         var row = msg.ReadMessage<AudioChunkMessage>();
-        if (row.netId == networkIdentity.netId.Value)
-        {
-            Debug.Log("Received clip row on client.");
-            OnAudioChunkReceived(row);
-        }
+        OnStreamChunkMessageFromServer(row, OnAudioChunkReceived);
     }
 
     private void OnAudioHeaderReceived(AudioHeaderMessage header)
     {
-        AudioStruc textS = new AudioStruc(header.samples, header.channels, header.frequency, header.chunkSize);
-        msgData.streamData[header.id] = textS;
-        msgData.streamWasFullyReceived[header.id] = false;
-        if (msgData.amountOfEarlyChunks.ContainsKey(header.id))
+        AudioStruc clipS = new AudioStruc(header.samples, header.channels, header.frequency, header.chunkSize);
+        msgData.RecoverEarlyChunks(header, clipS, SaveChunk);
+        if (msgData.CheckTimestamp(header))
         {
-            int i = 0;
-            int count = 0;
-            while (i < msgData.amountOfEarlyChunks[header.id] && i < msgData.unheadedChunks.Count)
-            {
-                var row = msgData.unheadedChunks[i].Item1;
-                if (row.id == header.id)
-                {
-                    SaveChunk(row);
-                    msgData.unheadedChunks.RemoveAt(i);
-                    count += 1;
-                }
-                i += 1;
-            }
-            if (msgData.amountOfEarlyChunks[header.id] != count)
-            {
-                msgData.RemoveStream(header.id);
-            }
-            msgData.amountOfEarlyChunks.Remove(header.id);
-        }
-        if (msgData.streamIdsReceived.Count > 0 && msgData.streamIdsReceived.KeyAt(0) >= header.timeStamp)
-        {
-            msgData.RemoveStream(header.id);
-        }
-        else
-        {
-            msgData.streamIdsReceived.Add(header.id, header.timeStamp);
-            StartCoroutine(WaitTillReceiveAllTheClip(header.id));
+            StartCoroutine(
+                msgData.WaitTillReceiveAllTheStream(
+                    header.id,
+                    (uint id) => msgData[id].samplesReceived < msgData[id].data.Length,
+                    streamTimeout));
         }
     }
 
     private void OnAudioChunkReceived(AudioChunkMessage row)
     {
-        if (msgData.streamData.ContainsKey(row.id))
-        {
-            SaveChunk(row);
-        }
-        else
-        {
-            msgData.unheadedChunks.Add((row, 0.0f));
-            if (msgData.amountOfEarlyChunks.ContainsKey(row.id))
-            {
-                msgData.amountOfEarlyChunks[row.id] += 1;
-            }
-            else
-            {
-                msgData.amountOfEarlyChunks[row.id] = 1;
-            }
-            Debug.Log(msgData.amountOfEarlyChunks[row.id] + " chunk(s) with our previous head received.");
-        }
+        msgData.AddChunk(row, SaveChunk);
     }
 
     private void SaveChunk(AudioChunkMessage row)
     {
-        AudioStruc clipStruc = msgData.streamData[row.id];
+        AudioStruc clipStruc = msgData[row.id];
         for (int i = 0; i < row.data.Length && i < row.size && clipStruc.samplesReceived < clipStruc.data.Length; i++)
         {
             clipStruc.data[i + row.order * clipStruc.chunkSize] = row.data[i];
             clipStruc.samplesReceived += 1;
         }
-        msgData.streamData[row.id] = clipStruc;
+        msgData[row.id] = clipStruc;
         Debug.Log(clipStruc.samplesReceived + "/" + clipStruc.data.Length
             + " samples currently recived for ID " + row.id + ".");
-    }
-
-    IEnumerator WaitTillReceiveAllTheClip(uint id)
-    {
-        uint waitingId = id;
-        float elapsedTime = 0;
-        while (msgData.streamData.ContainsKey(waitingId) && msgData.streamData[waitingId].samplesReceived < msgData.streamData[waitingId].data.Length)
-        {
-            yield return new WaitForSecondsRealtime(0.01f);
-            elapsedTime += 0.01f;
-            if (elapsedTime > streamTimeout)
-            {
-                msgData.RemoveStream(waitingId);
-                yield break;
-            }
-        }
-        if (msgData.streamData.ContainsKey(waitingId) && elapsedTime <= streamTimeout)
-        {
-            msgData.streamWasFullyReceived[waitingId] = true;
-        }
-        else
-        {
-            msgData.RemoveStream(waitingId);
-        }
     }
 
     private void RegenerateClipFromReceivedData(uint id)
     {
         Debug.Log("Regenerating clip from received data.");
-        AudioStruc clipS = msgData.streamData[id];
+        AudioStruc clipS = msgData[id];
         msgData.RemoveStream(id);
         AudioClip clip = AudioClip.Create("Received clip with ID " + id, clipS.samples, clipS.channels, clipS.frequency, false);
         clip.SetData(clipS.data, 0);
@@ -365,32 +291,23 @@ public class MicManager : StreamManager
         DestroyHandlers(clipMsgType);
     }
 
-    protected override void StreamIsOff()
-    {
-        msgData.RemoveAllStreams();
-        lastCapturedClip = null;
-    }
-
     [Command]
     protected void CmdStreamIsOn()
     {
-        //RpcCameraIsOn();
-        Debug.Log("Stream is on.");
-        isStreamOn = true;
+        StreamIsOnServer();
     }
 
     [Command]
     protected void CmdStreamIsOff()
     {
-        isStreamOn = false;
-        Debug.Log("Stream is off.");
+        StreamIsOffServer();
         RpcStreamIsOff();
     }
 
     [ClientRpc]
     protected void RpcStreamIsOff()
     {
-        //isCameraOn = false;
-        StreamIsOff();
+        msgData.RemoveAllStreams();
+        lastCapturedClip = null;
     }
 }
