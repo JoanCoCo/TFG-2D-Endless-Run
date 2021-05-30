@@ -21,7 +21,7 @@ namespace UnityEngine.Networking
         int m_MaxPendingPacketCount;
 
         const int k_MaxFreePacketCount = 512; //  this is for all connections. maybe make this configurable
-        public const int MaxPendingPacketCount = 16;  // this is per connection. each is around 1400 bytes (MTU)
+        public const int MaxPendingPacketCount = 128;  // this is per connection. each is around 1400 bytes (MTU)
         public const int MaxBufferedPackets = 512;
 
         Queue<ChannelPacket> m_PendingPackets;
