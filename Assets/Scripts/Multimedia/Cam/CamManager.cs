@@ -3,16 +3,47 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
 
+/// <summary>
+/// Class that implements a camera streaming service. 
+/// </summary>
 public class CamManager : StreamManager
 {
+    /// <summary>
+    /// Structure that models the images that are going to be streamed.
+    /// </summary>
     private struct TextureStruc
     {
+        /// <summary>
+        /// Width of the image.
+        /// </summary>
         public int width;
+
+        /// <summary>
+        /// Height of the image.
+        /// </summary>
         public int height;
+
+        /// <summary>
+        /// Pixels of the image.
+        /// </summary>
         public Color32[] data;
+
+        /// <summary>
+        /// Number of pixels correctly initialized.
+        /// </summary>
         public int pixelsReceived;
+
+        /// <summary>
+        /// Maximum size of the chunks that will be received to contruct this image.
+        /// </summary>
         public int chunkSize;
 
+        /// <summary>
+        /// Constructor of an image structure.
+        /// </summary>
+        /// <param name="w">Width of the image.</param>
+        /// <param name="h">Height of the image.</param>
+        /// <param name="chunk">Maximum size of the chunks that will be received to contruct this image.</param>
         public TextureStruc(int w, int h, int chunk)
         {
             width = w;
@@ -23,8 +54,14 @@ public class CamManager : StreamManager
         }
     }
 
+    /// <summary>
+    /// Message types used for sending images.
+    /// </summary>
     private class TextureMsgType : StreamMsgType
     {
+        /// <summary>
+        /// Constructor that inits the base values for the types.
+        /// </summary>
         public TextureMsgType()
         {
             Header = MsgType.Highest + 1;
@@ -38,13 +75,34 @@ public class CamManager : StreamManager
         }
     }
 
+    /// <summary>
+    /// Header message used for sending images.
+    /// </summary>
     private class TextureHeaderMessage : StreamHeaderMessage
     {
+        /// <summary>
+        /// Width of the image.
+        /// </summary>
         public int width;
+
+        /// <summary>
+        /// Height of the image.
+        /// </summary>
         public int height;
 
+        /// <summary>
+        /// Empty constructor mandatory for using the class as message.
+        /// </summary>
         public TextureHeaderMessage() : base() { }
 
+        /// <summary>
+        /// Constructor to initialize a header message for sending an image.
+        /// </summary>
+        /// <param name="netId">Network identifier of the player object who sent the message.</param>
+        /// <param name="id">Identifier of the stream.</param>
+        /// <param name="w">Width of the image.</param>
+        /// <param name="h">Height of the image.</param>
+        /// <param name="s">Maximum size of the following chunks associated with this header.</param>
         public TextureHeaderMessage(uint netId, uint id, int w, int h, int s) : base(netId, id, s)
         {
             width = w;
@@ -66,17 +124,41 @@ public class CamManager : StreamManager
         }
     }
 
+    /// <summary>
+    /// Chunk message used for sending images.
+    /// </summary>
     private class TextureChunkMessage : StreamChunkMessage
     {
+        /// <summary>
+        /// Chunk of pixels of the image.
+        /// </summary>
         public Color32[] data;
 
+        /// <summary>
+        /// Empty constructor mandatory for using the class as message.
+        /// </summary>
         public TextureChunkMessage() : base() { }
 
+        /// <summary>
+        /// Constructor to initialize a chunk message for sending an image.
+        /// </summary>
+        /// <param name="netId">Network identifier of the player object who sent the message.</param>
+        /// <param name="id">Identifier of the stream.</param>
+        /// <param name="o">Position in the sequence of chunks with the same id. Starts in zero.</param>
+        /// <param name="length">Maximum size of the chunk to be sent.</param>
         public TextureChunkMessage(uint netId, uint id, int o, int length) : base(netId, id, o)
         {
             data = new Color32[length];
         }
 
+        /// <summary>
+        /// Constructor to initialize a chunk message for sending an image.
+        /// </summary>
+        /// <param name="netId">Network identifier of the player object who sent the message.</param>
+        /// <param name="id">Identifier of the stream.</param>
+        /// <param name="o">Position in the sequence of chunks with the same id. Starts in zero.</param>
+        /// <param name="data">Chunk of pixels of the image.</param>
+        /// <param name="size">Number of valid pixels contained in this chunk.</param>
         public TextureChunkMessage(uint netId, uint id, int o, Color32[] data, int size) : base(netId, id, o)
         {
             this.data = new Color32[data.Length];
@@ -107,12 +189,30 @@ public class CamManager : StreamManager
         }
     }
 
+    /// <summary>
+    /// Webcam texture to access to the device camera.
+    /// </summary>
     private WebCamTexture cam;
+
+    /// <summary>
+    /// Last frame that was received and must be shown.
+    /// </summary>
     private Texture2D lastCapturedFrame;
+
+    /// <summary>
+    /// Resolution of a side in pixels of the squared image we want to record.
+    /// </summary>
     [SerializeField] private int resolution = 128;
 
+    /// <summary>
+    /// Message types used to send the images of this instance.
+    /// </summary>
     private TextureMsgType textureMsgType = new TextureMsgType();
 
+    /// <summary>
+    /// Data structure that constains and manages all the image's data received
+    /// through messages.
+    /// </summary>
     private StreamMessageDataSupport
         <TextureStruc, TextureHeaderMessage, TextureChunkMessage>
         msgData = new StreamMessageDataSupport<TextureStruc, TextureHeaderMessage, TextureChunkMessage>();
@@ -128,7 +228,6 @@ public class CamManager : StreamManager
             OnTextureChunkMessageFromServer);
     }
 
-    // Update is called once per frame
     private void Update()
     {
         if (cam != null && cam.isPlaying)
@@ -140,6 +239,11 @@ public class CamManager : StreamManager
         msgData.ManageUnheadedChunks();
     }
 
+    /// <summary>
+    /// Corutine that captures an image from the camera, obtains its relevant data
+    /// and sends the corresponding header and chunk messages.
+    /// </summary>
+    /// <returns>IEnumerator to be run.</returns>
     protected override IEnumerator SendStream()
     {
         uint textId = nextId;
@@ -171,30 +275,50 @@ public class CamManager : StreamManager
         yield return new WaitForSeconds(0.01f);
     }
 
+    /// <summary>
+    /// Handler for header messages received on the server.
+    /// </summary>
+    /// <param name="msg">Network message received.</param>
     private void OnTextureHeaderMessageFromClient(NetworkMessage msg)
     {
         var header = msg.ReadMessage<TextureHeaderMessage>();
         OnStreamHeaderMessageFromClient(textureMsgType, header);
     }
 
+    /// <summary>
+    /// Handler for chunk messages received on the server.
+    /// </summary>
+    /// <param name="msg">Network message received.</param>
     private void OnTextureChunkMessageFromClient(NetworkMessage msg)
     {
         var row = msg.ReadMessage<TextureChunkMessage>();
         OnStreamChunkMessageFromClient(textureMsgType, row);
     }
 
+    /// <summary>
+    /// Handler for header messages received on the client.
+    /// </summary>
+    /// <param name="msg">Network message received.</param>
     private void OnTextureHeaderMessageFromServer(NetworkMessage msg)
     {
         var header = msg.ReadMessage<TextureHeaderMessage>();
         OnStreamHeaderMessageFromServer(header, OnTextureHeaderReceived);
     }
 
+    /// <summary>
+    /// Handler for chunk messages received on the client.
+    /// </summary>
+    /// <param name="msg">Network message received.</param>
     private void OnTextureChunkMessageFromServer(NetworkMessage msg)
     {
         var row = msg.ReadMessage<TextureChunkMessage>();
         OnStreamChunkMessageFromServer(row, OnTextureChunkReceived);
     }
 
+    /// <summary>
+    /// Processes the header messages received on the client.
+    /// </summary>
+    /// <param name="header">Image's header message.</param>
     private void OnTextureHeaderReceived(TextureHeaderMessage header)
     {
         TextureStruc textS = new TextureStruc(header.width, header.height, header.chunkSize);
@@ -203,17 +327,25 @@ public class CamManager : StreamManager
         {
             StartCoroutine(
                 msgData.WaitTillReceiveAllTheStream(
-                    header.id,
+                    header,
                     (uint id) => msgData[id].pixelsReceived < msgData[id].data.Length,
                     streamTimeout));
         }
     }
 
+    /// <summary>
+    /// Processes the chunk messages received on the client.
+    /// </summary>
+    /// <param name="row">Image's chunk message.</param>
     private void OnTextureChunkReceived(TextureChunkMessage row)
     {
         msgData.AddChunk(row, SaveChunk);
     }
 
+    /// <summary>
+    /// Saves on the data structure the data contained in a chunk.
+    /// </summary>
+    /// <param name="row">Image's chunk message.</param>
     private void SaveChunk(TextureChunkMessage row)
     {
         TextureStruc textureStruc = msgData[row.id];
@@ -227,6 +359,11 @@ public class CamManager : StreamManager
             + " pixels currently recived for ID " + row.id + ".");
     }
 
+    /// <summary>
+    /// Regenerates a Texture2D from the complete image structure stored
+    /// on the data structure.
+    /// </summary>
+    /// <param name="id">Identifier of the image received to regenerate.</param>
     private void RegenerateTextureFromReceivedData(uint id)
     {
         Debug.Log("Regenerating texture from received data.");
@@ -238,6 +375,10 @@ public class CamManager : StreamManager
         lastCapturedFrame = texture;
     }
 
+    /// <summary>
+    /// Returns the last captured image.
+    /// </summary>
+    /// <returns>Sprite containing the last captured image.</returns>
     public Sprite ObtainWebcamImage()
     {
         if(lastCapturedFrame != null)
@@ -290,21 +431,30 @@ public class CamManager : StreamManager
         DestroyHandlers(textureMsgType);
     }
 
+    /// <summary>
+    /// Notifies the sever that the stream is starting.
+    /// </summary>
     [Command]
-    protected void CmdStreamIsOn()
+    private void CmdStreamIsOn()
     {
         StreamIsOnServer();
     }
 
+    /// <summary>
+    /// Notifies the sever that the stream has finished.
+    /// </summary>
     [Command]
-    protected void CmdStreamIsOff()
+    private void CmdStreamIsOff()
     {
         StreamIsOffServer();
         RpcStreamIsOff();
     }
 
+    /// <summary>
+    /// Notifies all the clients that the stream has finished.
+    /// </summary>
     [ClientRpc]
-    protected void RpcStreamIsOff()
+    private void RpcStreamIsOff()
     {
         msgData.RemoveAllStreams();
         lastCapturedFrame = null;

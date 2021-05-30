@@ -125,7 +125,7 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
         /// </summary>
         /// <param name="netId">Network identifier of the player object who sent the message.</param>
         /// <param name="id">Identifier of the stream.</param>
-        /// <param name="o">Position in the sequence of chunks with the same id. Starts in cero.</param>
+        /// <param name="o">Position in the sequence of chunks with the same id. Starts in zero.</param>
         public StreamChunkMessage(uint netId, uint id, int o)
         {
             this.netId = netId;
