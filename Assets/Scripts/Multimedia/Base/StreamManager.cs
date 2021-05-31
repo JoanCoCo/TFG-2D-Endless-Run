@@ -155,10 +155,10 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
     /// Class that gives support to the data structures needed to manage the media
     /// streaming.
     /// </summary>
-    /// <typeparam name="Struc">Type struct that represents the media that will be streamed.</typeparam>
+    /// <typeparam name="struc">Type struct that represents the media that will be streamed.</typeparam>
     /// <typeparam name="headerMsg">Class derived from StreamHeaderMessage that contains all the additional header information needed for the media.</typeparam>
     /// <typeparam name="chunkMsg">Class derived from StreamChunkMessage that contains all the chunk data needed for the media.</typeparam>
-    protected class StreamMessageDataSupport<Struc, headerMsg, chunkMsg>
+    protected class StreamMessageDataSupport<struc, headerMsg, chunkMsg>
         where chunkMsg : StreamChunkMessage
         where headerMsg : StreamHeaderMessage
     {
@@ -171,7 +171,7 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
         /// <summary>
         /// Dictionary that stores the reconstructed media.
         /// </summary>
-        private Dictionary<uint, Struc> streamData;
+        private Dictionary<uint, struc> streamData;
 
         /// <summary>
         /// List that contains all the stream ids received ordered by their timestamp.
@@ -235,7 +235,7 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
         /// </summary>
         /// <param name="id">Identifier of a stream.</param>
         /// <returns></returns>
-        public Struc this[uint id]
+        public struc this[uint id]
         {
             get
             {
@@ -282,7 +282,7 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
         public StreamMessageDataSupport(float unheadedChunksTimeout)
         {
             streamWasFullyReceived = new Dictionary<uint, bool>();
-            streamData = new Dictionary<uint, Struc>();
+            streamData = new Dictionary<uint, struc>();
             streamIdsReceived = new KeySortedList<uint, long>();
             unheadedChunks = new List<(chunkMsg, float)>();
             amountOfEarlyChunks = new Dictionary<uint, int>();
@@ -358,7 +358,7 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
         /// <param name="header">Header message.</param>
         /// <param name="streamS">Media associated to the header message.</param>
         /// <param name="SaveChunk">Methodd that takes a chunk message and saves its data.</param>
-        public void RecoverEarlyChunks(headerMsg header, Struc streamS, StreamChunkHandler<chunkMsg> SaveChunk)
+        public void RecoverEarlyChunks(headerMsg header, struc streamS, StreamChunkHandler<chunkMsg> SaveChunk)
         {
             streamData[header.id] = streamS;
             streamWasFullyReceived[header.id] = false;
@@ -388,7 +388,7 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
         /// <summary>
         /// Checks if a given header has arrived late. If its timestamp is lower or
         /// equal than the first timestamp in the registered sequence then the information
-        /// saved for this header message is discarded.
+        /// saved for this header message is discarded. If not, then the header is added.
         /// </summary>
         /// <param name="header">Header message.</param>
         /// <returns></returns>
