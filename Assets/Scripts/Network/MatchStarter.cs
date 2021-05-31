@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking;
-using UnityEngine.SceneManagement;
+using MLAPI;
+using MLAPI.NetworkVariable;
+using MLAPI.Messaging;
 
 public class MatchStarter : DistributedEntityBehaviour, InteractableObject
 {
@@ -11,20 +12,23 @@ public class MatchStarter : DistributedEntityBehaviour, InteractableObject
     [SerializeField] private int minNumberOfPlayers;
     [SerializeField] private int maxNumberOfPlayers;
 
-    [SyncVar]
-    int currNumberOfPlayers = 0;
+    private NetworkVariable<int> currNumberOfPlayers = new NetworkVariable<int>();
 
     private bool readyConfirmationPending = true;
     private bool gameIsStarting = false;
     [SerializeField] private float matchCountdown = 60;
     [SerializeField] private string gameScene;
-    private NetworkIdentity netIdentity;
+    private NetworkObject netIdentity;
     private float currentCountdown = 0; 
 
-    private void Start()
+    public override void NetworkStart()
     {
+        if(IsServer)
+        {
+            currNumberOfPlayers.Value = 0;
+        }
         if (netManager == null) netManager = GameObject.FindWithTag("NetManager").GetComponent<NetworkManager>();
-        netIdentity = GetComponent<NetworkIdentity>();
+        netIdentity = GetComponent<NetworkObject>();
         currentCountdown = matchCountdown;
     }
 
@@ -35,7 +39,7 @@ public class MatchStarter : DistributedEntityBehaviour, InteractableObject
 
     public void Interact()
     {
-        if (readyConfirmationPending && currNumberOfPlayers < maxNumberOfPlayers)
+        if (readyConfirmationPending && currNumberOfPlayers.Value < maxNumberOfPlayers)
         {
             readyConfirmationPending = false;
             Messenger.Broadcast(LobbyEvent.WAITING_FOR_MATCH);
@@ -45,20 +49,20 @@ public class MatchStarter : DistributedEntityBehaviour, InteractableObject
 
     private void UpdateNumberOfPlayersCommandCapsule(string player)
     {
-        CmdUpdateNumberOfReadyPlayers(player);
+        UpdateNumberOfReadyPlayersServerRpc(player);
     }
 
-    [Command]
-    private void CmdUpdateNumberOfReadyPlayers(string player)
+    [ServerRpc]
+    private void UpdateNumberOfReadyPlayersServerRpc(string player)
     {
-        if (currNumberOfPlayers < maxNumberOfPlayers)
+        if (currNumberOfPlayers.Value < maxNumberOfPlayers)
         {
-            currNumberOfPlayers += 1;
+            currNumberOfPlayers.Value += 1;
             //RpcUpdateNumberOfReadyPlayers(currNumberOfPlayers);
-            if (gameIsStarting) RpcGetReadyForMatch();
+            if (gameIsStarting) GetReadyForMatchClientRpc();
             Debug.Log("Server Ready Players: " + currNumberOfPlayers.ToString());
         }
-        RpcNewPlayerReadyForMatch(player);
+        NewPlayerReadyForMatchClientRpc(player);
         RemoveOwnership();
     }
 
@@ -70,7 +74,7 @@ public class MatchStarter : DistributedEntityBehaviour, InteractableObject
     }*/
 
     [ClientRpc]
-    private void RpcGetReadyForMatch()
+    private void GetReadyForMatchClientRpc()
     {
         if (!readyConfirmationPending)
         {
@@ -79,13 +83,13 @@ public class MatchStarter : DistributedEntityBehaviour, InteractableObject
     }
 
     [ClientRpc]
-    private void RpcNewPlayerReadyForMatch(string player)
+    private void NewPlayerReadyForMatchClientRpc(string player)
     {
         Messenger<string>.Broadcast(LobbyEvent.NEW_PLAYER_READY_FOR_MATCH, player);
     }
 
     [ClientRpc]
-    private void RpcUpdateCountdown(float countdown)
+    private void UpdateCountdownClientRpc(float countdown)
     {
         if(gameIsStarting)
         {
@@ -96,37 +100,37 @@ public class MatchStarter : DistributedEntityBehaviour, InteractableObject
 
     private void Update()
     {
-        if(isServer)
+        if(IsServer)
         {
-            if(currNumberOfPlayers >= minNumberOfPlayers && !gameIsStarting)
+            if(currNumberOfPlayers.Value >= minNumberOfPlayers && !gameIsStarting)
             {
                 gameIsStarting = true;
-                RpcGetReadyForMatch();
+                GetReadyForMatchClientRpc();
             }
 
             if (gameIsStarting)
             {
                 if (currentCountdown > 0.0f)
                 {
-                    RpcUpdateCountdown(currentCountdown - Time.deltaTime);
+                    UpdateCountdownClientRpc(currentCountdown - Time.deltaTime);
                 }
                 else
                 {
                     //netManager.ServerChangeScene(gameScene);
                     //Messenger.Broadcast(NetworkEvent.SPLIT);
-                    RpcSendSplit();
-                    currNumberOfPlayers = 0;
+                    SendSplitClientRpc();
+                    currNumberOfPlayers.Value = 0;
                     readyConfirmationPending = true;
                     gameIsStarting = false;
                     currentCountdown = matchCountdown;
-                    RpcUpdateCountdown(currentCountdown);
+                    UpdateCountdownClientRpc(currentCountdown);
                 }
             }
         }
     }
 
     [ClientRpc]
-    private void RpcSendSplit()
+    private void SendSplitClientRpc()
     {
         RemoveOwnership();
         Messenger<string>.Broadcast(NetworkEvent.SPLIT, gameScene);

@@ -1,12 +1,14 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking;
+using MLAPI.NetworkVariable;
+using MLAPI.Messaging;
+using MLAPI;
 
 public class ScoresManager : DistributedEntityBehaviour
 {
     private List<(string, int)> scores = new List<(string, int)>();
-    [SyncVar] private int numOfScoresNeeded;
+    private NetworkVariable<int> numOfScoresNeeded = new NetworkVariable<int>();
     private int currentScoresReceived;
     private bool myPlayerDied = false;
     private bool myPlayedIsDestroyed = false;
@@ -14,15 +16,15 @@ public class ScoresManager : DistributedEntityBehaviour
 
     [SerializeField] private ScoreScreen scoreScreen;
 
-    private void Start()
+    public override void NetworkStart()
     {
         Messenger<(string, int)>.AddListener(GameEvent.PLAYER_SCORE_OBTAINED, OnPlayerScoreObtained);
-        if(isServer) numOfScoresNeeded = GameObject.FindWithTag("PlayersManager").GetComponent<PlayersManager>().NumberOfPlayers;
+        if(IsServer) numOfScoresNeeded.Value = GameObject.FindWithTag("PlayersManager").GetComponent<PlayersManager>().NumberOfPlayers;
     }
 
     private void Update()
     {
-        if(currentScoresReceived == numOfScoresNeeded && !scoresHaveBeenDelivered)
+        if(currentScoresReceived == numOfScoresNeeded.Value && !scoresHaveBeenDelivered)
         {
             DeliverScores();
             scoresHaveBeenDelivered = true;
@@ -45,22 +47,22 @@ public class ScoresManager : DistributedEntityBehaviour
 
     private void SyncScoreCommandCapsule(string player, int d)
     {
-        CmdSyncScores(player, d);
+        SyncScoresServerRpc(player, d);
     }
 
-    [Command]
-    private void CmdSyncScores(string player, int d)
+    [ServerRpc]
+    private void SyncScoresServerRpc(string player, int d)
     {
-        RpcSyncScores(player, d);
+        SyncScoresClientRpc(player, d);
     }
 
     [ClientRpc]
-    private void RpcSyncScores(string player, int d)
+    private void SyncScoresClientRpc(string player, int d)
     {
         scores.InsertIntoSortedList((player, d), (p1, p2) => p1.Item2.CompareTo(p2.Item2));
         if (myPlayerDied && !myPlayedIsDestroyed)
         {
-            NetworkServer.Destroy(GameObject.FindWithTag("LocalPlayer"));
+            GetComponent<NetworkObject>().Despawn(GameObject.FindWithTag("LocalPlayer"));
             myPlayedIsDestroyed = true;
         }
         currentScoresReceived += 1;

@@ -17,7 +17,7 @@ public class PopUpBehaviour : MonoBehaviour
     {
         Debug.Log("Someone in range.");
         if (other.gameObject.CompareTag("LocalPlayer")
-            && other.gameObject.GetComponent<Player>().isLocalPlayer)
+            && other.gameObject.GetComponent<Player>().IsLocalPlayer)
         {
             note.SetActive(true);
         }
@@ -26,7 +26,7 @@ public class PopUpBehaviour : MonoBehaviour
     private void OnTriggerExit2D(Collider2D other)
     {
         if (other.gameObject.CompareTag("LocalPlayer")
-            && other.gameObject.GetComponent<Player>().isLocalPlayer
+            && other.gameObject.GetComponent<Player>().IsLocalPlayer
             && note.activeSelf)
         {
             note.SetActive(false);

@@ -2,15 +2,16 @@ using System.Collections;
 using System.Collections.Generic;
 using System.Linq;
 using UnityEngine;
-using UnityEngine.Networking;
+using MLAPI;
+using MLAPI.Transports.UNET;
 
-[RequireComponent(typeof(NetworkDiscovery))]
+[RequireComponent(typeof(UnityEngine.Networking.NetworkDiscovery))]
 public class PlayersFinder : MonoBehaviour
 {
     [SerializeField] private float maxWaitSecondsForServer = 10.0f;
     [SerializeField] private NetworkManager netManager;
     [SerializeField] private GameObject connectingWindow;
-    private NetworkDiscovery netDiscovery;
+    private UnityEngine.Networking.NetworkDiscovery netDiscovery;
     private float elapsedTime = 0.0f;
     private bool isConnected = false;
     private float waitSecondsForServer;
@@ -18,7 +19,7 @@ public class PlayersFinder : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        netDiscovery = GetComponent<NetworkDiscovery>();
+        netDiscovery = GetComponent<UnityEngine.Networking.NetworkDiscovery>();
         netDiscovery.Initialize();
         netDiscovery.StartAsClient();
         if (netManager == null) netManager = GameObject.FindWithTag("NetManager").GetComponent<NetworkManager>();
@@ -48,23 +49,24 @@ public class PlayersFinder : MonoBehaviour
             {
                 var brdReceived = netDiscovery.broadcastsReceived;
                 var brdKeys = brdReceived.Keys.ToArray();
-                NetworkBroadcastResult invitation = brdReceived[brdKeys[0]];
-                string msg = NetworkDiscovery.BytesToString(invitation.broadcastData);
+                UnityEngine.Networking.NetworkBroadcastResult invitation = brdReceived[brdKeys[0]];
+                string msg = UnityEngine.Networking.NetworkDiscovery.BytesToString(invitation.broadcastData);
                 Debug.Log("Broadcast from host at " + invitation.serverAddress + " was received: " + msg);
                 Debug.Log("Port: " + msg.Split(':')[2]);
-                netManager.networkPort = int.Parse(msg.Split(':').Last()); //NetworkManager:address:port
-                netManager.networkAddress = invitation.serverAddress;
+                NetworkManager.Singleton.GetComponent<UNetTransport>().ConnectPort = int.Parse(msg.Split(':').Last()); //NetworkManager:address:port
+                NetworkManager.Singleton.GetComponent<UNetTransport>().ConnectAddress = invitation.serverAddress;
                 netManager.StartClient();
                 isConnected = true;
                 netDiscovery.StopBroadcast();
                 if (connectingWindow != null) connectingWindow.SetActive(false);
-                NetworkManager.singleton.client.RegisterHandler(MsgType.Disconnect, OnNetworkDisconnect);
+                //NetworkManager.singleton.client.RegisterHandler(MsgType.Disconnect, OnNetworkDisconnect);
+                NetworkManager.Singleton.OnClientDisconnectCallback += OnNetworkDisconnect;
                 //netDiscovery.broadcastsReceived.Clear();
             }
         }
     }
 
-    private void OnNetworkDisconnect(NetworkMessage msg)
+    private void OnNetworkDisconnect(ulong id)
     {
         if (isConnected)
         {

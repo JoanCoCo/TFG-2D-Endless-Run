@@ -1,32 +1,35 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking;
+using MLAPI;
+using MLAPI.NetworkVariable;
+using MLAPI.Messaging;
+using MLAPI.Transports.UNET;
 using UnityEngine.SceneManagement;
+using MLAPI.SceneManagement;
 
 public class PlayersManager : DistributedEntityBehaviour
 {
     [SerializeField]
     private NetworkManager netManager;
 
-    [SyncVar]
-    private int numberOfPlayers = 0;
+    private NetworkVariable<int> numberOfPlayers = new NetworkVariable<int>();
 
     private bool iAmServer = false;
 
-    [SerializeField] private List<uint> currentPlayerGroup = new List<uint>();
-    [SerializeField] private List<uint> nextPlayerGroup = new List<uint>();
+    [SerializeField] private List<ulong> currentPlayerGroup = new List<ulong>();
+    [SerializeField] private List<ulong> nextPlayerGroup = new List<ulong>();
 
-    private uint myPlayerId = 0;
+    private ulong myPlayerId = 0;
 
     private bool waitingForMatch = false;
 
-    private Dictionary<uint, string> playersIpAddresses = new Dictionary<uint, string>();
+    private Dictionary<ulong, string> playersIpAddresses = new Dictionary<ulong, string>();
 
     public int NumberOfPlayers {
         get
         {
-            return numberOfPlayers;
+            return numberOfPlayers.Value;
         }
     }
 
@@ -47,9 +50,9 @@ public class PlayersManager : DistributedEntityBehaviour
         }
     }
 
-    private void PrepareSplitCommandCapsule(uint nwId)
+    private void PrepareSplitCommandCapsule(ulong nwId)
     {
-        CmdPreparePlayerSplit(nwId);
+        PreparePlayerSplitServerRpc(nwId);
     }
 
     private void OnSplit(string newScene)
@@ -63,7 +66,7 @@ public class PlayersManager : DistributedEntityBehaviour
         {
             Debug.Log("Isolating host...");
             bool isFirst = true;
-            int port = netManager.networkPort + 1;
+            int port = NetworkManager.Singleton.GetComponent<UNetTransport>().ConnectPort + 1;
             string address = "";
             RemoveOwnership();
             foreach (var player in currentPlayerGroup)
@@ -73,14 +76,14 @@ public class PlayersManager : DistributedEntityBehaviour
                     if (isFirst)
                     {
                         Debug.Log("Setting up split's host");
-                        RpcBecomeHost(player, currentPlayerGroup.Count, port, false, "");
+                        BecomeHostClientRpc(player, currentPlayerGroup.Count, port, false, "");
                         isFirst = false;
                         address = playersIpAddresses[player];
                     }
                     else
                     {
                         Debug.Log("Reconnecting splitted clients to the new host.");
-                        RpcChangeClientConnection(player, port, address);
+                        ChangeClientConnectionClientRpc(player, port, address);
                     }
                 }
             }
@@ -91,18 +94,18 @@ public class PlayersManager : DistributedEntityBehaviour
                     if (isFirst)
                     {
                         Debug.Log("Setting up split's host");
-                        RpcBecomeHost(player, currentPlayerGroup.Count, port, false, "");
+                        BecomeHostClientRpc(player, currentPlayerGroup.Count, port, false, "");
                         isFirst = false;
                         address = playersIpAddresses[player];
                     }
                     else
                     {
                         Debug.Log("Reconnecting splitted clients to the new host.");
-                        RpcChangeClientConnection(player, port, address);
+                        ChangeClientConnectionClientRpc(player, port, address);
                     }
                 }
             }
-            GameObject.FindWithTag("PlayersFinder").GetComponent<NetworkDiscovery>().StopBroadcast();
+            GameObject.FindWithTag("PlayersFinder").GetComponent<UnityEngine.Networking.NetworkDiscovery>().StopBroadcast();
             CloseHost(closer);
         }
     }
@@ -120,7 +123,7 @@ public class PlayersManager : DistributedEntityBehaviour
     {
         Debug.Log("Processing split.");
         bool isFirst = true;
-        int port = netManager.networkPort + 1;
+        int port = NetworkManager.Singleton.GetComponent<UNetTransport>().ConnectPort + 1;
         string address = "";
         RemoveOwnership();
         if (nextPlayerGroup.Contains(myPlayerId))
@@ -131,21 +134,21 @@ public class PlayersManager : DistributedEntityBehaviour
                 if(isFirst)
                 {
                     Debug.Log("Setting up split's host");
-                    RpcBecomeHost(player, currentPlayerGroup.Count, port, false, "");
+                    BecomeHostClientRpc(player, currentPlayerGroup.Count, port, false, "");
                     isFirst = false;
                     address = playersIpAddresses[player];
                 } else
                 {
                     Debug.Log("Reconnecting splitted clients to the new host.");
-                    RpcChangeClientConnection(player, port, address);
+                    ChangeClientConnectionClientRpc(player, port, address);
                 }
             }
             //new WaitForSeconds(0.1f);
-            numberOfPlayers = nextPlayerGroup.Count;
+            numberOfPlayers.Value = nextPlayerGroup.Count;
             var playersFinder = GameObject.FindWithTag("PlayersFinder");
-            playersFinder.GetComponent<NetworkDiscovery>().StopBroadcast();
+            playersFinder.GetComponent<UnityEngine.Networking.NetworkDiscovery>().StopBroadcast();
             Destroy(playersFinder);
-            netManager.ServerChangeScene(newScene);
+            NetworkSceneManager.SwitchScene(newScene);
         }
         else
         {
@@ -155,24 +158,24 @@ public class PlayersManager : DistributedEntityBehaviour
                 if (isFirst) 
                 {
                     Debug.Log("Setting up a new host");
-                    RpcBecomeHost(player, nextPlayerGroup.Count, port, true, newScene);
+                    BecomeHostClientRpc(player, nextPlayerGroup.Count, port, true, newScene);
                     isFirst = false;
                     address = playersIpAddresses[player];
                 }
                 else
                 {
                     Debug.Log("Reconnecting clients to the new host.");
-                    RpcChangeClientConnection(player, port, address);
+                    ChangeClientConnectionClientRpc(player, port, address);
                 }
                 playersIpAddresses.Remove(player);
-                numberOfPlayers -= 1;
+                numberOfPlayers.Value -= 1;
             }
             nextPlayerGroup.Clear();
         }
     }
 
     [ClientRpc]
-    private void RpcBecomeHost(uint nwId, int numOfPly, int port, bool changeScene, string scene)
+    private void BecomeHostClientRpc(ulong nwId, int numOfPly, int port, bool changeScene, string scene)
     {
         if (myPlayerId == nwId)
         {
@@ -183,13 +186,13 @@ public class PlayersManager : DistributedEntityBehaviour
     private void BecomeHost(int numOfPly, int port, bool changeScene, string scene)
     {
         Debug.Log("Becoming host...");
-        NetworkServer.Destroy(GameObject.FindWithTag("LocalPlayer"));
+        GameObject.FindWithTag("LocalPlayer").GetComponent<NetworkObject>().Despawn();
         currentPlayerGroup.Clear();
         nextPlayerGroup.Clear();
         playersIpAddresses.Clear();
         netManager.StopClient();
-        netManager.networkPort = port;
-        numberOfPlayers = 0;
+        NetworkManager.Singleton.GetComponent<UNetTransport>().ConnectPort = port; //netManager.networkPort = port;
+        numberOfPlayers.Value = 0;
         if(!changeScene) GameObject.FindWithTag("PlayersFinder").GetComponent<PlayersFinder>().SetUpAsHost();
         netManager.StartHost();
         //AddServerPlayer();
@@ -199,44 +202,56 @@ public class PlayersManager : DistributedEntityBehaviour
     IEnumerator WaitAndTransit(int n, string scene)
     {
         Debug.Log("Waiting for the rest of players.");
-        while (numberOfPlayers < n)
+        while (numberOfPlayers.Value < n)
         {
             yield return new WaitForSeconds(0.01f);
         }
         yield return new WaitForSeconds(0.5f);
-        netManager.ServerChangeScene(scene);
+        NetworkSceneManager.SwitchScene(scene);
     }
 
     private Coroutine ChangeSceneWhenReady(int n, string scene) => StartCoroutine(WaitAndTransit(n, scene));
 
     [ClientRpc]
-    private void RpcChangeClientConnection(uint nwId, int port, string address)
+    private void ChangeClientConnectionClientRpc(ulong nwId, int port, string address)
     {
         if (myPlayerId == nwId)
         {
             Debug.Log("Changing connection to host.");
-            NetworkServer.Destroy(GameObject.FindWithTag("LocalPlayer"));
+            GameObject.FindWithTag("LocalPlayer").GetComponent<NetworkObject>().Despawn();
             netManager.StopClient();
             //numberOfPlayers = 0;
-            netManager.networkPort = port;
-            netManager.networkAddress = address;
+            NetworkManager.Singleton.GetComponent<UNetTransport>().ConnectPort = port; //netManager.networkPort = port;
+            NetworkManager.Singleton.GetComponent<UNetTransport>().ConnectAddress = address; //netManager.networkAddress = address;
             netManager.StartClient();
         }
     }
 
-    [Command]
-    private void CmdPreparePlayerSplit(uint nwId)
+    [ServerRpc]
+    private void PreparePlayerSplitServerRpc(ulong nwId)
     {
         currentPlayerGroup.Remove(nwId);
         nextPlayerGroup.Add(nwId);
         RemoveOwnership();
     }
 
-    private void Start()
+    public override void NetworkStart()
     {
         if (netManager == null)
         {
             netManager = GameObject.FindWithTag("NetManager").GetComponent<NetworkManager>();
+        }
+        if (IsServer) numberOfPlayers.Value = 0;
+
+        if (!iAmServer)
+        {
+            Debug.Log("I'm not server, adding my player.");
+            StartCoroutine(FindPlayer());
+        }
+        else
+        {
+            Debug.Log("I'm the server, adding my player.");
+            AddServerPlayer();
         }
     }
 
@@ -245,7 +260,7 @@ public class PlayersManager : DistributedEntityBehaviour
         Debug.Log(numberOfPlayers.ToString() + " players currently connected.");
     }
 
-    public override void OnStartClient()
+    /*public override void OnStartClient()
     {
         if(!iAmServer)
         {
@@ -256,11 +271,11 @@ public class PlayersManager : DistributedEntityBehaviour
             Debug.Log("I'm the server, adding my player.");
             AddServerPlayer();
         }
-    }
+    }*/
 
-    private void AddPlayerCommandCapsule(uint nwId)
+    private void AddPlayerCommandCapsule(ulong nwId)
     {
-        CmdAddPlayer(nwId);
+        AddPlayerServerRpc(nwId);
     }
 
     IEnumerator RegisterLocalPlayer()
@@ -272,8 +287,8 @@ public class PlayersManager : DistributedEntityBehaviour
             player = GameObject.FindGameObjectWithTag("LocalPlayer");
             yield return new WaitForSeconds(0.01f);
         }
-        myPlayerId = player.GetComponent<NetworkIdentity>().netId.Value;
-        //playersIpAddresses.Add(myPlayerId, player.GetComponent<NetworkIdentity>().connectionToClient.address);
+        myPlayerId = player.GetComponent<NetworkObject>().NetworkObjectId;
+        //playersIpAddresses.Add(myPlayerId, player.GetComponent<NetworkObject>().connectionToClient.address);
         RegisterNewPlayer(myPlayerId);
     }
 
@@ -286,23 +301,23 @@ public class PlayersManager : DistributedEntityBehaviour
             player = GameObject.FindGameObjectWithTag("LocalPlayer");
             yield return new WaitForSeconds(0.01f);
         }
-        myPlayerId = player.GetComponent<NetworkIdentity>().netId.Value;
-        //Debug.Log("Connection with server IP: " + player.GetComponent<NetworkIdentity>().connectionToServer.address);
+        myPlayerId = player.GetComponent<NetworkObject>().NetworkObjectId;
+        //Debug.Log("Connection with server IP: " + player.GetComponent<NetworkObject>().connectionToServer.address);
         RunCommand(AddPlayerCommandCapsule, myPlayerId);
     }
 
-    IEnumerator WaitAuthorityUnregister(uint id, LobbyCloser closer)
+    IEnumerator WaitAuthorityUnregister(ulong id, LobbyCloser closer)
     {
         GetAuthority();
         if(!iAmServer)
         {
-            NetworkIdentity netIdentity = GetComponent<NetworkIdentity>();
-            while (!netIdentity.hasAuthority)
+            NetworkObject netIdentity = GetComponent<NetworkObject>();
+            while (!netIdentity.IsOwner)
             {
                 yield return new WaitForSeconds(0.01f);
             }
         }
-        CmdUnregister(id);
+        UnregisterServerRpc(id);
         Debug.Log("Client has been unregistered.");
         StartCoroutine(WaitToAuthorityRemoval(closer));
     }
@@ -311,12 +326,12 @@ public class PlayersManager : DistributedEntityBehaviour
     {
         if (!iAmServer)
         {
-            NetworkIdentity netIdentity = GetComponent<NetworkIdentity>();
-            while (netIdentity.hasAuthority)
+            NetworkObject netIdentity = GetComponent<NetworkObject>();
+            while (netIdentity.IsOwner)
             {
                 yield return new WaitForSeconds(0.01f);
             }
-            NetworkServer.Destroy(GameObject.FindWithTag("LocalPlayer"));
+            GetComponent<NetworkObject>().Despawn(GameObject.FindWithTag("LocalPlayer"));
             netManager.StopClient();
             Debug.Log("Closing game...");
             Destroy(gameObject);
@@ -324,30 +339,30 @@ public class PlayersManager : DistributedEntityBehaviour
         }
     }
 
-    private Coroutine Unregister(uint id, LobbyCloser closer) => StartCoroutine(WaitAuthorityUnregister(id, closer));
+    private Coroutine Unregister(ulong id, LobbyCloser closer) => StartCoroutine(WaitAuthorityUnregister(id, closer));
 
     private Coroutine AddServerPlayer() => StartCoroutine(RegisterLocalPlayer());
 
-    public override void OnStartServer()
+    public void OnServerInitialized()
     {
         Debug.Log("Starting the server...");
         iAmServer = true;
-        numberOfPlayers = 0;
+        numberOfPlayers.Value = 0;
     }
 
-    [Command]
-    private void CmdAddPlayer(uint nwId)
+    [ServerRpc]
+    private void AddPlayerServerRpc(ulong nwId)
     {
         RegisterNewPlayer(nwId);
-        GameObject nwPlayer = NetworkServer.FindLocalObject(new NetworkInstanceId(nwId));
-        playersIpAddresses.Add(nwId, nwPlayer.GetComponent<NetworkIdentity>().connectionToClient.address);
-        //Debug.Log("Connection with client IP: " + nwPlayer.GetComponent<NetworkIdentity>().connectionToClient.address);
+        NetworkObject nwPlayer = NetworkManager.Singleton.ConnectedClients[nwId].PlayerObject; // NetworkServer.FindLocalObject(new NetworkInstanceId(nwId));
+        playersIpAddresses.Add(nwId, "" /*nwPlayer.connectionToClient.address*/);
+        //Debug.Log("Connection with client IP: " + nwPlayer.GetComponent<NetworkObject>().connectionToClient.address);
         RemoveOwnership();
     }
 
-    private void RegisterNewPlayer(uint nwId)
+    private void RegisterNewPlayer(ulong nwId)
     {
-        numberOfPlayers += 1;
+        numberOfPlayers.Value += 1;
         currentPlayerGroup.Add(nwId);
         Debug.Log("Received " + nwId.ToString());
     }
@@ -376,9 +391,9 @@ public class PlayersManager : DistributedEntityBehaviour
 
     IEnumerator WaitBeforeClosing(LobbyCloser closer)
     {
-        while(netManager.numPlayers > 1)
+        while(netManager.ConnectedClients.Count > 1)
         {
-            Debug.Log("Waiting, currently connected players: " + netManager.numPlayers);
+            Debug.Log("Waiting, currently connected players: " + netManager.ConnectedClients.Count);
             yield return new WaitForSeconds(0.01f);
         }
         netManager.StopHost();
@@ -388,15 +403,15 @@ public class PlayersManager : DistributedEntityBehaviour
 
     private Coroutine CloseHost(LobbyCloser closer = null) => StartCoroutine(WaitBeforeClosing(closer));
 
-    [Command]
-    private void CmdUnregister(uint id)
+    [ServerRpc]
+    private void UnregisterServerRpc(ulong id)
     {
         Debug.Log("Unregistering " + id);
         if(currentPlayerGroup.Contains(id))
         {
             currentPlayerGroup.Remove(id);
             playersIpAddresses.Remove(id);
-            numberOfPlayers -= 1;
+            numberOfPlayers.Value -= 1;
             RemoveOwnership();
             return;
         }
@@ -405,7 +420,7 @@ public class PlayersManager : DistributedEntityBehaviour
         {
             nextPlayerGroup.Remove(id);
             playersIpAddresses.Remove(id);
-            numberOfPlayers -= 1;
+            numberOfPlayers.Value -= 1;
             RemoveOwnership();
             return;
         }

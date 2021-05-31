@@ -1,8 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking;
 using Cinemachine;
+using MLAPI;
 
 public class GameController : NetworkBehaviour
 {
@@ -28,7 +28,7 @@ public class GameController : NetworkBehaviour
     }
 
     // Start is called before the first frame update
-    void Start()
+    public override void NetworkStart()
     {
         cameraSet = GameObject.FindWithTag("CameraSet").GetComponent<CinemachineVirtualCamera>();
         myLocalPlayer = PlayerPrefs.GetString("Name");
@@ -100,7 +100,7 @@ public class GameController : NetworkBehaviour
             //Messenger.Broadcast(GameEvent.GAME_FINISHED);
         }
 
-        if(isServer)
+        if(IsServer)
         {
             float lastX;
             if (!playerDied)

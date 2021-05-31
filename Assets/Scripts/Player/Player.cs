@@ -1,10 +1,12 @@
 ﻿using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking;
 using Cinemachine;
 using UnityEngine.SceneManagement;
 using TMPro;
+using MLAPI;
+using MLAPI.NetworkVariable;
+using MLAPI.Messaging;
 
 public class Player : NetworkBehaviour
 {
@@ -23,8 +25,7 @@ public class Player : NetworkBehaviour
     [SerializeField] private TextMeshProUGUI distanceText;
     [SerializeField] private TextMeshProUGUI nameText;
 
-    [SyncVar]
-    private string playerName;
+    private NetworkVariable<string> playerName = new NetworkVariable<string>();
 
     private InteractableObject _currentInteractable;
 
@@ -40,7 +41,7 @@ public class Player : NetworkBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        if (isLocalPlayer)
+        if (IsLocalPlayer)
         {
             gameObject.tag = "LocalPlayer";
             _body = GetComponent<Rigidbody2D>();
@@ -52,12 +53,12 @@ public class Player : NetworkBehaviour
             healthBarObject.SetActive(false);
             textCanvas.SetActive(false);
             nameText.text = "";
-            CmdSetUpName(PlayerPrefs.GetString("Name"));
+            SetUpNameServerRpc(PlayerPrefs.GetString("Name"));
             if (!isInLobby) Messenger<int>.AddListener(GameEvent.DISTANCE_INCREASED, OnDistanceIncreased);
             inputAvailabilityManager = GameObject.FindWithTag("InputAvailabilityManager").GetComponent<InputAvailabilityManager>();
         } else
         {
-            nameText.text = playerName;
+            nameText.text = playerName.Value;
             arrow.SetActive(false);
             if(isInLobby)
             {
@@ -68,23 +69,23 @@ public class Player : NetworkBehaviour
         }
     }
 
-    [Command]
-    private void CmdSetUpName(string pName)
+    [ServerRpc]
+    private void SetUpNameServerRpc(string pName)
     {
-        playerName = pName;
-        RpcSetUpName(pName);
+        playerName.Value = pName;
+        SetUpNameClientRpc();
     }
 
     [ClientRpc]
-    private void RpcSetUpName(string pName)
+    private void SetUpNameClientRpc()
     {
-        if(!isLocalPlayer) nameText.text = playerName;
+        if(!IsLocalPlayer) nameText.text = playerName.Value;
     }
 
     // Update is called once per frame
     void Update()
     {
-        if (isLocalPlayer && health > 0)
+        if (IsLocalPlayer && health > 0)
         {
             Vector2 currentSpeed = _body.velocity;
             if (inputAvailabilityManager == null || !inputAvailabilityManager.UserIsTyping)
@@ -116,7 +117,7 @@ public class Player : NetworkBehaviour
 
     private void FixedUpdate()
     {
-        if (isLocalPlayer)
+        if (IsLocalPlayer)
         {
             if (!isInLobby && health > 0) Messenger<float>.Broadcast(GameEvent.PLAYER_MOVED, gameObject.transform.position.x);
         }
@@ -124,19 +125,19 @@ public class Player : NetworkBehaviour
 
     private void OnDistanceIncreased(int d)
     {
-        CmdDistanceIncreased(d);
+        DistanceIncreasedServerRpc(d);
     }
 
-    [Command]
-    private void CmdDistanceIncreased(int d)
+    [ServerRpc]
+    private void DistanceIncreasedServerRpc(int d)
     {
-        RpcDistanceIncreased(d);
+        DistanceIncreasedClientRpc(d);
     }
 
     [ClientRpc]
-    private void RpcDistanceIncreased(int d)
+    private void DistanceIncreasedClientRpc(int d)
     {
-        if(!isLocalPlayer) distanceText.text = d.ToString() + " m";
+        if(!IsLocalPlayer) distanceText.text = d.ToString() + " m";
     }
 
     private bool IsTouchingGround()
@@ -180,7 +181,7 @@ public class Player : NetworkBehaviour
 
     private void OnTriggerEnter2D(Collider2D other)
     {
-        if(isLocalPlayer && other.gameObject.CompareTag("Interactable") && health > 0)
+        if(IsLocalPlayer && other.gameObject.CompareTag("Interactable") && health > 0)
         {
             Debug.Log("Interactable in range.");
             _currentInteractable = other.gameObject.GetComponent<InteractableObject>();
@@ -189,7 +190,7 @@ public class Player : NetworkBehaviour
 
     private void OnTriggerExit2D(Collider2D other)
     {
-        if (isLocalPlayer && other.gameObject.CompareTag("Interactable") && health > 0)
+        if (IsLocalPlayer && other.gameObject.CompareTag("Interactable") && health > 0)
         {
             Debug.Log("Interactable out of range.");
             _currentInteractable = null;
@@ -198,7 +199,7 @@ public class Player : NetworkBehaviour
 
     private void OnCollisionEnter2D(Collision2D collision)
     {
-        if(isLocalPlayer && collision.gameObject.CompareTag("Damage") && health > 0)
+        if(IsLocalPlayer && collision.gameObject.CompareTag("Damage") && health > 0)
         {
             ReceiveDamage(1);
         }
@@ -209,27 +210,27 @@ public class Player : NetworkBehaviour
     {
         health = (damage > health) ? 0 : health - damage;
         Messenger<float>.Broadcast(GameEvent.PLAYER_HEALTH_CHANGED, (float) health / maxHealth);
-        CmdUpdateHealth(health);
+        UpdateHealthServerRpc(health);
         if (health == 0)
         {
             Messenger.Broadcast(GameEvent.PLAYER_DIED);
         }
     }
 
-    [Command]
-    private void CmdUpdateHealth(int health)
+    [ServerRpc]
+    private void UpdateHealthServerRpc(int health)
     {
         this.health = health;
         if (health == 0)
         {
-            RpcHidePlayer();
+            HidePlayerClientRpc();
             //NetworkServer.Destroy(gameObject);
         }
-        RpcUpdateHealthBar(health);
+        UpdateHealthBarClientRpc(health);
     }
 
     [ClientRpc]
-    private void RpcHidePlayer()
+    private void HidePlayerClientRpc()
     {
         arrow.SetActive(false);
         healthBarObject.SetActive(false);
@@ -238,36 +239,38 @@ public class Player : NetworkBehaviour
         GetComponent<SpriteRenderer>().sprite = null;
     }
 
-    [Command]
-    public void CmdSetAuth(NetworkInstanceId objectId, NetworkIdentity player)
+    [ServerRpc]
+    public void SetAuthServerRpc(ulong objectId)
     {
-        var iObject = NetworkServer.FindLocalObject(objectId);
-        var networkIdentity = iObject.GetComponent<NetworkIdentity>();
-        var otherOwner = networkIdentity.clientAuthorityOwner;
-
-        if (otherOwner == player.connectionToClient)
+        //var iObject = NetworkServer.FindLocalObject(objectId);
+        var NetworkObject = GetNetworkObject(objectId); //iObject.GetComponent<NetworkObject>();
+        //var otherOwner = NetworkObject.clientAuthorityOwner;
+        ulong myId = NetworkManager.Singleton.LocalClientId;
+        if (NetworkManager.Singleton.ConnectedClients[myId].OwnedObjects.Contains(NetworkObject))
         {
             return;
         }
         else
         {
-            if (otherOwner != null)
+            /*if (otherOwner != null)
             {
-                networkIdentity.RemoveClientAuthority(otherOwner);
-            }
-            networkIdentity.AssignClientAuthority(connectionToClient);
-            Debug.Log("Authority given to " + networkIdentity.netId.ToString());
+                NetworkObject.RemoveClientAuthority(otherOwner);
+            }*/
+            //NetworkObject.AssignClientAuthority(connectionToClient);
+            NetworkObject.RemoveOwnership();
+            NetworkObject.ChangeOwnership(myId);
+            Debug.Log("Authority given to " + NetworkObject.NetworkObjectId);
         }
     }
 
     [ClientRpc]
-    private void RpcUpdateHealthBar(int h)
+    private void UpdateHealthBarClientRpc(int h)
     {
-        if(!isLocalPlayer) healthBar.transform.localScale = new Vector3(((float) h) / maxHealth, 1.0f, 1.0f);
+        if(!IsLocalPlayer) healthBar.transform.localScale = new Vector3(((float) h) / maxHealth, 1.0f, 1.0f);
     }
 
     private void OnDestroy()
     {
-        if (isLocalPlayer && !isInLobby) Messenger<int>.RemoveListener(GameEvent.DISTANCE_INCREASED, OnDistanceIncreased);
+        if (IsLocalPlayer && !isInLobby) Messenger<int>.RemoveListener(GameEvent.DISTANCE_INCREASED, OnDistanceIncreased);
     }
 }

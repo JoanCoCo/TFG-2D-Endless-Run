@@ -2,7 +2,7 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.Networking;
+using MLAPI;
 
 public class CourseGenerator : NetworkBehaviour
 {
@@ -30,9 +30,9 @@ public class CourseGenerator : NetworkBehaviour
     }
 
     // Start is called before the first frame update
-    void Start()
+    public override void NetworkStart()
     {
-        if (isServer)
+        if (IsServer)
         {
             _origin = GetComponent<Transform>();
             _initialY = _origin.position.y;
@@ -54,7 +54,7 @@ public class CourseGenerator : NetworkBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (isServer)
+        if (IsServer)
         {
             while (gameObject.transform.position.x < refX
                 + _mainCamera.orthographicSize * _mainCamera.aspect + margin)
@@ -92,7 +92,7 @@ public class CourseGenerator : NetworkBehaviour
                 }
             }
 
-            NetworkServer.Spawn(o);
+            o.GetComponent<NetworkObject>().Spawn();
 
             _newCol[i] = o;
             if (o.GetComponent<Cell>().IsConnected(Cell.RIGHT) && !topFound)

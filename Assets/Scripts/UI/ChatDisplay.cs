@@ -1,9 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking;
 using TMPro;
 using UnityEngine.UI;
+using MLAPI;
 
 public class ChatDisplay : MonoBehaviour
 {
@@ -41,12 +41,12 @@ public class ChatDisplay : MonoBehaviour
         chatIcon.SetActive(isHidden);
     }
 
-    public void AddMessage(string msg, uint id)
+    public void AddMessage(string msg, ulong id)
     {
         GameObject omsg = Instantiate(messagePrefab, contentBox.transform);
         TextMeshProUGUI tmsg = omsg.GetComponent<TextMeshProUGUI>();
         tmsg.text = msg;
-        uint myPlayerNetId = GameObject.FindWithTag("LocalPlayer").GetComponent<NetworkIdentity>().netId.Value;
+        ulong myPlayerNetId = GameObject.FindWithTag("LocalPlayer").GetComponent<NetworkObject>().NetworkObjectId;
         if (myPlayerNetId == id) tmsg.alignment = TextAlignmentOptions.MidlineRight;
         omsg.transform.SetAsLastSibling();
     }

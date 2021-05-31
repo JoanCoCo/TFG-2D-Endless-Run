@@ -3,7 +3,6 @@ using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
 using UnityEngine.SceneManagement;
-using UnityEngine.Networking;
 
 public class ScoreScreen : MonoBehaviour
 {
@@ -32,9 +31,9 @@ public class ScoreScreen : MonoBehaviour
                 Destroy(netManager);
 
                 //Necessary to reset the online scene. If not, clients will try to change again to the GameScene when connecting to host.
-                NetworkManager.networkSceneName = "";
+                //NetworkManager.networkSceneName = "";
 
-                NetworkManager.Shutdown();
+                //NetworkManager.Shutdown();
                 //NetworkTransport.Shutdown();
             }
             GameObject playersManager = GameObject.FindWithTag("PlayersManager");

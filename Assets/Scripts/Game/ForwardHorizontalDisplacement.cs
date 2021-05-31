@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking;
+using MLAPI;
 
 public class ForwardHorizontalDisplacement : NetworkBehaviour
 {
@@ -10,14 +10,14 @@ public class ForwardHorizontalDisplacement : NetworkBehaviour
     private bool hasBeenInit = false;
     private bool iWasServer;
 
-    private void Start()
+    public override void NetworkStart()
     {
-        if (isServer)
+        if (IsServer)
         {
             Messenger<float>.AddListener(GameEvent.PLAYER_STARTS, OnPlayersStarts);
             Messenger<float>.AddListener(GameEvent.LAST_PLAYER_POSITION_CHANGED, OnLastPlayerPositionChanged);
         }
-        iWasServer = isServer;
+        iWasServer = IsServer;
     }
 
     private void OnPlayersStarts(float posX)

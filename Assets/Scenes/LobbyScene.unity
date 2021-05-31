@@ -433,8 +433,8 @@ GameObject:
   - component: {fileID: 554968368}
   - component: {fileID: 554968366}
   - component: {fileID: 554968370}
-  - component: {fileID: 554968371}
   - component: {fileID: 554968367}
+  - component: {fileID: 554968371}
   m_Layer: 0
   m_Name: LobbyExit
   m_TagString: Interactable
@@ -572,30 +572,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 554968365}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f8258ea15b8f74c4889ce485d21cbbb1, type: 3}
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_SceneId:
-    m_Value: 0
-  m_AssetId:
-    i0: 0
-    i1: 0
-    i2: 0
-    i3: 0
-    i4: 0
-    i5: 0
-    i6: 0
-    i7: 0
-    i8: 0
-    i9: 0
-    i10: 0
-    i11: 0
-    i12: 0
-    i13: 0
-    i14: 0
-    i15: 0
-  m_ServerOnly: 0
-  m_LocalPlayerAuthority: 0
+  NetworkInstanceId: 0
+  PrefabHash: 9872715009993542927
+  PrefabHashGenerator: LobbyExit
+  AlwaysReplicateAsRoot: 0
+  DontDestroyWithOwner: 0
 --- !u!1 &597201624
 GameObject:
   m_ObjectHideFlags: 0
@@ -608,8 +592,8 @@ GameObject:
   - component: {fileID: 597201626}
   - component: {fileID: 597201628}
   - component: {fileID: 597201629}
-  - component: {fileID: 597201630}
   - component: {fileID: 597201625}
+  - component: {fileID: 597201630}
   m_Layer: 0
   m_Name: GameStarter
   m_TagString: Interactable
@@ -630,7 +614,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   interactionKey: 122
-  netManager: {fileID: 1739939606}
+  netManager: {fileID: 0}
   minNumberOfPlayers: 1
   maxNumberOfPlayers: 6
   matchCountdown: 10
@@ -750,30 +734,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 597201624}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f8258ea15b8f74c4889ce485d21cbbb1, type: 3}
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_SceneId:
-    m_Value: 0
-  m_AssetId:
-    i0: 0
-    i1: 0
-    i2: 0
-    i3: 0
-    i4: 0
-    i5: 0
-    i6: 0
-    i7: 0
-    i8: 0
-    i9: 0
-    i10: 0
-    i11: 0
-    i12: 0
-    i13: 0
-    i14: 0
-    i15: 0
-  m_ServerOnly: 0
-  m_LocalPlayerAuthority: 1
+  NetworkInstanceId: 0
+  PrefabHash: 10686690341100065068
+  PrefabHashGenerator: GameStarter
+  AlwaysReplicateAsRoot: 0
+  DontDestroyWithOwner: 0
 --- !u!1 &632230677
 GameObject:
   m_ObjectHideFlags: 0
@@ -2480,7 +2448,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1431733358}
-  - component: {fileID: 1431733357}
   m_Layer: 0
   m_Name: SpawPoint1
   m_TagString: Untagged
@@ -2488,18 +2455,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1431733357
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1431733356}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 921ceb7939c624969a567b4c88e17315, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!4 &1431733358
 Transform:
   m_ObjectHideFlags: 0
@@ -2762,85 +2717,69 @@ MonoBehaviour:
   m_GameObject: {fileID: 1739939605}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 10c2fd873b12541b392f10ecc4846574, type: 3}
+  m_Script: {fileID: 11500000, guid: 593a2fe42fa9d37498c96f9a383b6521, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_NetworkPort: 7777
-  m_ServerBindToIP: 0
-  m_ServerBindAddress: 
-  m_NetworkAddress: localhost
-  m_DontDestroyOnLoad: 1
-  m_RunInBackground: 1
-  m_ScriptCRCCheck: 1
-  m_MaxDelay: 0.01
-  m_LogLevel: 2
-  m_PlayerPrefab: {fileID: 5481941042463265584, guid: 1cbcb44d9d58945dab098c7073eb09b5,
-    type: 3}
-  m_AutoCreatePlayer: 1
-  m_PlayerSpawnMethod: 1
-  m_OfflineScene: 
-  m_OnlineScene: 
-  m_SpawnPrefabs:
-  - {fileID: 7350454985027971671, guid: 3cec52bbba8854feeb0862102c3b0666, type: 3}
-  - {fileID: 7350454985027971671, guid: 221334cc830804e6d912c4a2b432fb18, type: 3}
-  - {fileID: 7350454985027971671, guid: 0314384c87f0b40439166050221c1680, type: 3}
-  - {fileID: 7350454985027971671, guid: 3b73fa430d16249b68aa167bd0f073bd, type: 3}
-  - {fileID: 7350454985027971671, guid: 62239cf4401e743b7be0db28f536d679, type: 3}
-  m_CustomConfig: 1
-  m_MaxConnections: 8
-  m_ConnectionConfig:
-    m_PacketSize: 1440
-    m_FragmentSize: 500
-    m_ResendTimeout: 1200
-    m_DisconnectTimeout: 5000
-    m_ConnectTimeout: 2000
-    m_MinUpdateTimeout: 10
-    m_PingTimeout: 500
-    m_ReducedPingTimeout: 100
-    m_AllCostTimeout: 20
-    m_NetworkDropThreshold: 5
-    m_OverflowDropThreshold: 5
-    m_MaxConnectionAttempt: 10
-    m_AckDelay: 33
-    m_SendDelay: 10
-    m_MaxCombinedReliableMessageSize: 100
-    m_MaxCombinedReliableMessageCount: 10
-    m_MaxSentMessageQueueSize: 512
-    m_AcksType: 1
-    m_UsePlatformSpecificProtocols: 0
-    m_InitialBandwidth: 0
-    m_BandwidthPeakFactor: 2
-    m_WebSocketReceiveBufferMaxSize: 0
-    m_UdpSocketReceiveBufferMaxSize: 0
-    m_SSLCertFilePath: 
-    m_SSLPrivateKeyFilePath: 
-    m_SSLCAFilePath: 
-    m_Channels: []
-  m_GlobalConfig:
-    m_ThreadAwakeTimeout: 1
-    m_ReactorModel: 0
-    m_ReactorMaximumReceivedMessages: 1024
-    m_ReactorMaximumSentMessages: 1024
-    m_MaxPacketSize: 2000
-    m_MaxHosts: 16
-    m_ThreadPoolSize: 1
-    m_MinTimerTimeout: 1
-    m_MaxTimerTimeout: 12000
-    m_MinNetSimulatorTimeout: 1
-    m_MaxNetSimulatorTimeout: 12000
-  m_Channels: 050000000000000004000000
-  m_UseWebSockets: 0
-  m_UseSimulator: 0
-  m_SimulatedLatency: 1
-  m_PacketLossPercentage: 0
-  m_MaxBufferedPackets: 256
-  m_AllowFragmentation: 1
-  m_MatchHost: mm.unet.unity3d.com
-  m_MatchPort: 443
-  matchName: default
-  matchSize: 4
-  isNetworkActive: 0
-  matchMaker: {fileID: 0}
+  DontDestroy: 1
+  RunInBackground: 1
+  LogLevel: 1
+  NetworkConfig:
+    ProtocolVersion: 0
+    NetworkTransport: {fileID: 1739939608}
+    RegisteredScenes:
+    - GameScene
+    - LobbyScene
+    AllowRuntimeSceneChanges: 0
+    NetworkPrefabs:
+    - Prefab: {fileID: 5481941042463265584, guid: 1cbcb44d9d58945dab098c7073eb09b5,
+        type: 3}
+      PlayerPrefab: 1
+    - Prefab: {fileID: 7350454985027971671, guid: 3cec52bbba8854feeb0862102c3b0666,
+        type: 3}
+      PlayerPrefab: 0
+    - Prefab: {fileID: 7350454985027971671, guid: 221334cc830804e6d912c4a2b432fb18,
+        type: 3}
+      PlayerPrefab: 0
+    - Prefab: {fileID: 7350454985027971671, guid: 3b73fa430d16249b68aa167bd0f073bd,
+        type: 3}
+      PlayerPrefab: 0
+    - Prefab: {fileID: 7350454985027971671, guid: 0314384c87f0b40439166050221c1680,
+        type: 3}
+      PlayerPrefab: 0
+    - Prefab: {fileID: 7350454985027971671, guid: 62239cf4401e743b7be0db28f536d679,
+        type: 3}
+      PlayerPrefab: 0
+    PlayerPrefabHash:
+      id: 0
+    CreatePlayerPrefab: 1
+    ReceiveTickrate: 64
+    NetworkTickIntervalSec: 0.05
+    MaxReceiveEventsPerTickRate: 500
+    EventTickrate: 64
+    ClientConnectionBufferTimeout: 10
+    ConnectionApproval: 0
+    ConnectionData: 
+    SecondsHistory: 5
+    EnableTimeResync: 0
+    TimeResyncInterval: 30
+    EnableNetworkVariable: 1
+    EnsureNetworkVariableLengthSafety: 0
+    EnableSceneManagement: 1
+    ForceSamePrefabs: 1
+    UsePrefabSync: 0
+    RecycleNetworkIds: 1
+    NetworkIdRecycleDelay: 120
+    RpcHashSize: 0
+    LoadSceneTimeOut: 120
+    EnableMessageBuffering: 1
+    MessageBufferTimeout: 20
+    EnableNetworkLogs: 1
+  references:
+    version: 1
+    00000000:
+      type: {class: NullableBoolSerializable, ns: MLAPI.Configuration, asm: Unity.Multiplayer.MLAPI.Runtime}
+      data:
+        Value: 1897319656204293034
 --- !u!4 &1739939607
 Transform:
   m_ObjectHideFlags: 0
@@ -2862,15 +2801,24 @@ MonoBehaviour:
   m_PrefabInstance: {fileID: 0}
   m_PrefabAsset: {fileID: 0}
   m_GameObject: {fileID: 1739939605}
-  m_Enabled: 0
+  m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 4394a3eef724546f896557197e2d6c44, type: 3}
+  m_Script: {fileID: 11500000, guid: b84c2d8dfe509a34fb59e2b81f8e1319, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  manager: {fileID: 0}
-  showGUI: 1
-  offsetX: 0
-  offsetY: 0
+  MessageBufferSize: 5120
+  MaxConnections: 100
+  MaxSentMessageQueueSize: 128
+  ConnectAddress: 127.0.0.1
+  ConnectPort: 7777
+  ServerListenPort: 7777
+  ServerWebsocketListenPort: 8887
+  SupportWebsocket: 0
+  Channels: []
+  UseMLAPIRelay: 0
+  MLAPIRelayAddress: 184.72.104.138
+  MLAPIRelayPort: 8888
+  MessageSendMode: 0
 --- !u!1 &1759915425
 GameObject:
   m_ObjectHideFlags: 0
@@ -3053,7 +3001,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 1918775735}
-  - component: {fileID: 1918775734}
   m_Layer: 0
   m_Name: SpawPoint2
   m_TagString: Untagged
@@ -3061,18 +3008,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &1918775734
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 1918775733}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 921ceb7939c624969a567b4c88e17315, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!4 &1918775735
 Transform:
   m_ObjectHideFlags: 0
@@ -3126,7 +3061,6 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2064406874}
-  - component: {fileID: 2064406873}
   m_Layer: 0
   m_Name: SpawPoint3
   m_TagString: Untagged
@@ -3134,18 +3068,6 @@ GameObject:
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
   m_IsActive: 1
---- !u!114 &2064406873
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 2064406872}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: 921ceb7939c624969a567b4c88e17315, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
 --- !u!4 &2064406874
 Transform:
   m_ObjectHideFlags: 0
@@ -3273,7 +3195,7 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   maxWaitSecondsForServer: 7
-  netManager: {fileID: 1739939606}
+  netManager: {fileID: 0}
   connectingWindow: {fileID: 1434113867}
 --- !u!114 &2118900502
 MonoBehaviour:
@@ -3321,8 +3243,8 @@ GameObject:
   serializedVersion: 6
   m_Component:
   - component: {fileID: 2144061214}
-  - component: {fileID: 2144061216}
   - component: {fileID: 2144061215}
+  - component: {fileID: 2144061216}
   m_Layer: 0
   m_Name: PlayersManager
   m_TagString: PlayersManager
@@ -3356,7 +3278,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 1b58d6ac30f0d4253b73513e41daf185, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  netManager: {fileID: 1739939606}
+  netManager: {fileID: 0}
   currentPlayerGroup: 
   nextPlayerGroup: 
 --- !u!114 &2144061216
@@ -3368,30 +3290,14 @@ MonoBehaviour:
   m_GameObject: {fileID: 2144061213}
   m_Enabled: 1
   m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f8258ea15b8f74c4889ce485d21cbbb1, type: 3}
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  m_SceneId:
-    m_Value: 0
-  m_AssetId:
-    i0: 0
-    i1: 0
-    i2: 0
-    i3: 0
-    i4: 0
-    i5: 0
-    i6: 0
-    i7: 0
-    i8: 0
-    i9: 0
-    i10: 0
-    i11: 0
-    i12: 0
-    i13: 0
-    i14: 0
-    i15: 0
-  m_ServerOnly: 0
-  m_LocalPlayerAuthority: 1
+  NetworkInstanceId: 0
+  PrefabHash: 13414285399570425098
+  PrefabHashGenerator: PlayersManager
+  AlwaysReplicateAsRoot: 0
+  DontDestroyWithOwner: 0
 --- !u!1001 &3140912725949296113
 PrefabInstance:
   m_ObjectHideFlags: 0

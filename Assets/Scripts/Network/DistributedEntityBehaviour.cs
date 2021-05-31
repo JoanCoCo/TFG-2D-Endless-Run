@@ -1,7 +1,7 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking;
+using MLAPI;
 
 public class DistributedEntityBehaviour : NetworkBehaviour
 {
@@ -13,8 +13,7 @@ public class DistributedEntityBehaviour : NetworkBehaviour
 
     public void RemoveAuthority()
     {
-        var owner = GetComponent<NetworkIdentity>().clientAuthorityOwner;
-        if (owner != null) GetComponent<NetworkIdentity>().RemoveClientAuthority(owner);
+        GetComponent<NetworkObject>().RemoveOwnership();
     }
 
     public void RemoveOwnership() { RemoveAuthority(); }
@@ -23,11 +22,11 @@ public class DistributedEntityBehaviour : NetworkBehaviour
 
     IEnumerator GetAuthorityCoroutine()
     {
-        if (!isServer)
+        if (!IsServer)
         {
             GameObject player = GameObject.FindGameObjectWithTag("LocalPlayer");
-            NetworkIdentity netIdentity = GetComponent<NetworkIdentity>();
-            while (!netIdentity.hasAuthority)
+            NetworkObject netIdentity = GetComponent<NetworkObject>();
+            while (!netIdentity.IsOwner)
             {
                 while (player == null)
                 {
@@ -36,22 +35,22 @@ public class DistributedEntityBehaviour : NetworkBehaviour
                     yield return new WaitForSeconds(0.01f);
                 }
                 Debug.Log("Local player found, asking for authority.");
-                NetworkIdentity playerId = player.GetComponent<NetworkIdentity>();
-                player.GetComponent<Player>().CmdSetAuth(netId, playerId);
+                NetworkObject playerId = player.GetComponent<NetworkObject>();
+                player.GetComponent<Player>().SetAuthServerRpc(netIdentity.NetworkObjectId);
                 yield return new WaitForSeconds(0.01f);
             }
             Debug.Log("Authority received.");
-            //myPlayerId = player.GetComponent<NetworkIdentity>().netId.Value;
+            //myPlayerId = player.GetComponent<NetworkObject>().netId.Value;
         }
     }
 
     IEnumerator WaitForAuthority(CommandNoArguments cmd)
     {
-        if (!isServer)
+        if (!IsServer)
         {
             GetAuthority();
-            NetworkIdentity netIdentity = GetComponent<NetworkIdentity>();
-            while (!netIdentity.hasAuthority)
+            NetworkObject netIdentity = GetComponent<NetworkObject>();
+            while (!netIdentity.IsOwner)
             {
                 yield return new WaitForSeconds(0.01f);
             }
@@ -62,11 +61,11 @@ public class DistributedEntityBehaviour : NetworkBehaviour
 
     IEnumerator WaitForAuthority<T>(CommandOneArgument<T> cmd, T arg)
     {
-        if (!isServer)
+        if (!IsServer)
         {
             GetAuthority();
-            NetworkIdentity netIdentity = GetComponent<NetworkIdentity>();
-            while (!netIdentity.hasAuthority)
+            NetworkObject netIdentity = GetComponent<NetworkObject>();
+            while (!netIdentity.IsOwner)
             {
                 yield return new WaitForSeconds(0.01f);
             }
@@ -76,11 +75,11 @@ public class DistributedEntityBehaviour : NetworkBehaviour
 
     IEnumerator WaitForAuthority<T, D>(CommandTwoArguments<T, D> cmd, T arg1, D arg2)
     {
-        if (!isServer)
+        if (!IsServer)
         {
             GetAuthority();
-            NetworkIdentity netIdentity = GetComponent<NetworkIdentity>();
-            while (!netIdentity.hasAuthority)
+            NetworkObject netIdentity = GetComponent<NetworkObject>();
+            while (!netIdentity.IsOwner)
             {
                 yield return new WaitForSeconds(0.01f);
             }

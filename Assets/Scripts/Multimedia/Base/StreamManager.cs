@@ -1,7 +1,11 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking;
+using MLAPI;
+using MLAPI.Messaging;
+using MLAPI.NetworkVariable;
+using MLAPI.Serialization;
+using System.IO;
 
 
 /// <summary>
@@ -17,30 +21,30 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
         /// <summary>
         /// A stream message of the type header.
         /// </summary>
-        public short Header;
+        public string Header;
 
         /// <summary>
         /// A stream message of the type chunk.
         /// </summary>
-        public short Chunk;
+        public string Chunk;
 
         /// <summary>
         /// Function that updates the values of the header and chunk. Takes a number
         /// and modifies Header and Chunk so they are unique to this number.
         /// </summary>
         /// <param name="n">Integer used to generete the new Header and Chunk values.</param>
-        public abstract void UpdateTypes(int n);
+        public abstract void UpdateTypes(ulong n);
     }
 
     /// <summary>
     /// Class that represents the basic stream header message.
     /// </summary>
-    protected class StreamHeaderMessage : MessageBase
+    protected class StreamHeaderMessage : INetworkSerializable
     {
         /// <summary>
         /// Network identifier of the player object who sent the message.
         /// </summary>
-        public uint netId;
+        public ulong netId;
 
         /// <summary>
         /// Identifier of the stream.
@@ -58,17 +62,12 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
         public long timeStamp;
 
         /// <summary>
-        /// Empty constructor mandatory for using the class as message.
-        /// </summary>
-        public StreamHeaderMessage() { }
-
-        /// <summary>
         /// Constructor to instantiate StreamHeaderMessage
         /// </summary>
         /// <param name="netId">Network identifier of the player object who sent the message.</param>
         /// <param name="id">Identifier of the stream.</param>
         /// <param name="s">Maximum size of the following chunks associated with this header.</param>
-        public StreamHeaderMessage(uint netId, uint id, int s)
+        public StreamHeaderMessage(ulong netId, uint id, int s)
         {
             this.netId = netId;
             this.id = id;
@@ -76,29 +75,21 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
             timeStamp = System.DateTime.Now.ToUniversalTime().Ticks;
         }
 
-        public override void Serialize(NetworkWriter writer)
+        public virtual void NetworkSerialize(NetworkSerializer serializer)
         {
-            writer.WritePackedUInt32(netId);
-            writer.WritePackedUInt32(id);
-            writer.Write(chunkSize);
-            writer.Write(timeStamp);
-        }
-
-        public override void Deserialize(NetworkReader reader)
-        {
-            netId = reader.ReadPackedUInt32();
-            id = reader.ReadPackedUInt32();
-            chunkSize = reader.ReadInt32();
-            timeStamp = reader.ReadInt64();
+            serializer.Serialize(ref netId);
+            serializer.Serialize(ref id);
+            serializer.Serialize(ref chunkSize);
+            serializer.Serialize(ref timeStamp);
         }
     }
 
-    protected class StreamChunkMessage : MessageBase
+    protected class StreamChunkMessage : INetworkSerializable
     {
         /// <summary>
         /// Network identifier of the player object who sent the message.
         /// </summary>
-        public uint netId;
+        public ulong netId;
 
         /// <summary>
         /// Identifier of the stream.
@@ -116,17 +107,12 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
         public int size;
 
         /// <summary>
-        /// Empty constructor mandatory for using the class as message.
-        /// </summary>
-        public StreamChunkMessage() { }
-
-        /// <summary>
         /// Constructor to instantiate StreamChunkMessage
         /// </summary>
         /// <param name="netId">Network identifier of the player object who sent the message.</param>
         /// <param name="id">Identifier of the stream.</param>
         /// <param name="o">Position in the sequence of chunks with the same id. Starts in zero.</param>
-        public StreamChunkMessage(uint netId, uint id, int o)
+        public StreamChunkMessage(ulong netId, uint id, int o)
         {
             this.netId = netId;
             this.id = id;
@@ -134,20 +120,12 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
             size = 0;
         }
 
-        public override void Serialize(NetworkWriter writer)
+        public virtual void NetworkSerialize(NetworkSerializer serializer)
         {
-            writer.WritePackedUInt32(netId);
-            writer.WritePackedUInt32(id);
-            writer.Write(order);
-            writer.Write(size);
-        }
-
-        public override void Deserialize(NetworkReader reader)
-        {
-            netId = reader.ReadPackedUInt32();
-            id = reader.ReadPackedUInt32();
-            order = reader.ReadInt32();
-            size = reader.ReadInt32();
+            serializer.Serialize(ref netId);
+            serializer.Serialize(ref id);
+            serializer.Serialize(ref order);
+            serializer.Serialize(ref size);
         }
     }
 
@@ -569,7 +547,7 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
     /// <summary>
     /// Network identity of this object.
     /// </summary>
-    protected NetworkIdentity networkIdentity;
+    protected NetworkObject networkIdentity;
     protected uint nextId = 0;
 
     /// <summary>
@@ -585,7 +563,7 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
     /// <summary>
     /// Bool used to synchronize if the streaming is tuned on or off.
     /// </summary>
-    [SyncVar] protected bool isStreamOn = false;
+    protected NetworkVariable<bool> isStreamOn = new NetworkVariable<bool>();
 
     /// <summary>
     /// Initializes the manager, setting up the network identity, updating the
@@ -602,9 +580,10 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
         where chunkMsg : StreamChunkMessage
         where headerMsg : StreamHeaderMessage
     {
+        isStreamOn.Value = false;
         msgData.UnheadedChunksTimeout = pendingHeadersTimeout;
-        networkIdentity = GetComponent<NetworkIdentity>();
-        type.UpdateTypes((int)networkIdentity.netId.Value);
+        networkIdentity = GetComponent<NetworkObject>();
+        type.UpdateTypes(networkIdentity.NetworkObjectId);
     }
 
     /// <summary>
@@ -612,38 +591,30 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
     /// </summary>
     /// <param name="msgType">Message type that is being used.</param>
     /// <param name="headerMessageFromClient">Method to handle the header messages on the server.</param>
-    /// <param name="chunkMessagerFromClient">Method to handle the chunk messages on the server.</param>
+    /// <param name="chunkMessageFromClient">Method to handle the chunk messages on the server.</param>
     /// <param name="headerMessageFromServer">Method to handle the header messages on the client.</param>
     /// <param name="chunkMessageFromServer">Method to handle the chunk messages on the client.</param>
     protected void CreateHandlers(StreamMsgType msgType,
-        NetworkMessageDelegate headerMessageFromClient,
-        NetworkMessageDelegate chunkMessagerFromClient,
-        NetworkMessageDelegate headerMessageFromServer,
-        NetworkMessageDelegate chunkMessageFromServer)
+        CustomMessagingManager.HandleNamedMessageDelegate headerMessageFromClient,
+        CustomMessagingManager.HandleNamedMessageDelegate chunkMessageFromClient,
+        CustomMessagingManager.HandleNamedMessageDelegate headerMessageFromServer,
+        CustomMessagingManager.HandleNamedMessageDelegate chunkMessageFromServer)
     {
-        if (isServer)
+        if (IsServer)
         {
             Debug.Log("Registering server handlers.");
-            if (!NetworkServer.handlers.ContainsKey(msgType.Header))
-            {
-                NetworkServer.RegisterHandler(msgType.Header, headerMessageFromClient);
-            }
-            if (!NetworkServer.handlers.ContainsKey(msgType.Chunk))
-            {
-                NetworkServer.RegisterHandler(msgType.Chunk, chunkMessagerFromClient);
-            }
+            CustomMessagingManager.RegisterNamedMessageHandler(msgType.Header, headerMessageFromClient);
+            //NetworkServer.RegisterHandler(msgType.Header, headerMessageFromClient);
+            CustomMessagingManager.RegisterNamedMessageHandler(msgType.Chunk, chunkMessageFromClient);
+            //NetworkServer.RegisterHandler(msgType.Chunk, chunkMessagerFromClient);
         }
-        if (isClient)
+        if (IsClient)
         {
             Debug.Log("Registering client handlers.");
-            if (!NetworkManager.singleton.client.handlers.ContainsKey(msgType.Header))
-            {
-                NetworkManager.singleton.client.RegisterHandler(msgType.Header, headerMessageFromServer);
-            }
-            if (!NetworkManager.singleton.client.handlers.ContainsKey(msgType.Chunk))
-            {
-                NetworkManager.singleton.client.RegisterHandler(msgType.Chunk, chunkMessageFromServer);
-            }
+            CustomMessagingManager.RegisterNamedMessageHandler(msgType.Header, headerMessageFromServer);
+            //NetworkManager.singleton.client.RegisterHandler(msgType.Header, headerMessageFromServer);
+            CustomMessagingManager.RegisterNamedMessageHandler(msgType.Chunk, chunkMessageFromServer);
+            //NetworkManager.singleton.client.RegisterHandler(msgType.Chunk, chunkMessageFromServer);
         }
     }
 
@@ -653,27 +624,15 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
     /// <param name="msgType">Message type that is being used.</param>
     protected void DestroyHandlers(StreamMsgType msgType)
     {
-        if (isServer)
+        if (IsServer)
         {
-            if (NetworkServer.handlers.ContainsKey(msgType.Header))
-            {
-                NetworkServer.UnregisterHandler(msgType.Header);
-            }
-            if (NetworkServer.handlers.ContainsKey(msgType.Chunk))
-            {
-                NetworkServer.UnregisterHandler(msgType.Chunk);
-            }
+            CustomMessagingManager.UnregisterNamedMessageHandler(msgType.Header);
+            CustomMessagingManager.UnregisterNamedMessageHandler(msgType.Chunk);
         }
-        if (isClient && NetworkManager.singleton != null && NetworkManager.singleton.client != null)
+        if (IsClient && NetworkManager.Singleton != null)
         {
-            if (NetworkManager.singleton.client.handlers.ContainsKey(msgType.Header))
-            {
-                NetworkManager.singleton.client.UnregisterHandler(msgType.Header);
-            }
-            if (NetworkManager.singleton.client.handlers.ContainsKey(msgType.Chunk))
-            {
-                NetworkManager.singleton.client.UnregisterHandler(msgType.Chunk);
-            }
+            CustomMessagingManager.UnregisterNamedMessageHandler(msgType.Header);
+            CustomMessagingManager.UnregisterNamedMessageHandler(msgType.Chunk);
         }
     }
 
@@ -748,7 +707,7 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
         where chunkMsg : StreamChunkMessage
         where headerMsg : StreamHeaderMessage
     {
-        if (isStreamOn)
+        if (isStreamOn.Value)
         {
             try
             {
@@ -801,9 +760,9 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
     /// </summary>
     /// <param name="id">Type of message that is being sent.</param>
     /// <param name="msg">Message to be sent.</param>
-    private void SendStreamMessage(short id, MessageBase msg)
+    private void SendStreamMessage(string id, INetworkSerializable msg)
     {
-        if (isServer)
+        if (IsServer)
         {
             SendStreamMessageFromServer(id, msg);
             //NetworkServer.SendToReady(gameObject, TextureMsgType.Header, headerMessage);
@@ -820,9 +779,10 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
     /// </summary>
     /// <param name="id">Type of message that is being sent.</param>
     /// <param name="msg">Message to be sent.</param>
-    private void SendStreamMessageFromServer(short id, MessageBase msg)
+    private void SendStreamMessageFromServer(string id, INetworkSerializable msg)
     {
-        NetworkServer.SendByChannelToReady(gameObject, id, msg, 2);
+        //NetworkServer.SendByChannelToReady(gameObject, id, msg, 2);
+        //CustomMessagingManager.SendNamedMessage(id, NetworkManager.Singleton.LocalClientId, msg);
     }
 
     /// <summary>
@@ -830,9 +790,10 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
     /// </summary>
     /// <param name="id">Type of message that is being sent.</param>
     /// <param name="msg">Message to be sent.</param>
-    private void SendStreamMessageFromClient(short id, MessageBase msg)
+    private void SendStreamMessageFromClient(string id, INetworkSerializable msg)
     {
-        NetworkManager.singleton.client.SendByChannel(id, msg, 2);
+        //NetworkManager.singleton.client.SendByChannel(id, msg, 2);
+        //CustomMessagingManager.SendNamedMessage(id, NetworkManager.Singleton.ServerClientId, msg);
     }
 
     /// <summary>
@@ -843,7 +804,7 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
     /// <param name="msg"></param>
     protected void OnStreamHeaderMessageFromClient(StreamMsgType type, StreamHeaderMessage msg)
     {
-        if (msg.netId == networkIdentity.netId.Value)
+        if (msg.netId == networkIdentity.NetworkObjectId)
         {
             Debug.Log("Received stream header on server.");
             SendStreamMessageFromServer(type.Header, msg);
@@ -857,7 +818,7 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
     /// <param name="msg"></param>
     protected void OnStreamChunkMessageFromClient(StreamMsgType type, StreamChunkMessage msg)
     {
-        if (msg.netId == networkIdentity.netId.Value)
+        if (msg.netId == networkIdentity.NetworkObjectId)
         {
             Debug.Log("Received stream chunk on server.");
             SendStreamMessageFromServer(type.Chunk, msg);
@@ -874,7 +835,7 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
     protected void OnStreamHeaderMessageFromServer<T>(T msg,
         StreamHeaderHandler<T> OnHeaderReceived) where T : StreamHeaderMessage
     {
-        if (msg.netId == networkIdentity.netId.Value)
+        if (msg.netId == networkIdentity.NetworkObjectId)
         {
             Debug.Log("Received stream header on client.");
             OnHeaderReceived(msg);
@@ -891,7 +852,7 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
     protected void OnStreamChunkMessageFromServer<T>(T msg,
         StreamChunkHandler<T> OnChunkReceived) where T : StreamChunkMessage
     {
-        if (msg.netId == networkIdentity.netId.Value)
+        if (msg.netId == networkIdentity.NetworkObjectId)
         {
             Debug.Log("Received stream chunk on client.");
             OnChunkReceived(msg);
@@ -907,7 +868,7 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
     protected void StreamIsOnServer()
     {
         Debug.Log("Stream is on.");
-        isStreamOn = true;
+        isStreamOn.Value = true;
     }
 
     /// <summary>
@@ -915,7 +876,7 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
     /// </summary>
     protected void StreamIsOffServer()
     {
-        isStreamOn = false;
+        isStreamOn.Value = false;
         Debug.Log("Stream is off.");
     }
 }

@@ -1508,9 +1508,9 @@ GameObject:
   - component: {fileID: 3140912726820173699}
   - component: {fileID: 3140912726820173696}
   - component: {fileID: 3140912726820173697}
-  - component: {fileID: 3140912726820173726}
   - component: {fileID: 3140912726820173727}
   - component: {fileID: 9107600555305971377}
+  - component: {fileID: 8836322439388929053}
   m_Layer: 5
   m_Name: CommunicationCanvas
   m_TagString: Chat
@@ -1623,39 +1623,6 @@ MonoBehaviour:
     type: 3}
   chatIcon: {fileID: 607934949}
   isHidden: 1
---- !u!114 &3140912726820173726
-MonoBehaviour:
-  m_ObjectHideFlags: 0
-  m_CorrespondingSourceObject: {fileID: 0}
-  m_PrefabInstance: {fileID: 0}
-  m_PrefabAsset: {fileID: 0}
-  m_GameObject: {fileID: 3140912726820173724}
-  m_Enabled: 1
-  m_EditorHideFlags: 0
-  m_Script: {fileID: 11500000, guid: f8258ea15b8f74c4889ce485d21cbbb1, type: 3}
-  m_Name: 
-  m_EditorClassIdentifier: 
-  m_SceneId:
-    m_Value: 0
-  m_AssetId:
-    i0: 0
-    i1: 0
-    i2: 0
-    i3: 0
-    i4: 0
-    i5: 0
-    i6: 0
-    i7: 0
-    i8: 0
-    i9: 0
-    i10: 0
-    i11: 0
-    i12: 0
-    i13: 0
-    i14: 0
-    i15: 0
-  m_ServerOnly: 0
-  m_LocalPlayerAuthority: 1
 --- !u!114 &3140912726820173727
 MonoBehaviour:
   m_ObjectHideFlags: 0
@@ -1683,6 +1650,23 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   camController: {fileID: 1841633312354525754}
   micController: {fileID: 7248057362354410800}
+--- !u!114 &8836322439388929053
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 3140912726820173724}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: d5a57f767e5e46a458fc5d3c628d0cbb, type: 3}
+  m_Name: 
+  m_EditorClassIdentifier: 
+  NetworkInstanceId: 0
+  PrefabHash: 8600747936147543663
+  PrefabHashGenerator: CommunicationCanvas
+  AlwaysReplicateAsRoot: 0
+  DontDestroyWithOwner: 0
 --- !u!1 &3140912727284414898
 GameObject:
   m_ObjectHideFlags: 0
@@ -1827,6 +1811,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2bca4a98276e04c5fb546366aba373b8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mediaInputManager: {fileID: 0}
   onImage: {fileID: 7148752089532769621}
   offImage: {fileID: 8815974157737295039}
   keyText: {fileID: 7663292355135801304}
@@ -1958,6 +1943,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: 2bca4a98276e04c5fb546366aba373b8, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
+  mediaInputManager: {fileID: 0}
   onImage: {fileID: 2163400032209795066}
   offImage: {fileID: 4656305650537589546}
   keyText: {fileID: 8292886883431439753}

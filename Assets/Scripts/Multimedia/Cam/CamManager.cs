@@ -1,7 +1,10 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking;
+using MLAPI.Serialization;
+using MLAPI.Serialization.Pooled;
+using System.IO;
+using MLAPI.Messaging;
 
 /// <summary>
 /// Class that implements a camera streaming service. 
@@ -64,14 +67,14 @@ public class CamManager : StreamManager
         /// </summary>
         public TextureMsgType()
         {
-            Header = MsgType.Highest + 1;
-            Chunk = MsgType.Highest + 2;
+            Header = "ImageHeader";
+            Chunk = "ImageChunk";
         }
 
-        public override void UpdateTypes(int n)
+        public override void UpdateTypes(ulong n)
         {
-            Header += (short) (n * 100);
-            Chunk += (short) (n * 100);
+            Header += n * 100;
+            Chunk += n * 100;
         }
     }
 
@@ -91,11 +94,6 @@ public class CamManager : StreamManager
         public int height;
 
         /// <summary>
-        /// Empty constructor mandatory for using the class as message.
-        /// </summary>
-        public TextureHeaderMessage() : base() { }
-
-        /// <summary>
         /// Constructor to initialize a header message for sending an image.
         /// </summary>
         /// <param name="netId">Network identifier of the player object who sent the message.</param>
@@ -103,24 +101,17 @@ public class CamManager : StreamManager
         /// <param name="w">Width of the image.</param>
         /// <param name="h">Height of the image.</param>
         /// <param name="s">Maximum size of the following chunks associated with this header.</param>
-        public TextureHeaderMessage(uint netId, uint id, int w, int h, int s) : base(netId, id, s)
+        public TextureHeaderMessage(ulong netId, uint id, int w, int h, int s) : base(netId, id, s)
         {
             width = w;
             height = h;
         }
 
-        public override void Serialize(NetworkWriter writer)
+        public override void NetworkSerialize(NetworkSerializer serializer)
         {
-            base.Serialize(writer);
-            writer.Write(width);
-            writer.Write(height);
-        }
-
-        public override void Deserialize(NetworkReader reader)
-        {
-            base.Deserialize(reader);
-            width = reader.ReadInt32();
-            height = reader.ReadInt32();
+            base.NetworkSerialize(serializer);
+            serializer.Serialize(ref width);
+            serializer.Serialize(ref height);
         }
     }
 
@@ -135,18 +126,13 @@ public class CamManager : StreamManager
         public Color32[] data;
 
         /// <summary>
-        /// Empty constructor mandatory for using the class as message.
-        /// </summary>
-        public TextureChunkMessage() : base() { }
-
-        /// <summary>
         /// Constructor to initialize a chunk message for sending an image.
         /// </summary>
         /// <param name="netId">Network identifier of the player object who sent the message.</param>
         /// <param name="id">Identifier of the stream.</param>
         /// <param name="o">Position in the sequence of chunks with the same id. Starts in zero.</param>
         /// <param name="length">Maximum size of the chunk to be sent.</param>
-        public TextureChunkMessage(uint netId, uint id, int o, int length) : base(netId, id, o)
+        public TextureChunkMessage(ulong netId, uint id, int o, int length) : base(netId, id, o)
         {
             data = new Color32[length];
         }
@@ -159,7 +145,7 @@ public class CamManager : StreamManager
         /// <param name="o">Position in the sequence of chunks with the same id. Starts in zero.</param>
         /// <param name="data">Chunk of pixels of the image.</param>
         /// <param name="size">Number of valid pixels contained in this chunk.</param>
-        public TextureChunkMessage(uint netId, uint id, int o, Color32[] data, int size) : base(netId, id, o)
+        public TextureChunkMessage(ulong netId, uint id, int o, Color32[] data, int size) : base(netId, id, o)
         {
             this.data = new Color32[data.Length];
             for (int i = 0; i < data.Length; i++)
@@ -169,22 +155,12 @@ public class CamManager : StreamManager
             this.size = size;
         }
 
-        public override void Serialize(NetworkWriter writer)
+        public override void NetworkSerialize(NetworkSerializer serializer)
         {
-            base.Serialize(writer);
+            base.NetworkSerialize(serializer);
             for(int i = 0; i < size; i++)
             {
-                writer.Write(data[i]);
-            }
-        }
-
-        public override void Deserialize(NetworkReader reader)
-        {
-            base.Deserialize(reader);
-            data = new Color32[size];
-            for(int i = 0; i < size; i++)
-            {
-                data[i] = reader.ReadColor32();
+                serializer.Serialize(ref data[i]);
             }
         }
     }
@@ -261,13 +237,13 @@ public class CamManager : StreamManager
         Color32[] pixelData = texture.GetPixels32(0);
         int size = Mathf.FloorToInt(pixelData.Length / Mathf.Ceil(pixelData.Length * 4.0f / maxChunkSize));
         Debug.Log("Chunk size " + size);
-        var headerMessage = new TextureHeaderMessage(networkIdentity.netId.Value, textId, texture.width, texture.height, size);
+        var headerMessage = new TextureHeaderMessage(networkIdentity.NetworkObjectId, textId, texture.width, texture.height, size);
         SendHeaderMessage(textureMsgType, headerMessage);
 
         List<(int, Color32[], int)> chunks = DivideArrayInChunks(pixelData, size);
         foreach (var chunk in chunks)
         {
-            var chunkMessage = new TextureChunkMessage(networkIdentity.netId.Value, textId, chunk.Item1, chunk.Item2, chunk.Item3);
+            var chunkMessage = new TextureChunkMessage(networkIdentity.NetworkObjectId, textId, chunk.Item1, chunk.Item2, chunk.Item3);
             SendChunkMessage(textureMsgType, chunkMessage);
         }
 
@@ -279,40 +255,52 @@ public class CamManager : StreamManager
     /// Handler for header messages received on the server.
     /// </summary>
     /// <param name="msg">Network message received.</param>
-    private void OnTextureHeaderMessageFromClient(NetworkMessage msg)
+    private void OnTextureHeaderMessageFromClient(ulong sender, Stream msg)
     {
-        var header = msg.ReadMessage<TextureHeaderMessage>();
-        OnStreamHeaderMessageFromClient(textureMsgType, header);
+        using (PooledNetworkReader reader = PooledNetworkReader.Get(msg))
+        {
+            //var header = reader.Read
+            //OnStreamHeaderMessageFromClient(textureMsgType, header);
+        }
     }
 
     /// <summary>
     /// Handler for chunk messages received on the server.
     /// </summary>
     /// <param name="msg">Network message received.</param>
-    private void OnTextureChunkMessageFromClient(NetworkMessage msg)
+    private void OnTextureChunkMessageFromClient(ulong sender, Stream msg)
     {
-        var row = msg.ReadMessage<TextureChunkMessage>();
-        OnStreamChunkMessageFromClient(textureMsgType, row);
+        using (PooledNetworkReader reader = PooledNetworkReader.Get(msg))
+        {
+            //var row = msg.ReadMessage<TextureChunkMessage>();
+            //OnStreamChunkMessageFromClient(textureMsgType, row);
+        }
     }
 
     /// <summary>
     /// Handler for header messages received on the client.
     /// </summary>
     /// <param name="msg">Network message received.</param>
-    private void OnTextureHeaderMessageFromServer(NetworkMessage msg)
+    private void OnTextureHeaderMessageFromServer(ulong sender, Stream msg)
     {
-        var header = msg.ReadMessage<TextureHeaderMessage>();
-        OnStreamHeaderMessageFromServer(header, OnTextureHeaderReceived);
+        using (PooledNetworkReader reader = PooledNetworkReader.Get(msg))
+        {
+            //var header = msg.ReadMessage<TextureHeaderMessage>();
+            //OnStreamHeaderMessageFromServer(header, OnTextureHeaderReceived);
+        }
     }
 
     /// <summary>
     /// Handler for chunk messages received on the client.
     /// </summary>
     /// <param name="msg">Network message received.</param>
-    private void OnTextureChunkMessageFromServer(NetworkMessage msg)
+    private void OnTextureChunkMessageFromServer(ulong sender, Stream msg)
     {
-        var row = msg.ReadMessage<TextureChunkMessage>();
-        OnStreamChunkMessageFromServer(row, OnTextureChunkReceived);
+        using (PooledNetworkReader reader = PooledNetworkReader.Get(msg))
+        {
+            //var row = msg.ReadMessage<TextureChunkMessage>();
+            //OnStreamChunkMessageFromServer(row, OnTextureChunkReceived);
+        }
     }
 
     /// <summary>
@@ -395,7 +383,7 @@ public class CamManager : StreamManager
 
     public override void StartRecording()
     {
-        if (isLocalPlayer)
+        if (IsLocalPlayer)
         {
             Debug.Log("Turning camera on.");
             if (cam == null)
@@ -409,12 +397,12 @@ public class CamManager : StreamManager
                 cam.Play();
             }
         }
-        CmdStreamIsOn();
+        StreamIsOnServerRpc();
     }
 
     public override void StopRecording()
     {
-        if (isLocalPlayer)
+        if (IsLocalPlayer)
         {
             Debug.Log("Turning camera off");
             if (cam != null && cam.isPlaying)
@@ -423,7 +411,7 @@ public class CamManager : StreamManager
             }
         }
         lastCapturedFrame = null;
-        CmdStreamIsOff();
+        StreamIsOffServerRpc();
     }
 
     private void OnDestroy()
@@ -434,8 +422,8 @@ public class CamManager : StreamManager
     /// <summary>
     /// Notifies the sever that the stream is starting.
     /// </summary>
-    [Command]
-    private void CmdStreamIsOn()
+    [ServerRpc]
+    private void StreamIsOnServerRpc()
     {
         StreamIsOnServer();
     }
@@ -443,18 +431,18 @@ public class CamManager : StreamManager
     /// <summary>
     /// Notifies the sever that the stream has finished.
     /// </summary>
-    [Command]
-    private void CmdStreamIsOff()
+    [ServerRpc]
+    private void StreamIsOffServerRpc()
     {
         StreamIsOffServer();
-        RpcStreamIsOff();
+        StreamIsOffClientRpc();
     }
 
     /// <summary>
     /// Notifies all the clients that the stream has finished.
     /// </summary>
     [ClientRpc]
-    private void RpcStreamIsOff()
+    private void StreamIsOffClientRpc()
     {
         msgData.RemoveAllStreams();
         lastCapturedFrame = null;

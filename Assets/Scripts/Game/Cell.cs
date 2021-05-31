@@ -2,7 +2,8 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
-using UnityEngine.Networking;
+using MLAPI;
+using MLAPI.NetworkVariable;
 
 public class Cell : NetworkBehaviour
 {
@@ -15,15 +16,17 @@ public class Cell : NetworkBehaviour
     [SerializeField] private bool[] _conections = { true, true, true, true };
     private float lastPosX = 0.0f;
 
-    [SyncVar] private float width = 1.0f;
-    [SyncVar] private float height = 1.0f;
+    private NetworkVariable<float> width = new NetworkVariable<float>();
+    private NetworkVariable<float> height = new NetworkVariable<float>();
 
     // Start is called before the first frame update
-    void Start()
+    public override void NetworkStart()
     {
         Assert.AreEqual(4, _conections.Length);
-        if (isServer)
+        if (IsServer)
         {
+            width.Value = 1.0f;
+            height.Value = 1.0f;
             _mainCamera = Camera.main;
             lastPosX = _mainCamera.transform.position.x;
             Messenger<float>.AddListener(GameEvent.LAST_PLAYER_POSITION_CHANGED, OnLastPlayerPositionChanged);
@@ -32,12 +35,12 @@ public class Cell : NetworkBehaviour
 
     void Update()
     {
-        if (isServer)
+        if (IsServer)
         {
             if (gameObject.transform.position.x < lastPosX
                 - _mainCamera.orthographicSize * _mainCamera.aspect - _margin)
             {
-                NetworkServer.Destroy(gameObject);
+                GetComponent<NetworkObject>().Despawn(); // NetworkSever.Destro(gameObject);
             }
         }
     }
@@ -57,29 +60,29 @@ public class Cell : NetworkBehaviour
 
     public float GetWidth()
     {
-        return width;
+        return width.Value;
     }
 
     public float GetHeight()
     {
-        return height;
+        return height.Value;
     }
 
     public void SetHeight(float h)
     {
-        height = h;
+        height.Value = h;
     }
 
     public void SetWidth(float w)
     {
-        width = w;
+        width.Value = w;
     }
 
     private void OnDrawGizmos()
     {
         Vector3 center = new Vector3(transform.position.x,
             transform.position.y, transform.position.z + 2);
-        Vector3 size = new Vector3(width, height, 1);
+        Vector3 size = new Vector3(width.Value, height.Value, 1);
         Gizmos.color = Color.green;
         Gizmos.DrawWireCube(center, size);
     }

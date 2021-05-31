@@ -1,8 +1,8 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking;
 using UnityEngine.SceneManagement;
+using MLAPI;
 
 public class LobbyCloser : NetworkBehaviour, InteractableObject
 {
@@ -11,7 +11,7 @@ public class LobbyCloser : NetworkBehaviour, InteractableObject
     private NetworkManager netManager;
     [SerializeField] private string scene;
 
-    private void Start()
+    public override void NetworkStart()
     {
         if (netManagerObject == null) netManagerObject = GameObject.FindWithTag("NetManager");
         netManager = netManagerObject.GetComponent<NetworkManager>();
@@ -26,7 +26,7 @@ public class LobbyCloser : NetworkBehaviour, InteractableObject
     {
         if(netManager != null)
         {
-            if(isServer)
+            if(IsServer)
             {
                 GameObject.FindWithTag("PlayersManager").GetComponent<PlayersManager>().IsolateHost(this);
                 //netManager.StopHost();
@@ -42,7 +42,7 @@ public class LobbyCloser : NetworkBehaviour, InteractableObject
     public void Close()
     {
         Destroy(netManagerObject);
-        NetworkManager.networkSceneName = "";
+        //NetworkManager.networkSceneName = "";
         NetworkManager.Shutdown();
         //NetworkTransport.Shutdown();
         GameObject playersManager = GameObject.FindWithTag("PlayersManager");

@@ -1,8 +1,9 @@
 using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
-using UnityEngine.Networking;
 using TMPro;
+using MLAPI;
+using MLAPI.Messaging;
 
 [RequireComponent(typeof(ChatDisplay))]
 public class ChatManager : DistributedEntityBehaviour
@@ -29,34 +30,34 @@ public class ChatManager : DistributedEntityBehaviour
     private void OnSendNewMessage(string msg)
     {
         string pmsg = myPlayerName + " - " + msg;
-        if(isServer)
+        if(IsServer)
         {
             Debug.Log("I'm server, running rpc.");
-            RpcSendMessage(pmsg,
-                GameObject.FindWithTag("LocalPlayer").GetComponent<NetworkIdentity>().netId.Value);
+            SendMessageClientRpc(pmsg,
+                GameObject.FindWithTag("LocalPlayer").GetComponent<NetworkObject>().NetworkObjectId);
         } else
         {
             Debug.Log("I'm client, running command.");
             RunCommand(SendMessageCommandCapsule, pmsg,
-                GameObject.FindWithTag("LocalPlayer").GetComponent<NetworkIdentity>().netId.Value);
+                GameObject.FindWithTag("LocalPlayer").GetComponent<NetworkObject>().NetworkObjectId);
         }
         inputText.text = "";
     }
 
-    private void SendMessageCommandCapsule(string msg, uint id)
+    private void SendMessageCommandCapsule(string msg, ulong id)
     {
-        CmdSendMessage(msg, id);
+        SendMessageServerRpc(msg, id);
     }
 
-    [Command]
-    private void CmdSendMessage(string msg, uint id)
+    [ServerRpc]
+    private void SendMessageServerRpc(string msg, ulong id)
     {
-        RpcSendMessage(msg, id);
+        SendMessageClientRpc(msg, id);
         RemoveAuthority();
     }
 
     [ClientRpc]
-    private void RpcSendMessage(string msg, uint id)
+    private void SendMessageClientRpc(string msg, ulong id)
     {
         display.AddMessage(msg, id);
     }
