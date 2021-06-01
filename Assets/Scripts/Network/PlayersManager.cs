@@ -25,6 +25,8 @@ public class PlayersManager : NetworkBehaviour
 
     private Dictionary<ulong, string> playersIpAddresses = new Dictionary<ulong, string>();
 
+    private bool waitingCloseSignal = false;
+
     public int NumberOfPlayers {
         get
         {
@@ -111,7 +113,10 @@ public class PlayersManager : NetworkBehaviour
         if(!iAmServer)
         {
             Debug.Log("Isolating client...");
-            Unregister(myPlayerId, closer);
+            waitingCloseSignal = true;
+            UnregisterServerRpc(myPlayerId, NetworkManager.LocalClientId);
+            Debug.Log("Client has been unregistered.");
+            StartCoroutine(WaitToAuthorityRemoval(closer));
         }
         else
         {
@@ -305,39 +310,20 @@ public class PlayersManager : NetworkBehaviour
         AddPlayerServerRpc(myPlayerId, NetworkManager.LocalClientId);
     }
 
-    IEnumerator WaitAuthorityUnregister(ulong id, LobbyCloser closer)
-    {
-        if(!iAmServer)
-        {
-            NetworkObject netIdentity = GetComponent<NetworkObject>();
-            while (!netIdentity.IsOwner)
-            {
-                yield return new WaitForSeconds(0.01f);
-            }
-        }
-        UnregisterServerRpc(id);
-        Debug.Log("Client has been unregistered.");
-        StartCoroutine(WaitToAuthorityRemoval(closer));
-    }
-
     IEnumerator WaitToAuthorityRemoval(LobbyCloser closer)
     {
         if (!iAmServer)
         {
-            NetworkObject netIdentity = GetComponent<NetworkObject>();
-            while (netIdentity.IsOwner)
+            while (waitingCloseSignal)
             {
                 yield return new WaitForSeconds(0.01f);
             }
-            GetComponent<NetworkObject>().Despawn(GameObject.FindWithTag("LocalPlayer"));
-            netManager.StopClient();
+            //netManager.StopClient();
             Debug.Log("Closing game...");
             Destroy(gameObject);
             closer.Close();
         }
     }
-
-    private Coroutine Unregister(ulong id, LobbyCloser closer) => StartCoroutine(WaitAuthorityUnregister(id, closer));
 
     private Coroutine AddServerPlayer() => StartCoroutine(RegisterLocalPlayer());
 
@@ -404,7 +390,7 @@ public class PlayersManager : NetworkBehaviour
     private Coroutine CloseHost(LobbyCloser closer = null) => StartCoroutine(WaitBeforeClosing(closer));
 
     [ServerRpc(RequireOwnership = false)]
-    private void UnregisterServerRpc(ulong id)
+    private void UnregisterServerRpc(ulong id, ulong clientId)
     {
         Debug.Log("Unregistering " + id);
         if(currentPlayerGroup.Contains(id))
@@ -412,7 +398,6 @@ public class PlayersManager : NetworkBehaviour
             currentPlayerGroup.Remove(id);
             playersIpAddresses.Remove(id);
             numberOfPlayers.Value -= 1;
-            return;
         }
 
         if(nextPlayerGroup.Contains(id))
@@ -420,7 +405,17 @@ public class PlayersManager : NetworkBehaviour
             nextPlayerGroup.Remove(id);
             playersIpAddresses.Remove(id);
             numberOfPlayers.Value -= 1;
-            return;
+        }
+        CloseClientClientRpc(id);
+    }
+
+    [ClientRpc]
+    private void CloseClientClientRpc(ulong id)
+    {
+        if (id == myPlayerId)
+        {
+            Debug.Log("Client ready to be closed.");
+            waitingCloseSignal = false;
         }
     }
 }
