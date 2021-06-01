@@ -105,6 +105,21 @@ public class MicManager : StreamManager
         /// </summary>
         public int frequency;
 
+        public override Stream MessageStream
+        {
+            get
+            {
+                var stream = base.MessageStream;
+                using (PooledNetworkWriter writer = PooledNetworkWriter.Get(stream))
+                {
+                    writer.WriteInt32(samples);
+                    writer.WriteInt32(channels);
+                    writer.WriteInt32(frequency);
+                }
+                return stream;
+            }
+        }
+
         /// <summary>
         /// Constructor to initialize a header message for sending an audio clip.
         /// </summary>
@@ -119,6 +134,16 @@ public class MicManager : StreamManager
             samples = s;
             channels = c;
             frequency = f;
+        }
+
+        public AudioHeaderMessage(Stream stream) : base(stream)
+        {
+            using (PooledNetworkReader reader = PooledNetworkReader.Get(stream))
+            {
+                samples = reader.ReadInt32();
+                channels = reader.ReadInt32();
+                frequency = reader.ReadInt32();
+            }
         }
 
         public override void NetworkSerialize(NetworkSerializer serializer)
@@ -139,6 +164,21 @@ public class MicManager : StreamManager
         /// Samples that from the audio.
         /// </summary>
         public float[] data;
+
+        public override Stream MessageStream
+        {
+            get
+            {
+                var stream = base.MessageStream;
+                using (PooledNetworkWriter writer = PooledNetworkWriter.Get(stream))
+                {
+                    for (int i = 0; i < size; i++) {
+                        writer.WriteSingle(data[i]);
+                    }
+                }
+                return stream;
+            }
+        }
 
         /// <summary>
         /// Constructor to initialize a chunk message for sending an audio clip.
@@ -170,8 +210,21 @@ public class MicManager : StreamManager
             this.size = size;
         }
 
+        public AudioChunkMessage(Stream stream) : base(stream)
+        {
+            using (PooledNetworkReader reader = PooledNetworkReader.Get(stream))
+            {
+                data = new float[size];
+                for (int i = 0; i < size; i++)
+                {
+                    data[i] = reader.ReadSingle();
+                }
+            }
+        }
+
         public override void NetworkSerialize(NetworkSerializer serializer)
         {
+            data = new float[size];
             base.NetworkSerialize(serializer);
             for(int i = 0; i < size; i++)
             {
@@ -208,7 +261,7 @@ public class MicManager : StreamManager
         <AudioStruc, AudioHeaderMessage, AudioChunkMessage>
         msgData = new StreamMessageDataSupport<AudioStruc, AudioHeaderMessage, AudioChunkMessage>();
 
-    private void Start()
+    public override void NetworkStart()
     {
         Initialize(msgData, clipMsgType);
 
@@ -249,12 +302,15 @@ public class MicManager : StreamManager
         var headerMessage = new AudioHeaderMessage(networkIdentity.NetworkObjectId,
             clipId, voiceClip.samples, voiceClip.channels, frequency, size);
         SendHeaderMessage(clipMsgType, headerMessage);
+        if (IsServer) OnAudioHeaderReceived(headerMessage);
 
         List<(int, float[], int)> chunks = DivideArrayInChunks(samplesData, size);
+        Debug.Log(chunks.Count + " chunks generated.");
         foreach (var chunk in chunks)
         {
             var chunkMessage = new AudioChunkMessage(networkIdentity.NetworkObjectId, clipId, chunk.Item1, chunk.Item2, chunk.Item3);
             SendChunkMessage(clipMsgType, chunkMessage);
+            if (IsServer) OnAudioChunkReceived(chunkMessage);
         }
 
         Debug.Log("Clip for ID " + clipId + " has been sent.");
@@ -267,11 +323,9 @@ public class MicManager : StreamManager
     /// <param name="msg">Network message received.</param>
     private void OnAudioHeaderMessageFromClient(ulong sender, Stream msg)
     {
-        using (PooledNetworkReader reader = PooledNetworkReader.Get(msg))
-        {
-            //var header = msg.ReadMessage<AudioHeaderMessage>();
-            //OnStreamHeaderMessageFromClient(clipMsgType, header);
-        }
+        var header = new AudioHeaderMessage(msg);
+        OnStreamHeaderMessageFromClient(clipMsgType, header);
+        OnStreamHeaderMessageFromServer(header, OnAudioHeaderReceived);
     }
 
     /// <summary>
@@ -280,11 +334,9 @@ public class MicManager : StreamManager
     /// <param name="msg">Network message received.</param>
     private void OnAudioChunkMessageFromClient(ulong sender, Stream msg)
     {
-        using (PooledNetworkReader reader = PooledNetworkReader.Get(msg))
-        {
-            //var row = msg.ReadMessage<AudioChunkMessage>();
-            //OnStreamChunkMessageFromClient(clipMsgType, row);
-        }
+        var row = new AudioChunkMessage(msg);
+        OnStreamChunkMessageFromClient(clipMsgType, row);
+        OnStreamChunkMessageFromServer(row, OnAudioChunkReceived);
     }
 
     /// <summary>
@@ -293,11 +345,8 @@ public class MicManager : StreamManager
     /// <param name="msg">Network message received.</param>
     private void OnAudioHeaderMessageFromServer(ulong sender, Stream msg)
     {
-        using (PooledNetworkReader reader = PooledNetworkReader.Get(msg))
-        {
-            //var header = msg.ReadMessage<AudioHeaderMessage>();
-            //OnStreamHeaderMessageFromServer(header, OnAudioHeaderReceived);
-        }
+        var header = new AudioHeaderMessage(msg);
+        OnStreamHeaderMessageFromServer(header, OnAudioHeaderReceived);
     }
 
     /// <summary>
@@ -306,11 +355,8 @@ public class MicManager : StreamManager
     /// <param name="msg">Network message received.</param>
     private void OnAudioChunkMessageFromServer(ulong sender, Stream msg)
     {
-        using (PooledNetworkReader reader = PooledNetworkReader.Get(msg))
-        {
-            //var row = msg.ReadMessage<AudioChunkMessage>();
-            //OnStreamChunkMessageFromServer(row, OnAudioChunkReceived);
-        }
+        var row = new AudioChunkMessage(msg);
+        OnStreamChunkMessageFromServer(row, OnAudioChunkReceived);
     }
 
     /// <summary>

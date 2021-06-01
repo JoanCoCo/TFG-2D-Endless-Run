@@ -439,18 +439,18 @@ namespace MLAPI
 
         void OnDestroy()
         {
-            if (m_IsServer && m_Running && m_HostId != -1)
+            if (m_IsServer && m_Running && m_HostId != -1 && UnityEngine.Networking.NetworkTransport.IsStarted)
             {
                 UnityEngine.Networking.NetworkTransport.StopBroadcastDiscovery();
                 UnityEngine.Networking.NetworkTransport.RemoveHost(m_HostId);
             }
 
-            if (m_IsClient && m_Running && m_HostId != -1)
+            if (m_IsClient && m_Running && m_HostId != -1 && UnityEngine.Networking.NetworkTransport.IsStarted)
             {
                 UnityEngine.Networking.NetworkTransport.RemoveHost(m_HostId);
             }
 
-            if (m_Running)
+            if (m_Running && UnityEngine.Networking.NetworkTransport.IsStarted)
                 UnityEngine.Networking.NetworkTransport.SetMulticastLock(false);
         }
 

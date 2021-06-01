@@ -861,7 +861,7 @@ MonoBehaviour:
   streamTimeout: 2
   pendingHeadersTimeout: 5
   transmissionsPerSecond: 1
-  frequency: 44100
+  frequency: 8000
 --- !u!114 &2396191616980681266
 MonoBehaviour:
   m_ObjectHideFlags: 0

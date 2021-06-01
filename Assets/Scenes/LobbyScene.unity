@@ -617,7 +617,7 @@ MonoBehaviour:
   netManager: {fileID: 0}
   minNumberOfPlayers: 1
   maxNumberOfPlayers: 6
-  matchCountdown: 10
+  matchCountdown: 2
   gameScene: GameScene
 --- !u!212 &597201626
 SpriteRenderer:
@@ -2727,8 +2727,8 @@ MonoBehaviour:
     ProtocolVersion: 0
     NetworkTransport: {fileID: 1739939608}
     RegisteredScenes:
-    - GameScene
     - LobbyScene
+    - GameScene
     AllowRuntimeSceneChanges: 1
     NetworkPrefabs:
     - Prefab: {fileID: 5481941042463265584, guid: 1cbcb44d9d58945dab098c7073eb09b5,

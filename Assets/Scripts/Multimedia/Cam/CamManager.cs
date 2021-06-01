@@ -93,6 +93,20 @@ public class CamManager : StreamManager
         /// </summary>
         public int height;
 
+        public override Stream MessageStream
+        {
+            get
+            {
+                var stream = base.MessageStream;
+                using (PooledNetworkWriter writer = PooledNetworkWriter.Get(stream))
+                {
+                    writer.WriteInt32(width);
+                    writer.WriteInt32(height);
+                }
+                return stream;
+            }
+        }
+
         /// <summary>
         /// Constructor to initialize a header message for sending an image.
         /// </summary>
@@ -105,6 +119,15 @@ public class CamManager : StreamManager
         {
             width = w;
             height = h;
+        }
+
+        public TextureHeaderMessage(Stream stream) : base (stream)
+        {
+            using(PooledNetworkReader reader = PooledNetworkReader.Get(stream))
+            {
+                width = reader.ReadInt32();
+                height = reader.ReadInt32();
+            }
         }
 
         public override void NetworkSerialize(NetworkSerializer serializer)
@@ -124,6 +147,22 @@ public class CamManager : StreamManager
         /// Chunk of pixels of the image.
         /// </summary>
         public Color32[] data;
+
+        public override Stream MessageStream
+        {
+            get
+            {
+                var stream = base.MessageStream;
+                using (PooledNetworkWriter writer = PooledNetworkWriter.Get(stream))
+                {
+                    for(int i = 0; i < size; i++)
+                    {
+                        writer.WriteColor32(data[i]);
+                    }
+                }
+                return stream;
+            }
+        }
 
         /// <summary>
         /// Constructor to initialize a chunk message for sending an image.
@@ -155,9 +194,22 @@ public class CamManager : StreamManager
             this.size = size;
         }
 
+        public TextureChunkMessage(Stream stream) : base(stream)
+        {
+            using(PooledNetworkReader reader = PooledNetworkReader.Get(stream))
+            {
+                data = new Color32[size];
+                for(int i = 0; i < size; i++)
+                {
+                    data[i] = reader.ReadColor32();
+                }
+            }
+        }
+
         public override void NetworkSerialize(NetworkSerializer serializer)
         {
             base.NetworkSerialize(serializer);
+            data = new Color32[size];
             for(int i = 0; i < size; i++)
             {
                 serializer.Serialize(ref data[i]);
@@ -193,7 +245,7 @@ public class CamManager : StreamManager
         <TextureStruc, TextureHeaderMessage, TextureChunkMessage>
         msgData = new StreamMessageDataSupport<TextureStruc, TextureHeaderMessage, TextureChunkMessage>();
 
-    private void Start()
+    public override void NetworkStart()
     {
         Initialize(msgData, textureMsgType);
 
@@ -239,12 +291,14 @@ public class CamManager : StreamManager
         Debug.Log("Chunk size " + size);
         var headerMessage = new TextureHeaderMessage(networkIdentity.NetworkObjectId, textId, texture.width, texture.height, size);
         SendHeaderMessage(textureMsgType, headerMessage);
+        if (IsServer) OnTextureHeaderReceived(headerMessage);
 
         List<(int, Color32[], int)> chunks = DivideArrayInChunks(pixelData, size);
         foreach (var chunk in chunks)
         {
             var chunkMessage = new TextureChunkMessage(networkIdentity.NetworkObjectId, textId, chunk.Item1, chunk.Item2, chunk.Item3);
             SendChunkMessage(textureMsgType, chunkMessage);
+            if (IsServer) OnTextureChunkReceived(chunkMessage);
         }
 
         Debug.Log("SnapShoot for ID " + textId + " has been sent.");
@@ -257,11 +311,9 @@ public class CamManager : StreamManager
     /// <param name="msg">Network message received.</param>
     private void OnTextureHeaderMessageFromClient(ulong sender, Stream msg)
     {
-        using (PooledNetworkReader reader = PooledNetworkReader.Get(msg))
-        {
-            //var header = reader.Read
-            //OnStreamHeaderMessageFromClient(textureMsgType, header);
-        }
+        var header = new TextureHeaderMessage(msg);
+        OnStreamHeaderMessageFromClient(textureMsgType, header);
+        OnStreamHeaderMessageFromServer(header, OnTextureHeaderReceived);
     }
 
     /// <summary>
@@ -270,11 +322,9 @@ public class CamManager : StreamManager
     /// <param name="msg">Network message received.</param>
     private void OnTextureChunkMessageFromClient(ulong sender, Stream msg)
     {
-        using (PooledNetworkReader reader = PooledNetworkReader.Get(msg))
-        {
-            //var row = msg.ReadMessage<TextureChunkMessage>();
-            //OnStreamChunkMessageFromClient(textureMsgType, row);
-        }
+        var row = new TextureChunkMessage(msg);
+        OnStreamChunkMessageFromClient(textureMsgType, row);
+        OnStreamChunkMessageFromServer(row, OnTextureChunkReceived);
     }
 
     /// <summary>
@@ -283,11 +333,8 @@ public class CamManager : StreamManager
     /// <param name="msg">Network message received.</param>
     private void OnTextureHeaderMessageFromServer(ulong sender, Stream msg)
     {
-        using (PooledNetworkReader reader = PooledNetworkReader.Get(msg))
-        {
-            //var header = msg.ReadMessage<TextureHeaderMessage>();
-            //OnStreamHeaderMessageFromServer(header, OnTextureHeaderReceived);
-        }
+        var header = new TextureHeaderMessage(msg);
+        OnStreamHeaderMessageFromServer(header, OnTextureHeaderReceived);
     }
 
     /// <summary>
@@ -296,11 +343,8 @@ public class CamManager : StreamManager
     /// <param name="msg">Network message received.</param>
     private void OnTextureChunkMessageFromServer(ulong sender, Stream msg)
     {
-        using (PooledNetworkReader reader = PooledNetworkReader.Get(msg))
-        {
-            //var row = msg.ReadMessage<TextureChunkMessage>();
-            //OnStreamChunkMessageFromServer(row, OnTextureChunkReceived);
-        }
+        var row = new TextureChunkMessage(msg);
+        OnStreamChunkMessageFromServer(row, OnTextureChunkReceived);
     }
 
     /// <summary>

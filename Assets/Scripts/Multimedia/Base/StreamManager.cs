@@ -6,6 +6,7 @@ using MLAPI.Messaging;
 using MLAPI.NetworkVariable;
 using MLAPI.Serialization;
 using System.IO;
+using MLAPI.Serialization.Pooled;
 
 
 /// <summary>
@@ -36,11 +37,7 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
         public abstract void UpdateTypes(ulong n);
     }
 
-    /// <summary>
-    /// Class that represents the basic stream header message.
-    /// </summary>
-    protected class StreamHeaderMessage : INetworkSerializable
-    {
+    protected abstract class StreamMessage {
         /// <summary>
         /// Network identifier of the player object who sent the message.
         /// </summary>
@@ -51,6 +48,14 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
         /// </summary>
         public uint id;
 
+        public abstract Stream MessageStream { get; }
+    }
+
+    /// <summary>
+    /// Class that represents the basic stream header message.
+    /// </summary>
+    protected class StreamHeaderMessage : StreamMessage, INetworkSerializable
+    {
         /// <summary>
         /// Maximum size of the following chunks associated with this header.
         /// </summary>
@@ -60,6 +65,22 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
         /// Time mark used to know when the header was generated.
         /// </summary>
         public long timeStamp;
+
+        public override Stream MessageStream
+        {
+            get
+            {
+                MemoryStream stream = new MemoryStream();
+                using (PooledNetworkWriter writer = PooledNetworkWriter.Get(stream))
+                {
+                    writer.WriteUInt64(netId);
+                    writer.WriteUInt32(id);
+                    writer.WriteInt32(chunkSize);
+                    writer.WriteInt64(timeStamp);
+                }
+                return stream;
+            }
+        }
 
         /// <summary>
         /// Constructor to instantiate StreamHeaderMessage
@@ -75,6 +96,17 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
             timeStamp = System.DateTime.Now.ToUniversalTime().Ticks;
         }
 
+        public StreamHeaderMessage(Stream stream)
+        {
+            using(PooledNetworkReader reader = PooledNetworkReader.Get(stream))
+            {
+                netId = reader.ReadUInt64();
+                id = reader.ReadUInt32();
+                chunkSize = reader.ReadInt32();
+                timeStamp = reader.ReadInt64();
+            }
+        }
+
         public virtual void NetworkSerialize(NetworkSerializer serializer)
         {
             serializer.Serialize(ref netId);
@@ -84,18 +116,8 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
         }
     }
 
-    protected class StreamChunkMessage : INetworkSerializable
+    protected class StreamChunkMessage : StreamMessage, INetworkSerializable
     {
-        /// <summary>
-        /// Network identifier of the player object who sent the message.
-        /// </summary>
-        public ulong netId;
-
-        /// <summary>
-        /// Identifier of the stream.
-        /// </summary>
-        public uint id;
-
         /// <summary>
         /// Position in the sequence of chunks with the same id. Starts in cero.
         /// </summary>
@@ -105,6 +127,22 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
         /// Real size of the chunk's data.
         /// </summary>
         public int size;
+
+        public override Stream MessageStream
+        {
+            get
+            {
+                MemoryStream stream = new MemoryStream();
+                using (PooledNetworkWriter writer = PooledNetworkWriter.Get(stream))
+                {
+                    writer.WriteUInt64(netId);
+                    writer.WriteUInt32(id);
+                    writer.WriteInt32(order);
+                    writer.WriteInt32(size);
+                }
+                return stream;
+            }
+        }
 
         /// <summary>
         /// Constructor to instantiate StreamChunkMessage
@@ -118,6 +156,17 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
             this.id = id;
             order = o;
             size = 0;
+        }
+
+        public StreamChunkMessage(Stream stream)
+        {
+            using (PooledNetworkReader reader = PooledNetworkReader.Get(stream))
+            {
+                netId = reader.ReadUInt64();
+                id = reader.ReadUInt32();
+                order = reader.ReadInt32();
+                size = reader.ReadInt32();
+            }
         }
 
         public virtual void NetworkSerialize(NetworkSerializer serializer)
@@ -565,6 +614,9 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
     /// </summary>
     protected NetworkVariable<bool> isStreamOn = new NetworkVariable<bool>();
 
+    private const string SERVER_MSGTYPE = "Server";
+    private const string CLIENT_MSGTYPE = "Client";
+
     /// <summary>
     /// Initializes the manager, setting up the network identity, updating the
     /// message type identifiers and setting up the unheaded chunks timeout.
@@ -603,17 +655,17 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
         if (IsServer)
         {
             Debug.Log("Registering server handlers.");
-            CustomMessagingManager.RegisterNamedMessageHandler(msgType.Header, headerMessageFromClient);
+            CustomMessagingManager.RegisterNamedMessageHandler(msgType.Header + SERVER_MSGTYPE, headerMessageFromClient);
             //NetworkServer.RegisterHandler(msgType.Header, headerMessageFromClient);
-            CustomMessagingManager.RegisterNamedMessageHandler(msgType.Chunk, chunkMessageFromClient);
+            CustomMessagingManager.RegisterNamedMessageHandler(msgType.Chunk + SERVER_MSGTYPE, chunkMessageFromClient);
             //NetworkServer.RegisterHandler(msgType.Chunk, chunkMessagerFromClient);
         }
-        if (IsClient)
+        else if (IsClient)
         {
             Debug.Log("Registering client handlers.");
-            CustomMessagingManager.RegisterNamedMessageHandler(msgType.Header, headerMessageFromServer);
+            CustomMessagingManager.RegisterNamedMessageHandler(msgType.Header + CLIENT_MSGTYPE, headerMessageFromServer);
             //NetworkManager.singleton.client.RegisterHandler(msgType.Header, headerMessageFromServer);
-            CustomMessagingManager.RegisterNamedMessageHandler(msgType.Chunk, chunkMessageFromServer);
+            CustomMessagingManager.RegisterNamedMessageHandler(msgType.Chunk + CLIENT_MSGTYPE, chunkMessageFromServer);
             //NetworkManager.singleton.client.RegisterHandler(msgType.Chunk, chunkMessageFromServer);
         }
     }
@@ -626,13 +678,13 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
     {
         if (IsServer)
         {
-            CustomMessagingManager.UnregisterNamedMessageHandler(msgType.Header);
-            CustomMessagingManager.UnregisterNamedMessageHandler(msgType.Chunk);
+            CustomMessagingManager.UnregisterNamedMessageHandler(msgType.Header + SERVER_MSGTYPE);
+            CustomMessagingManager.UnregisterNamedMessageHandler(msgType.Chunk + SERVER_MSGTYPE);
         }
-        if (IsClient && NetworkManager.Singleton != null)
+        else if (IsClient && NetworkManager.Singleton != null)
         {
-            CustomMessagingManager.UnregisterNamedMessageHandler(msgType.Header);
-            CustomMessagingManager.UnregisterNamedMessageHandler(msgType.Chunk);
+            CustomMessagingManager.UnregisterNamedMessageHandler(msgType.Header + CLIENT_MSGTYPE);
+            CustomMessagingManager.UnregisterNamedMessageHandler(msgType.Chunk + CLIENT_MSGTYPE);
         }
     }
 
@@ -760,17 +812,15 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
     /// </summary>
     /// <param name="id">Type of message that is being sent.</param>
     /// <param name="msg">Message to be sent.</param>
-    private void SendStreamMessage(string id, INetworkSerializable msg)
+    private void SendStreamMessage(string id, StreamMessage msg)
     {
         if (IsServer)
         {
             SendStreamMessageFromServer(id, msg);
-            //NetworkServer.SendToReady(gameObject, TextureMsgType.Header, headerMessage);
         }
         else
         {
             SendStreamMessageFromClient(id, msg);
-            //NetworkManager.singleton.client.Send(TextureMsgType.Header, headerMessage);
         }
     }
 
@@ -779,10 +829,17 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
     /// </summary>
     /// <param name="id">Type of message that is being sent.</param>
     /// <param name="msg">Message to be sent.</param>
-    private void SendStreamMessageFromServer(string id, INetworkSerializable msg)
+    private void SendStreamMessageFromServer(string id, StreamMessage msg)
     {
         //NetworkServer.SendByChannelToReady(gameObject, id, msg, 2);
-        //CustomMessagingManager.SendNamedMessage(id, NetworkManager.Singleton.LocalClientId, msg);
+        Debug.Log("Sending to client stream of length: " + msg.MessageStream.Length);
+        foreach (var client in NetworkManager.Singleton.ConnectedClients.Keys)
+        {
+            if (client != NetworkManager.LocalClientId)
+            {
+                CustomMessagingManager.SendNamedMessage(id + CLIENT_MSGTYPE, client, msg.MessageStream);
+            }
+        }
     }
 
     /// <summary>
@@ -790,10 +847,11 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
     /// </summary>
     /// <param name="id">Type of message that is being sent.</param>
     /// <param name="msg">Message to be sent.</param>
-    private void SendStreamMessageFromClient(string id, INetworkSerializable msg)
+    private void SendStreamMessageFromClient(string id, StreamMessage msg)
     {
         //NetworkManager.singleton.client.SendByChannel(id, msg, 2);
-        //CustomMessagingManager.SendNamedMessage(id, NetworkManager.Singleton.ServerClientId, msg);
+        Debug.Log("Sending to server stream of length: " + msg.MessageStream.Length);
+        CustomMessagingManager.SendNamedMessage(id + SERVER_MSGTYPE, NetworkManager.Singleton.ServerClientId, msg.MessageStream);
     }
 
     /// <summary>
