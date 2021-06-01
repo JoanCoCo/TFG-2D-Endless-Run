@@ -632,7 +632,7 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
         where chunkMsg : StreamChunkMessage
         where headerMsg : StreamHeaderMessage
     {
-        isStreamOn.Value = false;
+        if(IsServer) isStreamOn.Value = false;
         msgData.UnheadedChunksTimeout = pendingHeadersTimeout;
         networkIdentity = GetComponent<NetworkObject>();
         type.UpdateTypes(networkIdentity.NetworkObjectId);

@@ -302,7 +302,7 @@ public class PlayersManager : NetworkBehaviour
         }
         myPlayerId = player.GetComponent<NetworkObject>().NetworkObjectId;
         //Debug.Log("Connection with server IP: " + player.GetComponent<NetworkObject>().connectionToServer.address);
-        AddPlayerServerRpc(myPlayerId);
+        AddPlayerServerRpc(myPlayerId, NetworkManager.LocalClientId);
     }
 
     IEnumerator WaitAuthorityUnregister(ulong id, LobbyCloser closer)
@@ -349,12 +349,17 @@ public class PlayersManager : NetworkBehaviour
     }*/
 
     [ServerRpc(RequireOwnership = false)]
-    private void AddPlayerServerRpc(ulong nwId)
+    private void AddPlayerServerRpc(ulong nwId, ulong clientId)
     {
         RegisterNewPlayer(nwId);
-        NetworkObject nwPlayer = GetNetworkObject(nwId); // NetworkServer.FindLocalObject(new NetworkInstanceId(nwId));
-        playersIpAddresses.Add(nwId, "" /*nwPlayer.connectionToClient.address*/);
-        //Debug.Log("Connection with client IP: " + nwPlayer.GetComponent<NetworkObject>().connectionToClient.address);
+        // NetworkServer.FindLocalObject(new NetworkInstanceId(nwId));
+        ushort connectionId = 0;
+        byte hostId = 0;
+        NetworkManager.Singleton.GetComponent<UNetTransport>().GetUNetConnectionDetails(clientId, out hostId, out connectionId);
+        string address = "";
+        UnityEngine.Networking.NetworkTransport.GetConnectionInfo(hostId, connectionId, out address, out _, out _, out _, out _);
+        playersIpAddresses.Add(nwId, address /*nwPlayer.connectionToClient.address*/);
+        Debug.Log("Player IP has been registered for " + nwId + ": " + address);
     }
 
     private void RegisterNewPlayer(ulong nwId)
