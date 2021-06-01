@@ -5,13 +5,13 @@ using UnityEngine;
 using MLAPI;
 using MLAPI.Transports.UNET;
 
-[RequireComponent(typeof(UnityEngine.Networking.NetworkDiscovery))]
+[RequireComponent(typeof(NetworkDiscovery))]
 public class PlayersFinder : MonoBehaviour
 {
     [SerializeField] private float maxWaitSecondsForServer = 10.0f;
     [SerializeField] private NetworkManager netManager;
     [SerializeField] private GameObject connectingWindow;
-    private UnityEngine.Networking.NetworkDiscovery netDiscovery;
+    private NetworkDiscovery netDiscovery;
     private float elapsedTime = 0.0f;
     private bool isConnected = false;
     private float waitSecondsForServer;
@@ -19,7 +19,7 @@ public class PlayersFinder : MonoBehaviour
     // Start is called before the first frame update
     void Start()
     {
-        netDiscovery = GetComponent<UnityEngine.Networking.NetworkDiscovery>();
+        netDiscovery = GetComponent<NetworkDiscovery>();
         netDiscovery.Initialize();
         netDiscovery.StartAsClient();
         if (netManager == null) netManager = GameObject.FindWithTag("NetManager").GetComponent<NetworkManager>();
@@ -49,10 +49,10 @@ public class PlayersFinder : MonoBehaviour
             {
                 var brdReceived = netDiscovery.broadcastsReceived;
                 var brdKeys = brdReceived.Keys.ToArray();
-                UnityEngine.Networking.NetworkBroadcastResult invitation = brdReceived[brdKeys[0]];
-                string msg = UnityEngine.Networking.NetworkDiscovery.BytesToString(invitation.broadcastData);
+                NetworkBroadcastResult invitation = brdReceived[brdKeys[0]];
+                string msg = NetworkDiscovery.BytesToString(invitation.broadcastData);
                 Debug.Log("Broadcast from host at " + invitation.serverAddress + " was received: " + msg);
-                Debug.Log("Port: " + msg.Split(':')[2]);
+                Debug.Log("Port: " + msg.Split(':').Last());
                 NetworkManager.Singleton.GetComponent<UNetTransport>().ConnectPort = int.Parse(msg.Split(':').Last()); //NetworkManager:address:port
                 NetworkManager.Singleton.GetComponent<UNetTransport>().ConnectAddress = invitation.serverAddress;
                 netManager.StartClient();

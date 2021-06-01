@@ -5,7 +5,7 @@ using MLAPI;
 using MLAPI.NetworkVariable;
 using MLAPI.Messaging;
 
-public class MatchStarter : DistributedEntityBehaviour, InteractableObject
+public class MatchStarter : NetworkBehaviour, InteractableObject
 {
     [SerializeField] private KeyCode interactionKey = KeyCode.Z;
     [SerializeField] private NetworkManager netManager;
@@ -43,16 +43,11 @@ public class MatchStarter : DistributedEntityBehaviour, InteractableObject
         {
             readyConfirmationPending = false;
             Messenger.Broadcast(LobbyEvent.WAITING_FOR_MATCH);
-            RunCommand(UpdateNumberOfPlayersCommandCapsule, PlayerPrefs.GetString("Name"));
+            UpdateNumberOfReadyPlayersServerRpc(PlayerPrefs.GetString("Name"));
         }
     }
 
-    private void UpdateNumberOfPlayersCommandCapsule(string player)
-    {
-        UpdateNumberOfReadyPlayersServerRpc(player);
-    }
-
-    [ServerRpc]
+    [ServerRpc(RequireOwnership = false)]
     private void UpdateNumberOfReadyPlayersServerRpc(string player)
     {
         if (currNumberOfPlayers.Value < maxNumberOfPlayers)
@@ -60,10 +55,9 @@ public class MatchStarter : DistributedEntityBehaviour, InteractableObject
             currNumberOfPlayers.Value += 1;
             //RpcUpdateNumberOfReadyPlayers(currNumberOfPlayers);
             if (gameIsStarting) GetReadyForMatchClientRpc();
-            Debug.Log("Server Ready Players: " + currNumberOfPlayers.ToString());
+            Debug.Log("Server Ready Players: " + currNumberOfPlayers.Value.ToString());
         }
         NewPlayerReadyForMatchClientRpc(player);
-        RemoveOwnership();
     }
 
     /*[ClientRpc]
@@ -132,7 +126,6 @@ public class MatchStarter : DistributedEntityBehaviour, InteractableObject
     [ClientRpc]
     private void SendSplitClientRpc()
     {
-        RemoveOwnership();
         Messenger<string>.Broadcast(NetworkEvent.SPLIT, gameScene);
     }
 }

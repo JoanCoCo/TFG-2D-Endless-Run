@@ -5,7 +5,7 @@ using MLAPI.NetworkVariable;
 using MLAPI.Messaging;
 using MLAPI;
 
-public class ScoresManager : DistributedEntityBehaviour
+public class ScoresManager : NetworkBehaviour
 {
     private List<(string, int)> scores = new List<(string, int)>();
     private NetworkVariable<int> numOfScoresNeeded = new NetworkVariable<int>();
@@ -42,15 +42,10 @@ public class ScoresManager : DistributedEntityBehaviour
 
     private void OnPlayerScoreObtained((string, int) pair)
     {
-        RunCommand(SyncScoreCommandCapsule, pair.Item1, pair.Item2);
+        SyncScoresServerRpc(pair.Item1, pair.Item2);
     }
 
-    private void SyncScoreCommandCapsule(string player, int d)
-    {
-        SyncScoresServerRpc(player, d);
-    }
-
-    [ServerRpc]
+    [ServerRpc(RequireOwnership = false)]
     private void SyncScoresServerRpc(string player, int d)
     {
         SyncScoresClientRpc(player, d);

@@ -5,10 +5,9 @@ using MLAPI;
 using MLAPI.NetworkVariable;
 using MLAPI.Messaging;
 using MLAPI.Transports.UNET;
-using UnityEngine.SceneManagement;
 using MLAPI.SceneManagement;
 
-public class PlayersManager : DistributedEntityBehaviour
+public class PlayersManager : NetworkBehaviour
 {
     [SerializeField]
     private NetworkManager netManager;
@@ -46,13 +45,8 @@ public class PlayersManager : DistributedEntityBehaviour
         if(!waitingForMatch)
         {
             waitingForMatch = true;
-            RunCommand(PrepareSplitCommandCapsule, myPlayerId);
+            PreparePlayerSplitServerRpc(myPlayerId);
         }
-    }
-
-    private void PrepareSplitCommandCapsule(ulong nwId)
-    {
-        PreparePlayerSplitServerRpc(nwId);
     }
 
     private void OnSplit(string newScene)
@@ -68,7 +62,6 @@ public class PlayersManager : DistributedEntityBehaviour
             bool isFirst = true;
             int port = NetworkManager.Singleton.GetComponent<UNetTransport>().ConnectPort + 1;
             string address = "";
-            RemoveOwnership();
             foreach (var player in currentPlayerGroup)
             {
                 if (player != myPlayerId)
@@ -105,8 +98,11 @@ public class PlayersManager : DistributedEntityBehaviour
                     }
                 }
             }
-            GameObject.FindWithTag("PlayersFinder").GetComponent<UnityEngine.Networking.NetworkDiscovery>().StopBroadcast();
+            GameObject.FindWithTag("PlayersFinder").GetComponent<NetworkDiscovery>().StopBroadcast();
             CloseHost(closer);
+        } else
+        {
+            Debug.LogWarning("Bad use of IsolateHost: I'm not a server.");
         }
     }
 
@@ -117,6 +113,10 @@ public class PlayersManager : DistributedEntityBehaviour
             Debug.Log("Isolating client...");
             Unregister(myPlayerId, closer);
         }
+        else
+        {
+            Debug.LogWarning("Bad use of IsolateClient: I'm not a client.");
+        }
     }
 
     private void RunSplit(string newScene)
@@ -125,7 +125,6 @@ public class PlayersManager : DistributedEntityBehaviour
         bool isFirst = true;
         int port = NetworkManager.Singleton.GetComponent<UNetTransport>().ConnectPort + 1;
         string address = "";
-        RemoveOwnership();
         if (nextPlayerGroup.Contains(myPlayerId))
         {
             Debug.Log("Host is in split.");
@@ -146,7 +145,7 @@ public class PlayersManager : DistributedEntityBehaviour
             //new WaitForSeconds(0.1f);
             numberOfPlayers.Value = nextPlayerGroup.Count;
             var playersFinder = GameObject.FindWithTag("PlayersFinder");
-            playersFinder.GetComponent<UnityEngine.Networking.NetworkDiscovery>().StopBroadcast();
+            playersFinder.GetComponent<NetworkDiscovery>().StopBroadcast();
             Destroy(playersFinder);
             NetworkSceneManager.SwitchScene(newScene);
         }
@@ -227,12 +226,11 @@ public class PlayersManager : DistributedEntityBehaviour
         }
     }
 
-    [ServerRpc]
+    [ServerRpc(RequireOwnership = false)]
     private void PreparePlayerSplitServerRpc(ulong nwId)
     {
         currentPlayerGroup.Remove(nwId);
         nextPlayerGroup.Add(nwId);
-        RemoveOwnership();
     }
 
     public override void NetworkStart()
@@ -241,7 +239,13 @@ public class PlayersManager : DistributedEntityBehaviour
         {
             netManager = GameObject.FindWithTag("NetManager").GetComponent<NetworkManager>();
         }
-        if (IsServer) numberOfPlayers.Value = 0;
+
+        if (IsServer)
+        {
+            Debug.Log("Starting the server...");
+            iAmServer = true;
+            numberOfPlayers.Value = 0;
+        }
 
         if (!iAmServer)
         {
@@ -257,7 +261,7 @@ public class PlayersManager : DistributedEntityBehaviour
 
     private void Update()
     {
-        Debug.Log(numberOfPlayers.ToString() + " players currently connected.");
+        Debug.Log(numberOfPlayers.Value.ToString() + " players currently connected.");
     }
 
     /*public override void OnStartClient()
@@ -272,11 +276,6 @@ public class PlayersManager : DistributedEntityBehaviour
             AddServerPlayer();
         }
     }*/
-
-    private void AddPlayerCommandCapsule(ulong nwId)
-    {
-        AddPlayerServerRpc(nwId);
-    }
 
     IEnumerator RegisterLocalPlayer()
     {
@@ -303,12 +302,11 @@ public class PlayersManager : DistributedEntityBehaviour
         }
         myPlayerId = player.GetComponent<NetworkObject>().NetworkObjectId;
         //Debug.Log("Connection with server IP: " + player.GetComponent<NetworkObject>().connectionToServer.address);
-        RunCommand(AddPlayerCommandCapsule, myPlayerId);
+        AddPlayerServerRpc(myPlayerId);
     }
 
     IEnumerator WaitAuthorityUnregister(ulong id, LobbyCloser closer)
     {
-        GetAuthority();
         if(!iAmServer)
         {
             NetworkObject netIdentity = GetComponent<NetworkObject>();
@@ -343,21 +341,20 @@ public class PlayersManager : DistributedEntityBehaviour
 
     private Coroutine AddServerPlayer() => StartCoroutine(RegisterLocalPlayer());
 
-    public void OnServerInitialized()
+    /*public void OnServerInitialized()
     {
         Debug.Log("Starting the server...");
         iAmServer = true;
         numberOfPlayers.Value = 0;
-    }
+    }*/
 
-    [ServerRpc]
+    [ServerRpc(RequireOwnership = false)]
     private void AddPlayerServerRpc(ulong nwId)
     {
         RegisterNewPlayer(nwId);
-        NetworkObject nwPlayer = NetworkManager.Singleton.ConnectedClients[nwId].PlayerObject; // NetworkServer.FindLocalObject(new NetworkInstanceId(nwId));
+        NetworkObject nwPlayer = GetNetworkObject(nwId); // NetworkServer.FindLocalObject(new NetworkInstanceId(nwId));
         playersIpAddresses.Add(nwId, "" /*nwPlayer.connectionToClient.address*/);
         //Debug.Log("Connection with client IP: " + nwPlayer.GetComponent<NetworkObject>().connectionToClient.address);
-        RemoveOwnership();
     }
 
     private void RegisterNewPlayer(ulong nwId)
@@ -378,12 +375,10 @@ public class PlayersManager : DistributedEntityBehaviour
     {
         if (iAmServer)
         {
-            RemoveOwnership();
             CloseHost();
         }
         else
         {
-            RemoveOwnership();
             netManager.StopClient();
             Destroy(gameObject);
         }
@@ -403,7 +398,7 @@ public class PlayersManager : DistributedEntityBehaviour
 
     private Coroutine CloseHost(LobbyCloser closer = null) => StartCoroutine(WaitBeforeClosing(closer));
 
-    [ServerRpc]
+    [ServerRpc(RequireOwnership = false)]
     private void UnregisterServerRpc(ulong id)
     {
         Debug.Log("Unregistering " + id);
@@ -412,7 +407,6 @@ public class PlayersManager : DistributedEntityBehaviour
             currentPlayerGroup.Remove(id);
             playersIpAddresses.Remove(id);
             numberOfPlayers.Value -= 1;
-            RemoveOwnership();
             return;
         }
 
@@ -421,7 +415,6 @@ public class PlayersManager : DistributedEntityBehaviour
             nextPlayerGroup.Remove(id);
             playersIpAddresses.Remove(id);
             numberOfPlayers.Value -= 1;
-            RemoveOwnership();
             return;
         }
     }

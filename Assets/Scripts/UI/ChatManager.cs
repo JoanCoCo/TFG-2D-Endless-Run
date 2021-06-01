@@ -6,7 +6,7 @@ using MLAPI;
 using MLAPI.Messaging;
 
 [RequireComponent(typeof(ChatDisplay))]
-public class ChatManager : DistributedEntityBehaviour
+public class ChatManager : NetworkBehaviour
 {
     [SerializeField] private TMP_InputField inputText;
     private ChatDisplay display;
@@ -38,22 +38,16 @@ public class ChatManager : DistributedEntityBehaviour
         } else
         {
             Debug.Log("I'm client, running command.");
-            RunCommand(SendMessageCommandCapsule, pmsg,
+            SendMessageServerRpc(pmsg,
                 GameObject.FindWithTag("LocalPlayer").GetComponent<NetworkObject>().NetworkObjectId);
         }
         inputText.text = "";
     }
 
-    private void SendMessageCommandCapsule(string msg, ulong id)
-    {
-        SendMessageServerRpc(msg, id);
-    }
-
-    [ServerRpc]
+    [ServerRpc(RequireOwnership = false)]
     private void SendMessageServerRpc(string msg, ulong id)
     {
         SendMessageClientRpc(msg, id);
-        RemoveAuthority();
     }
 
     [ClientRpc]

@@ -24,15 +24,18 @@ public class LobbyCloser : NetworkBehaviour, InteractableObject
 
     public void Interact()
     {
+        Debug.Log("Interacting with LobbyCloser");
         if(netManager != null)
         {
             if(IsServer)
             {
+                Debug.Log("Server LobbyCloser.");
                 GameObject.FindWithTag("PlayersManager").GetComponent<PlayersManager>().IsolateHost(this);
                 //netManager.StopHost();
                 //Close();
             } else
             {
+                Debug.Log("Client LobbyCloser.");
                 GameObject.FindWithTag("PlayersManager").GetComponent<PlayersManager>().IsolateClient(this);
                 //netManager.StopClient();
             }
