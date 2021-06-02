@@ -7,6 +7,7 @@ using TMPro;
 using MLAPI;
 using MLAPI.NetworkVariable;
 using MLAPI.Messaging;
+using MLAPI.SceneManagement;
 
 public class Player : NetworkBehaviour
 {
@@ -31,15 +32,8 @@ public class Player : NetworkBehaviour
 
     private InputAvailabilityManager inputAvailabilityManager;
 
-    //[SerializeField] private CamManager camManager;
-
-    private void Awake()
-    {
-        isInLobby = SceneManager.GetActiveScene().name.Equals("LobbyScene");
-    }
-
     // Start is called before the first frame update
-    void Start()
+    public override void NetworkStart()
     {
         if (IsLocalPlayer)
         {
@@ -47,26 +41,50 @@ public class Player : NetworkBehaviour
             _body = GetComponent<Rigidbody2D>();
             _collider = GetComponent<BoxCollider2D>();
             _currentInteractable = null;
+            NetworkSceneManager.OnSceneSwitched += OnNewScene;
+        }
+        OnNewScene();
+    }
+
+    private void OnNewScene()
+    {
+        isInLobby = SceneManager.GetActiveScene().name.Equals("LobbyScene");
+
+        if (IsLocalPlayer)
+        {
+            ToSpawnPosition();
+            SetUpVirtualCamera();
             if (!isInLobby) Messenger<float>.Broadcast(GameEvent.PLAYER_STARTS, gameObject.transform.position.x);
-            vcamera = GameObject.FindWithTag("CameraSet").GetComponent<CinemachineVirtualCamera>();
-            vcamera.Follow = transform;
             healthBarObject.SetActive(false);
             textCanvas.SetActive(false);
             nameText.text = "";
             SetUpNameServerRpc(PlayerPrefs.GetString("Name"));
             if (!isInLobby) Messenger<int>.AddListener(GameEvent.DISTANCE_INCREASED, OnDistanceIncreased);
             inputAvailabilityManager = GameObject.FindWithTag("InputAvailabilityManager").GetComponent<InputAvailabilityManager>();
-        } else
+        }
+        else
         {
             nameText.text = playerName.Value;
             arrow.SetActive(false);
-            if(isInLobby)
+            if (isInLobby)
             {
                 healthBarObject.SetActive(false);
                 textCanvas.SetActive(false);
             }
-            
+
         }
+    }
+
+    private void SetUpVirtualCamera()
+    {
+        vcamera = GameObject.FindWithTag("CameraSet").GetComponent<CinemachineVirtualCamera>();
+        vcamera.Follow = transform;
+    }
+
+    private void ToSpawnPosition()
+    {
+        GameObject[] spawnPoint = GameObject.FindGameObjectsWithTag("SpawnPoint");
+        if (spawnPoint.Length > 0) transform.position = spawnPoint[Random.Range(0, spawnPoint.Length - 1)].transform.position;
     }
 
     [ServerRpc]

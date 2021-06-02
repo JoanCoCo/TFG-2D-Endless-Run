@@ -19,6 +19,8 @@ public class Cell : NetworkBehaviour
     private NetworkVariable<float> width = new NetworkVariable<float>();
     private NetworkVariable<float> height = new NetworkVariable<float>();
 
+    private bool despawnWasTriggered = false;
+
     // Start is called before the first frame update
     public override void NetworkStart()
     {
@@ -35,12 +37,13 @@ public class Cell : NetworkBehaviour
 
     void Update()
     {
-        if (IsServer)
+        if (IsServer && !despawnWasTriggered)
         {
             if (gameObject.transform.position.x < lastPosX
                 - _mainCamera.orthographicSize * _mainCamera.aspect - _margin)
             {
-                GetComponent<NetworkObject>().Despawn(); // NetworkSever.Destro(gameObject);
+                GetComponent<NetworkObject>().Despawn(); // NetworkSever.Destroy(gameObject);
+                despawnWasTriggered = true;
             }
         }
     }
@@ -70,12 +73,12 @@ public class Cell : NetworkBehaviour
 
     public void SetHeight(float h)
     {
-        height.Value = h;
+        if (IsServer) height.Value = h;
     }
 
     public void SetWidth(float w)
     {
-        width.Value = w;
+        if(IsServer) width.Value = w;
     }
 
     private void OnDrawGizmos()

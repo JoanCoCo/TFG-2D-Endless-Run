@@ -15,6 +15,7 @@ TagManager:
   - Chat
   - CamManager
   - InputAvailabilityManager
+  - SpawnPoint
   layers:
   - Default
   - TransparentFX

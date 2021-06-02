@@ -80,8 +80,6 @@ public class CourseGenerator : NetworkBehaviour
             hasDamage |= o.CompareTag("Damage");
             //o.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, cellSizeY);
             //o.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, cellSizeX);
-            o.GetComponent<Cell>().SetHeight(cellSizeY);
-            o.GetComponent<Cell>().SetWidth(cellSizeX);
 
             if(_red)
             {
@@ -93,6 +91,8 @@ public class CourseGenerator : NetworkBehaviour
             }
 
             o.GetComponent<NetworkObject>().Spawn();
+            o.GetComponent<Cell>().SetHeight(cellSizeY);
+            o.GetComponent<Cell>().SetWidth(cellSizeX);
 
             _newCol[i] = o;
             if (o.GetComponent<Cell>().IsConnected(Cell.RIGHT) && !topFound)

@@ -68,7 +68,7 @@ public class PlayersFinder : MonoBehaviour
 
     private void OnNetworkDisconnect(ulong id)
     {
-        if (isConnected)
+        /*if (isConnected)
         {
             netManager.StopClient();
             isConnected = false;
@@ -77,7 +77,7 @@ public class PlayersFinder : MonoBehaviour
             netDiscovery.StartAsClient();
             if (connectingWindow != null) connectingWindow.SetActive(true);
             if (netDiscovery.broadcastsReceived.Count > 0) netDiscovery.broadcastsReceived.Clear();
-        }
+        }*/
     }
 
     public void SetUpAsHost()
