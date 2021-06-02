@@ -257,30 +257,6 @@ public class Player : NetworkBehaviour
         GetComponent<SpriteRenderer>().sprite = null;
     }
 
-    [ServerRpc]
-    public void SetAuthServerRpc(ulong objectId)
-    {
-        //var iObject = NetworkServer.FindLocalObject(objectId);
-        var NetworkObject = GetNetworkObject(objectId); //iObject.GetComponent<NetworkObject>();
-        //var otherOwner = NetworkObject.clientAuthorityOwner;
-        ulong myId = NetworkManager.Singleton.LocalClientId;
-        if (NetworkManager.Singleton.ConnectedClients[myId].OwnedObjects.Contains(NetworkObject))
-        {
-            return;
-        }
-        else
-        {
-            /*if (otherOwner != null)
-            {
-                NetworkObject.RemoveClientAuthority(otherOwner);
-            }*/
-            //NetworkObject.AssignClientAuthority(connectionToClient);
-            NetworkObject.RemoveOwnership();
-            NetworkObject.ChangeOwnership(myId);
-            Debug.Log("Authority given to " + NetworkObject.NetworkObjectId);
-        }
-    }
-
     [ClientRpc]
     private void UpdateHealthBarClientRpc(int h)
     {

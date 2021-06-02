@@ -8,14 +8,7 @@ public class LobbyCloser : NetworkBehaviour, InteractableObject
 {
     [SerializeField] private KeyCode interactionKey = KeyCode.Z;
     [SerializeField] private GameObject netManagerObject;
-    private NetworkManager netManager;
     [SerializeField] private string scene;
-
-    public override void NetworkStart()
-    {
-        if (netManagerObject == null) netManagerObject = GameObject.FindWithTag("NetManager");
-        netManager = netManagerObject.GetComponent<NetworkManager>();
-    }
 
     public KeyCode GetKey()
     {
@@ -25,7 +18,7 @@ public class LobbyCloser : NetworkBehaviour, InteractableObject
     public void Interact()
     {
         Debug.Log("Interacting with LobbyCloser");
-        if(netManager != null)
+        if(NetworkManager.Singleton != null)
         {
             if(IsServer)
             {
@@ -46,7 +39,7 @@ public class LobbyCloser : NetworkBehaviour, InteractableObject
     {
         Destroy(netManagerObject);
         //NetworkManager.networkSceneName = "";
-        NetworkManager.Shutdown();
+        //NetworkManager.Singleton.Shutdown();
         //NetworkTransport.Shutdown();
         GameObject playersManager = GameObject.FindWithTag("PlayersManager");
         if (playersManager != null) Destroy(playersManager);

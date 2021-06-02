@@ -11,8 +11,6 @@ public class PlayersManager : NetworkBehaviour
 {
     private NetworkVariable<int> numberOfPlayers = new NetworkVariable<int>();
 
-    private bool iAmServer = false;
-
     [SerializeField] private List<ulong> currentPlayerGroup = new List<ulong>();
     [SerializeField] private List<ulong> nextPlayerGroup = new List<ulong>();
 
@@ -23,6 +21,8 @@ public class PlayersManager : NetworkBehaviour
     private Dictionary<ulong, string> playersIpAddresses = new Dictionary<ulong, string>();
 
     private bool waitingCloseSignal = false;
+
+    private int playersReadyForSplit = 0;
 
     public int NumberOfPlayers {
         get
@@ -50,12 +50,12 @@ public class PlayersManager : NetworkBehaviour
 
     private void OnSplit(string newScene)
     {
-        if(iAmServer) RunSplit(newScene);
+        if(IsServer) RunSplit(newScene);
     }
 
     public void IsolateHost(LobbyCloser closer)
     {
-        if(iAmServer)
+        if(IsServer)
         {
             Debug.Log("Isolating host...");
 
@@ -73,6 +73,7 @@ public class PlayersManager : NetworkBehaviour
 
             NewPlayersPartitionFromList(allPlayers);
             GameObject.FindWithTag("PlayersFinder").GetComponent<NetworkDiscovery>().StopBroadcast();
+            playersReadyForSplit += 1;
             CloseHost(closer);
         } else
         {
@@ -82,7 +83,7 @@ public class PlayersManager : NetworkBehaviour
 
     public void IsolateClient(LobbyCloser closer)
     {
-        if(!iAmServer)
+        if(!IsServer)
         {
             Debug.Log("Isolating client...");
             waitingCloseSignal = true;
@@ -151,21 +152,28 @@ public class PlayersManager : NetworkBehaviour
     [ClientRpc]
     private void BecomeHostClientRpc(int numOfPly, int port, bool changeScene, string scene, ClientRpcParams clientRpcParams = default)
     {
-        BecomeHost(numOfPly, port, changeScene, scene);
+        StartCoroutine(BecomeHost(numOfPly, port, changeScene, scene));
     }
 
-    private void BecomeHost(int numOfPly, int port, bool changeScene, string scene)
+    private IEnumerator BecomeHost(int numOfPly, int port, bool changeScene, string scene)
     {
+        Debug.Log("Sending split ready confirmation.");
+        ConfirmSplitServerRpc();
+        while(NetworkManager.Singleton.IsConnectedClient)
+        {
+            yield return new WaitForSeconds(0.01f);
+        }
         Debug.Log("Becoming host on port " + port + "...");
         //GameObject.FindWithTag("LocalPlayer").GetComponent<NetworkObject>().Despawn();
         currentPlayerGroup.Clear();
         nextPlayerGroup.Clear();
         playersIpAddresses.Clear();
-        NetworkManager.Singleton.StopClient();
+        //NetworkManager.Singleton.StopClient();
+        //NetworkManager.Singleton.Shutdown();
         NetworkManager.Singleton.GetComponent<UNetTransport>().ServerListenPort = port; //netManager.networkPort = port;
-        numberOfPlayers.Value = 0;
         if(!changeScene) GameObject.FindWithTag("PlayersFinder").GetComponent<PlayersFinder>().SetUpAsHost();
         NetworkManager.Singleton.StartHost();
+        //numberOfPlayers.Value = 0;
         if (changeScene) ChangeSceneWhenReady(numOfPly, scene);
     }
 
@@ -185,9 +193,21 @@ public class PlayersManager : NetworkBehaviour
     [ClientRpc]
     private void ChangeClientConnectionClientRpc(int port, string address, ClientRpcParams clientRpcParams = default)
     {
+        StartCoroutine(ChangeClientConnection(port, address));
+    }
+
+    private IEnumerator ChangeClientConnection(int port, string address)
+    {
+        Debug.Log("Sending split ready confirmation.");
+        ConfirmSplitServerRpc();
+        while (NetworkManager.Singleton.IsConnectedClient)
+        {
+            yield return new WaitForSeconds(0.01f);
+        }
         Debug.Log("Changing connection to host.");
         //GameObject.FindWithTag("LocalPlayer").GetComponent<NetworkObject>().Despawn();
-        NetworkManager.Singleton.StopClient();
+        //NetworkManager.Singleton.StopClient();
+        //NetworkManager.Singleton.Shutdown();
         NetworkManager.Singleton.GetComponent<UNetTransport>().ConnectPort = port; //netManager.networkPort = port;
         NetworkManager.Singleton.GetComponent<UNetTransport>().ConnectAddress = address; //NetworkManager.Singleton.networkAddress = address;
         NetworkManager.Singleton.StartClient();
@@ -205,13 +225,12 @@ public class PlayersManager : NetworkBehaviour
         if (IsServer)
         {
             Debug.Log("Starting the server...");
-            iAmServer = true;
             numberOfPlayers.Value = 0;
         }
 
         myClientId = NetworkManager.LocalClientId;
 
-        if (!iAmServer)
+        if (!IsServer)
         {
             Debug.Log("I'm not server, adding my player.");
             AddPlayerServerRpc(myClientId);
@@ -226,11 +245,17 @@ public class PlayersManager : NetworkBehaviour
     private void Update()
     {
         Debug.Log(numberOfPlayers.Value.ToString() + " players currently connected.");
+        string playersConn = "Players connected: ";
+        foreach (var player in NetworkManager.Singleton.ConnectedClients.Keys)
+        {
+            playersConn += player + " ";
+        }
+        Debug.Log(playersConn);
     }
 
     IEnumerator WaitToAuthorityRemoval(LobbyCloser closer)
     {
-        if (!iAmServer)
+        if (!IsServer)
         {
             while (waitingCloseSignal)
             {
@@ -269,7 +294,7 @@ public class PlayersManager : NetworkBehaviour
 
     private void OnFinishedScreenOut()
     {
-        if (iAmServer)
+        if (IsServer)
         {
             CloseHost();
         }
@@ -282,14 +307,20 @@ public class PlayersManager : NetworkBehaviour
 
     IEnumerator WaitBeforeClosing(LobbyCloser closer)
     {
-        while(NetworkManager.Singleton.ConnectedClients.Count > 1)
+        while(playersReadyForSplit < numberOfPlayers.Value)
         {
-            Debug.Log("Waiting, currently connected players: " + NetworkManager.Singleton.ConnectedClients.Count);
+            Debug.Log("Waiting, received readys: " + playersReadyForSplit);
             yield return new WaitForSeconds(0.01f);
         }
         NetworkManager.Singleton.StopHost();
-        //Destroy(gameObject);
+        Destroy(gameObject);
         if (closer != null) closer.Close();
+    }
+
+    [ServerRpc(RequireOwnership = false)]
+    private void ConfirmSplitServerRpc()
+    {
+        playersReadyForSplit += 1;
     }
 
     private Coroutine CloseHost(LobbyCloser closer = null) => StartCoroutine(WaitBeforeClosing(closer));

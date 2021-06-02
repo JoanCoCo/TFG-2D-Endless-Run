@@ -614,10 +614,9 @@ MonoBehaviour:
   m_Name: 
   m_EditorClassIdentifier: 
   interactionKey: 122
-  netManager: {fileID: 0}
   minNumberOfPlayers: 1
   maxNumberOfPlayers: 6
-  matchCountdown: 2
+  matchCountdown: 10
   gameScene: GameScene
 --- !u!212 &597201626
 SpriteRenderer:

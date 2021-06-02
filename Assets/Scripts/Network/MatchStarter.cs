@@ -8,7 +8,6 @@ using MLAPI.Messaging;
 public class MatchStarter : NetworkBehaviour, InteractableObject
 {
     [SerializeField] private KeyCode interactionKey = KeyCode.Z;
-    [SerializeField] private NetworkManager netManager;
     [SerializeField] private int minNumberOfPlayers;
     [SerializeField] private int maxNumberOfPlayers;
 
@@ -18,7 +17,6 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
     private bool gameIsStarting = false;
     [SerializeField] private float matchCountdown = 60;
     [SerializeField] private string gameScene;
-    private NetworkObject netIdentity;
     private float currentCountdown = 0; 
 
     public override void NetworkStart()
@@ -27,8 +25,6 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
         {
             currNumberOfPlayers.Value = 0;
         }
-        if (netManager == null) netManager = GameObject.FindWithTag("NetManager").GetComponent<NetworkManager>();
-        netIdentity = GetComponent<NetworkObject>();
         currentCountdown = matchCountdown;
     }
 
@@ -59,13 +55,6 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
         }
         NewPlayerReadyForMatchClientRpc(player);
     }
-
-    /*[ClientRpc]
-    private void RpcUpdateNumberOfReadyPlayers(int n)
-    {
-        currNumberOfPlayers = n;
-        Debug.Log("Ready players: " + currNumberOfPlayers);
-    }*/
 
     [ClientRpc]
     private void GetReadyForMatchClientRpc()
