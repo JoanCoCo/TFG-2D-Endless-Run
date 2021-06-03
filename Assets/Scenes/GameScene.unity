@@ -350,9 +350,9 @@ SpriteRenderer:
   m_AutoUVMaxDistance: 0.5
   m_AutoUVMaxAngle: 89
   m_LightmapParameters: {fileID: 0}
-  m_SortingLayerID: 1691388583
-  m_SortingLayer: 1
-  m_SortingOrder: 0
+  m_SortingLayerID: -2008585701
+  m_SortingLayer: 2
+  m_SortingOrder: 5
   m_Sprite: {fileID: 21300000, guid: b6e736d9da74c4434a1cf1f665f7c078, type: 3}
   m_Color: {r: 0.2861699, g: 0.24701852, b: 0.5754717, a: 1}
   m_FlipX: 0
@@ -380,6 +380,11 @@ PrefabInstance:
         type: 3}
       propertyPath: m_AnchorMax.y
       value: 0
+      objectReference: {fileID: 0}
+    - target: {fileID: 3140912726088212038, guid: def5de2e876b34810be02f605d94e3d7,
+        type: 3}
+      propertyPath: m_AnchoredPosition.y
+      value: -114.498566
       objectReference: {fileID: 0}
     - target: {fileID: 3140912726820173701, guid: def5de2e876b34810be02f605d94e3d7,
         type: 3}
@@ -1502,7 +1507,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9670801, guid: 51242349f4ff44b0d84a86b19547ee94, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -21.119003
+      value: -21.118958
       objectReference: {fileID: 0}
     - target: {fileID: 2020966103, guid: 51242349f4ff44b0d84a86b19547ee94, type: 3}
       propertyPath: m_AnchorMax.x
