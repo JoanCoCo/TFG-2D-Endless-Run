@@ -312,7 +312,14 @@ public class PlayersManager : NetworkBehaviour
         }
         //NetworkManager.Singleton.StopHost();
         Destroy(gameObject);
-        if (closer != null) closer.Close();
+        if (closer != null)
+        {
+            closer.Close();
+        }
+        else
+        {
+            NetworkManager.Singleton.StopHost();
+        }
     }
 
     private Coroutine CloseHost(LobbyCloser closer = null) => StartCoroutine(WaitBeforeClosing(closer));

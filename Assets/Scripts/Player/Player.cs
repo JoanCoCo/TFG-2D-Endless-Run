@@ -51,8 +51,9 @@ public class Player : NetworkBehaviour
     private void OnNewScene()
     {
         if(!isInLobby && IsLocalPlayer) Messenger<int>.RemoveListener(GameEvent.DISTANCE_INCREASED, OnDistanceIncreased);
-
         isInLobby = SceneManager.GetActiveScene().name.Equals("LobbyScene");
+
+        if(!IsLocalPlayer) Debug.Log(NetworkObjectId + ": new scene has been loaded. Is it lobby? " + isInLobby);
 
         if (IsLocalPlayer)
         {
@@ -250,8 +251,9 @@ public class Player : NetworkBehaviour
         this.health = health;
         if (health == 0)
         {
-            HidePlayerClientRpc();
+            //HidePlayerClientRpc();
             //NetworkServer.Destroy(gameObject);
+            Destroy(gameObject);
         }
         UpdateHealthBarClientRpc(health);
     }

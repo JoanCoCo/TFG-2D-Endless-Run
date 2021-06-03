@@ -29,6 +29,10 @@ public class ScoreScreen : MonoBehaviour
             GameObject netManager = GameObject.FindWithTag("NetManager");
             if (netManager != null)
             {
+                if (netManager.GetComponent<NetworkManager>().isActiveAndEnabled)
+                {
+                    netManager.GetComponent<NetworkManager>().Shutdown();
+                }
                 Destroy(netManager);
 
                 //Necessary to reset the online scene. If not, clients will try to change again to the GameScene when connecting to host.
