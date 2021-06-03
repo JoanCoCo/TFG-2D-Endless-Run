@@ -39,19 +39,12 @@ SpriteAtlas:
       blockOffset: 1
       allowAlphaSplitting: 0
       enableRotation: 1
-      enableTightPacking: 1
+      enableTightPacking: 0
     secondaryTextureSettings: {}
     variantMultiplier: 1
     packables:
-    - {fileID: 2800000, guid: 279a92465d05d4be8a70f3a92480781f, type: 3}
-    - {fileID: 2800000, guid: 21f89afacfb9a482e877c3c95347e816, type: 3}
-    - {fileID: 2800000, guid: 9cc1b576e28d1448682304843e6a33b5, type: 3}
-    - {fileID: 2800000, guid: ea959ad74f6834759917295edd04f7e8, type: 3}
-    - {fileID: 2800000, guid: 6bfd2dc1c4c6846288a2aeb666621dfb, type: 3}
-    - {fileID: 2800000, guid: b6e736d9da74c4434a1cf1f665f7c078, type: 3}
-    - {fileID: 2800000, guid: 1c734862549ea4d7f876e5c1716fddf7, type: 3}
-    - {fileID: 2800000, guid: 4e636001f6a08426e82954cdedddb835, type: 3}
-    totalSpriteSurfaceArea: 33554432
+    - {fileID: 102900000, guid: 7bb81155319f04ce188470d7a55afd62, type: 3}
+    totalSpriteSurfaceArea: 52068352
     bindAsDefault: 1
     isAtlasV2: 0
     cachedData: {fileID: 0}
@@ -60,20 +53,30 @@ SpriteAtlas:
   - {fileID: 21300000, guid: 4e636001f6a08426e82954cdedddb835, type: 3}
   - {fileID: 21300000, guid: 6bfd2dc1c4c6846288a2aeb666621dfb, type: 3}
   - {fileID: 21300000, guid: 1c734862549ea4d7f876e5c1716fddf7, type: 3}
+  - {fileID: 21300000, guid: 62d29de20302840e7866b334d5a53b74, type: 3}
+  - {fileID: 21300000, guid: 8575bce419fba43ceb69ed78cbb7a6b5, type: 3}
+  - {fileID: 21300000, guid: 089a84f5fa9664d51b087c0763efd9d4, type: 3}
   - {fileID: 21300000, guid: 279a92465d05d4be8a70f3a92480781f, type: 3}
   - {fileID: 21300000, guid: 9cc1b576e28d1448682304843e6a33b5, type: 3}
+  - {fileID: 21300000, guid: 9a27d4074165b404abd7526efde17159, type: 3}
   - {fileID: 21300000, guid: ea959ad74f6834759917295edd04f7e8, type: 3}
   - {fileID: 21300000, guid: b6e736d9da74c4434a1cf1f665f7c078, type: 3}
   - {fileID: 21300000, guid: 21f89afacfb9a482e877c3c95347e816, type: 3}
+  - {fileID: 21300000, guid: 0813c90d6bb9c46498de8b3cfe9e4cb9, type: 3}
   m_PackedSpriteNamesToIndex:
   - candy_arrow
   - candy_slope
   - candy_z_button
+  - candy_load_2
+  - canndy_load_3
+  - candy_load_1
   - candy_exit_door
   - candy_ui_background
+  - candy_pipe_collision
   - candy_spikes
   - candy_ground
   - candy_game_door
+  - candy_pipe
   m_RenderDataMap: {}
   m_Tag: Candy Atlas
   m_IsVariant: 0
