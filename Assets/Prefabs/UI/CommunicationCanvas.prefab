@@ -743,7 +743,7 @@ RectTransform:
   m_LocalEulerAnglesHint: {x: 0, y: 0, z: 0}
   m_AnchorMin: {x: 0, y: 0.11881482}
   m_AnchorMax: {x: 1, y: 0.11881482}
-  m_AnchoredPosition: {x: -11.720718, y: -114.50488}
+  m_AnchoredPosition: {x: -11.720718, y: -114.49118}
   m_SizeDelta: {x: -23.924547, y: 0}
   m_Pivot: {x: 0.5, y: 0}
 --- !u!114 &3140912726088212040
@@ -1665,7 +1665,7 @@ MonoBehaviour:
   NetworkInstanceId: 0
   PrefabHash: 8600747936147543663
   PrefabHashGenerator: CommunicationCanvas
-  AlwaysReplicateAsRoot: 0
+  AlwaysReplicateAsRoot: 1
   DontDestroyWithOwner: 1
 --- !u!1 &3140912727284414898
 GameObject:

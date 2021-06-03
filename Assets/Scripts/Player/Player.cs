@@ -32,6 +32,8 @@ public class Player : NetworkBehaviour
 
     private InputAvailabilityManager inputAvailabilityManager;
 
+    private bool iWasLocalPlayer = false;
+
     // Start is called before the first frame update
     public override void NetworkStart()
     {
@@ -48,6 +50,8 @@ public class Player : NetworkBehaviour
 
     private void OnNewScene()
     {
+        if(!isInLobby && IsLocalPlayer) Messenger<int>.RemoveListener(GameEvent.DISTANCE_INCREASED, OnDistanceIncreased);
+
         isInLobby = SceneManager.GetActiveScene().name.Equals("LobbyScene");
 
         if (IsLocalPlayer)
@@ -61,6 +65,7 @@ public class Player : NetworkBehaviour
             SetUpNameServerRpc(PlayerPrefs.GetString("Name"));
             if (!isInLobby) Messenger<int>.AddListener(GameEvent.DISTANCE_INCREASED, OnDistanceIncreased);
             inputAvailabilityManager = GameObject.FindWithTag("InputAvailabilityManager").GetComponent<InputAvailabilityManager>();
+            iWasLocalPlayer = true;
         }
         else
         {
@@ -71,7 +76,7 @@ public class Player : NetworkBehaviour
                 healthBarObject.SetActive(false);
                 textCanvas.SetActive(false);
             }
-
+            iWasLocalPlayer = false;
         }
     }
 
@@ -265,6 +270,7 @@ public class Player : NetworkBehaviour
 
     private void OnDestroy()
     {
-        if (IsLocalPlayer && !isInLobby) Messenger<int>.RemoveListener(GameEvent.DISTANCE_INCREASED, OnDistanceIncreased);
+        if (iWasLocalPlayer && !isInLobby) Messenger<int>.RemoveListener(GameEvent.DISTANCE_INCREASED, OnDistanceIncreased);
+        if (iWasLocalPlayer) NetworkSceneManager.OnSceneSwitched -= OnNewScene;
     }
 }

@@ -61,5 +61,5 @@ MonoBehaviour:
   NetworkInstanceId: 0
   PrefabHash: 13414285399570425098
   PrefabHashGenerator: PlayersManager
-  AlwaysReplicateAsRoot: 0
-  DontDestroyWithOwner: 0
+  AlwaysReplicateAsRoot: 1
+  DontDestroyWithOwner: 1

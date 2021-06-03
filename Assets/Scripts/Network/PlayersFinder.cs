@@ -64,6 +64,13 @@ public class PlayersFinder : MonoBehaviour
                 //netDiscovery.broadcastsReceived.Clear();
             }
         }
+        /*if(Input.GetKeyDown(KeyCode.Alpha1))
+        {
+            NetworkManager.Singleton.StartHost();
+        } else if(Input.GetKeyDown(KeyCode.Alpha2))
+        {
+            NetworkManager.Singleton.StartClient();
+        }*/
     }
 
     private void OnNetworkDisconnect(ulong id)

@@ -22,8 +22,6 @@ public class PlayersManager : NetworkBehaviour
 
     private bool waitingCloseSignal = false;
 
-    private int playersReadyForSplit = 0;
-
     public int NumberOfPlayers {
         get
         {
@@ -73,7 +71,6 @@ public class PlayersManager : NetworkBehaviour
 
             NewPlayersPartitionFromList(allPlayers);
             GameObject.FindWithTag("PlayersFinder").GetComponent<NetworkDiscovery>().StopBroadcast();
-            playersReadyForSplit += 1;
             CloseHost(closer);
         } else
         {
@@ -139,7 +136,7 @@ public class PlayersManager : NetworkBehaviour
             var playersFinder = GameObject.FindWithTag("PlayersFinder");
             playersFinder.GetComponent<NetworkDiscovery>().StopBroadcast();
             Destroy(playersFinder);
-            NetworkSceneManager.SwitchScene(newScene);
+            StartCoroutine(WaitToStartScene(newScene));
         }
         else
         {
@@ -147,6 +144,15 @@ public class PlayersManager : NetworkBehaviour
             NewPlayersPartitionFromList(nextPlayerGroup);
             nextPlayerGroup.Clear();
         }
+    }
+
+    private IEnumerator WaitToStartScene(string scene)
+    {
+        while(NetworkManager.Singleton.ConnectedClients.Count > nextPlayerGroup.Count)
+        {
+            yield return new WaitForSeconds(0.01f);
+        }
+        NetworkSceneManager.SwitchScene(scene);
     }
 
     [ClientRpc]
@@ -158,17 +164,13 @@ public class PlayersManager : NetworkBehaviour
     private IEnumerator BecomeHost(int numOfPly, int port, bool changeScene, string scene)
     {
         Debug.Log("Sending split ready confirmation.");
-        ConfirmSplitServerRpc();
-        while(NetworkManager.Singleton.IsConnectedClient)
-        {
-            yield return new WaitForSeconds(0.01f);
-        }
+        yield return new WaitForSeconds(0.01f);
         Debug.Log("Becoming host on port " + port + "...");
         //GameObject.FindWithTag("LocalPlayer").GetComponent<NetworkObject>().Despawn();
         currentPlayerGroup.Clear();
         nextPlayerGroup.Clear();
         playersIpAddresses.Clear();
-        //NetworkManager.Singleton.StopClient();
+        NetworkManager.Singleton.StopClient();
         //NetworkManager.Singleton.Shutdown();
         NetworkManager.Singleton.GetComponent<UNetTransport>().ServerListenPort = port; //netManager.networkPort = port;
         if(!changeScene) GameObject.FindWithTag("PlayersFinder").GetComponent<PlayersFinder>().SetUpAsHost();
@@ -199,11 +201,7 @@ public class PlayersManager : NetworkBehaviour
     private IEnumerator ChangeClientConnection(int port, string address)
     {
         Debug.Log("Sending split ready confirmation.");
-        ConfirmSplitServerRpc();
-        while (NetworkManager.Singleton.IsConnectedClient)
-        {
-            yield return new WaitForSeconds(0.01f);
-        }
+        yield return new WaitForSeconds(0.01f);
         Debug.Log("Changing connection to host.");
         //GameObject.FindWithTag("LocalPlayer").GetComponent<NetworkObject>().Despawn();
         //NetworkManager.Singleton.StopClient();
@@ -307,20 +305,14 @@ public class PlayersManager : NetworkBehaviour
 
     IEnumerator WaitBeforeClosing(LobbyCloser closer)
     {
-        while(playersReadyForSplit < numberOfPlayers.Value)
+        while(NetworkManager.Singleton.ConnectedClients.Count > 1 )//playersReadyForSplit < numberOfPlayers.Value)
         {
-            Debug.Log("Waiting, received readys: " + playersReadyForSplit);
+            Debug.Log("Waiting, connected players: " + NetworkManager.Singleton.ConnectedClients.Count);
             yield return new WaitForSeconds(0.01f);
         }
-        NetworkManager.Singleton.StopHost();
+        //NetworkManager.Singleton.StopHost();
         Destroy(gameObject);
         if (closer != null) closer.Close();
-    }
-
-    [ServerRpc(RequireOwnership = false)]
-    private void ConfirmSplitServerRpc()
-    {
-        playersReadyForSplit += 1;
     }
 
     private Coroutine CloseHost(LobbyCloser closer = null) => StartCoroutine(WaitBeforeClosing(closer));

@@ -74,7 +74,7 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
     [ClientRpc]
     private void UpdateCountdownClientRpc(float countdown)
     {
-        if(gameIsStarting)
+        if(gameIsStarting && currentCountdown > countdown)
         {
             currentCountdown = countdown;
             Messenger<int>.Broadcast(LobbyEvent.MATCH_COUNTDOWN_UPDATE, (int) countdown);

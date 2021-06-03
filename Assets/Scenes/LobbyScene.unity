@@ -616,7 +616,7 @@ MonoBehaviour:
   interactionKey: 122
   minNumberOfPlayers: 1
   maxNumberOfPlayers: 6
-  matchCountdown: 10
+  matchCountdown: 2
   gameScene: GameScene
 --- !u!212 &597201626
 SpriteRenderer:
@@ -1983,7 +1983,7 @@ PrefabInstance:
     - target: {fileID: 1255541398554838848, guid: f40a0fba558f74a38a6754c4d954c43b,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: -210.39357
+      value: -210.39355
       objectReference: {fileID: 0}
     - target: {fileID: 5162437775394149940, guid: f40a0fba558f74a38a6754c4d954c43b,
         type: 3}
@@ -2516,7 +2516,7 @@ GameObject:
   m_Icon: {fileID: 0}
   m_NavMeshLayer: 0
   m_StaticEditorFlags: 0
-  m_IsActive: 1
+  m_IsActive: 0
 --- !u!114 &1434113868
 MonoBehaviour:
   m_ObjectHideFlags: 0
