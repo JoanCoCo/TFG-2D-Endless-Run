@@ -75,6 +75,10 @@ public class Player : NetworkBehaviour
             {
                 healthBarObject.SetActive(false);
                 textCanvas.SetActive(false);
+            } else
+            {
+                healthBarObject.SetActive(true);
+                textCanvas.SetActive(true);
             }
             iWasLocalPlayer = false;
         }

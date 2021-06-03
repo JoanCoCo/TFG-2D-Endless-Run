@@ -42,7 +42,7 @@ public class MicPlayer : MonoBehaviour
         }
         else
         {
-            Debug.Log("Mic is stopped.");
+            //Debug.Log("Mic is stopped.");
             //if (audioSource.isPlaying) audioSource.Pause();
         } 
     }

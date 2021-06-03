@@ -19,7 +19,7 @@ public class ScoresManager : NetworkBehaviour
     public override void NetworkStart()
     {
         Messenger<(string, int)>.AddListener(GameEvent.PLAYER_SCORE_OBTAINED, OnPlayerScoreObtained);
-        if(IsServer) numOfScoresNeeded.Value = GameObject.FindWithTag("PlayersManager").GetComponent<PlayersManager>().NumberOfPlayers;
+        if (IsServer) numOfScoresNeeded.Value = NetworkManager.Singleton.ConnectedClients.Count;
     }
 
     private void Update()
@@ -61,7 +61,7 @@ public class ScoresManager : NetworkBehaviour
             myPlayedIsDestroyed = true;
         }
         currentScoresReceived += 1;
-        Debug.Log(currentScoresReceived + "/" + numOfScoresNeeded + " scores have been received.");
+        Debug.Log(currentScoresReceived + "/" + numOfScoresNeeded.Value + " scores have been received.");
     }
 
     private void OnDestroy()

@@ -90,9 +90,10 @@ public class CourseGenerator : NetworkBehaviour
                 }
             }
 
-            o.GetComponent<NetworkObject>().Spawn();
             o.GetComponent<Cell>().SetHeight(cellSizeY);
             o.GetComponent<Cell>().SetWidth(cellSizeX);
+
+            o.GetComponent<NetworkObject>().Spawn();
 
             _newCol[i] = o;
             if (o.GetComponent<Cell>().IsConnected(Cell.RIGHT) && !topFound)
