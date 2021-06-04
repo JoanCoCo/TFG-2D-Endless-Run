@@ -452,10 +452,10 @@ public class CamManager : StreamManager
             if (cam != null && cam.isPlaying)
             {
                 cam.Stop();
+                StreamIsOffServerRpc();
             }
         }
         lastCapturedFrame = null;
-        StreamIsOffServerRpc();
     }
 
     private void OnDestroy()

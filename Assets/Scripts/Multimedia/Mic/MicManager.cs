@@ -463,11 +463,11 @@ public class MicManager : StreamManager
                 if (voiceClip != null)
                 {
                     voiceClip = null;
+                    StreamIsOffServerRpc();
                 }
             }
             lastCapturedClip = null;
         }
-        StreamIsOffServerRpc();
     }
 
     private void OnDestroy()

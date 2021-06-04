@@ -103,7 +103,7 @@ public class GameController : NetworkBehaviour
         if(IsServer)
         {
             float lastX;
-            if (!playerDied)
+            if (!playerDied && GameObject.FindGameObjectWithTag("LocalPlayer") != null)
             {
                 lastX = GameObject.FindGameObjectWithTag("LocalPlayer").transform.position.x;
             } else

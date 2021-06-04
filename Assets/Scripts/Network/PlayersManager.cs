@@ -94,10 +94,10 @@ public class PlayersManager : NetworkBehaviour
         }
     }
 
-    private void NewPlayersPartitionFromList(List<ulong> players)
+    private void NewPlayersPartitionFromList(List<ulong> players, bool transition = false, string scene = "")
     {
         bool isFirst = true;
-        int port = NetworkManager.Singleton.GetComponent<UNetTransport>().ConnectPort + 1;
+        int port = NetworkManager.Singleton.GetComponent<UNetTransport>().ServerListenPort + 1;
         string address = "";
 
         foreach (var player in players)
@@ -110,12 +110,12 @@ public class PlayersManager : NetworkBehaviour
                 }
             };
 
-            NetworkManager.Singleton.ConnectedClients[player].PlayerObject.Despawn(true);
+            //NetworkManager.Singleton.ConnectedClients[player].PlayerObject.Despawn(true);
 
             if (isFirst)
             {
                 Debug.Log("Setting up split's host");
-                BecomeHostClientRpc(currentPlayerGroup.Count, port, false, "", clientRpcParams);
+                BecomeHostClientRpc(currentPlayerGroup.Count, port, transition, scene, clientRpcParams);
                 isFirst = false;
                 address = playersIpAddresses[player];
             }
@@ -124,6 +124,8 @@ public class PlayersManager : NetworkBehaviour
                 Debug.Log("Reconnecting splitted clients to the new host.");
                 ChangeClientConnectionClientRpc(port, address, clientRpcParams);
             }
+
+            if (playersIpAddresses.ContainsKey(player)) playersIpAddresses.Remove(player);
         }
     }
 
@@ -134,6 +136,7 @@ public class PlayersManager : NetworkBehaviour
         {
             Debug.Log("Host is in split.");
             NewPlayersPartitionFromList(currentPlayerGroup);
+            currentPlayerGroup.Clear();
             numberOfPlayers.Value = nextPlayerGroup.Count;
             var playersFinder = GameObject.FindWithTag("PlayersFinder");
             playersFinder.GetComponent<NetworkDiscovery>().StopBroadcast();
@@ -143,8 +146,9 @@ public class PlayersManager : NetworkBehaviour
         else
         {
             Debug.Log("Host is not in split");
-            NewPlayersPartitionFromList(nextPlayerGroup);
+            NewPlayersPartitionFromList(nextPlayerGroup, true, newScene);
             nextPlayerGroup.Clear();
+            numberOfPlayers.Value = currentPlayerGroup.Count;
         }
     }
 
@@ -165,19 +169,19 @@ public class PlayersManager : NetworkBehaviour
 
     private IEnumerator BecomeHost(int numOfPly, int port, bool changeScene, string scene)
     {
-        Debug.Log("Sending split ready confirmation.");
-        yield return new WaitForSeconds(0.01f);
         Debug.Log("Becoming host on port " + port + "...");
         //GameObject.FindWithTag("LocalPlayer").GetComponent<NetworkObject>().Despawn();
         currentPlayerGroup.Clear();
         nextPlayerGroup.Clear();
         playersIpAddresses.Clear();
         NetworkManager.Singleton.StopClient();
+        //yield return new WaitForSeconds(1f);
+        while(GameObject.FindWithTag("LocalPlayer") != null) { yield return new WaitForSeconds(0.01f); }
         //NetworkManager.Singleton.Shutdown();
         NetworkManager.Singleton.GetComponent<UNetTransport>().ServerListenPort = port; //netManager.networkPort = port;
         if(!changeScene) GameObject.FindWithTag("PlayersFinder").GetComponent<PlayersFinder>().SetUpAsHost();
         NetworkManager.Singleton.StartHost();
-        numberOfPlayers.Value = 0;
+        numberOfPlayers.Value = 1;
         if (changeScene) ChangeSceneWhenReady(numOfPly, scene);
     }
 
@@ -202,7 +206,6 @@ public class PlayersManager : NetworkBehaviour
 
     private IEnumerator ChangeClientConnection(int port, string address)
     {
-        Debug.Log("Sending split ready confirmation.");
         yield return new WaitForSeconds(0.01f);
         Debug.Log("Changing connection to host.");
         //GameObject.FindWithTag("LocalPlayer").GetComponent<NetworkObject>().Despawn();
@@ -244,13 +247,16 @@ public class PlayersManager : NetworkBehaviour
 
     private void Update()
     {
-        Debug.Log(numberOfPlayers.Value.ToString() + " players currently connected.");
-        string playersConn = "Players connected: ";
-        foreach (var player in NetworkManager.Singleton.ConnectedClients.Keys)
+        if (IsClient || IsServer)
         {
-            playersConn += player + " ";
+            Debug.Log(numberOfPlayers.Value.ToString() + " players currently connected.");
+            string playersConn = "Players connected: ";
+            foreach (var player in NetworkManager.Singleton.ConnectedClients.Keys)
+            {
+                playersConn += player + " ";
+            }
+            Debug.Log(playersConn);
         }
-        Debug.Log(playersConn);
     }
 
     IEnumerator WaitToAuthorityRemoval(LobbyCloser closer)
