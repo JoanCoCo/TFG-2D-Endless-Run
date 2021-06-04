@@ -128,9 +128,9 @@
       "url": "https://packages.unity.com"
     },
     "com.unity.multiplayer.mlapi": {
-      "version": "file:/Users/joanc2/Documents/GitHub/com.unity.multiplayer.mlapi/com.unity.multiplayer.mlapi",
+      "version": "file:com.unity.multiplayer.mlapi",
       "depth": 0,
-      "source": "local",
+      "source": "embedded",
       "dependencies": {
         "com.unity.modules.ai": "1.0.0",
         "com.unity.modules.animation": "1.0.0",
