@@ -275,7 +275,7 @@ namespace MLAPI
 
             if (m_UseNetworkManager && NetworkManager.Singleton != null)
             {
-                m_BroadcastData = "NetworkManager:" + NetworkManager.Singleton.GetComponent<UNetTransport>().ConnectAddress + ":" + NetworkManager.Singleton.GetComponent<UNetTransport>().ConnectPort;
+                m_BroadcastData = "NetworkManager:" + NetworkManager.Singleton.GetComponent<UNetTransport>().ConnectAddress + ":" + NetworkManager.Singleton.GetComponent<UNetTransport>().ServerListenPort;
                 if (m_ShowDebugMessages) { Debug.Log("NetworkDiscovery set broadcast data to:" + m_BroadcastData); }
             }
 

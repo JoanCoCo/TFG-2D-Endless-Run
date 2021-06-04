@@ -384,7 +384,7 @@ PrefabInstance:
     - target: {fileID: 3140912726088212038, guid: def5de2e876b34810be02f605d94e3d7,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -114.498566
+      value: -114.496826
       objectReference: {fileID: 0}
     - target: {fileID: 3140912726820173701, guid: def5de2e876b34810be02f605d94e3d7,
         type: 3}
@@ -1282,7 +1282,7 @@ MonoBehaviour:
   - {fileID: 7350454985027971671, guid: 3b73fa430d16249b68aa167bd0f073bd, type: 3}
   - {fileID: 7350454985027971671, guid: 3b73fa430d16249b68aa167bd0f073bd, type: 3}
   - {fileID: 7350454985027971671, guid: 62239cf4401e743b7be0db28f536d679, type: 3}
-  margin: 10
+  margin: 5
   cellSizeX: 2
   cellSizeY: 0.5
   maxDamageLenght: 1
@@ -1363,7 +1363,7 @@ MonoBehaviour:
   NetworkInstanceId: 0
   PrefabHash: 2269114888384632728
   PrefabHashGenerator: CellGenerator
-  AlwaysReplicateAsRoot: 0
+  AlwaysReplicateAsRoot: 1
   DontDestroyWithOwner: 0
 --- !u!1 &2138460673
 GameObject:

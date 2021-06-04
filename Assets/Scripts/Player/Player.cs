@@ -43,8 +43,8 @@ public class Player : NetworkBehaviour
             _body = GetComponent<Rigidbody2D>();
             _collider = GetComponent<BoxCollider2D>();
             _currentInteractable = null;
-            NetworkSceneManager.OnSceneSwitched += OnNewScene;
         }
+        NetworkSceneManager.OnSceneSwitched += OnNewScene;
         OnNewScene();
     }
 
@@ -277,6 +277,6 @@ public class Player : NetworkBehaviour
     private void OnDestroy()
     {
         if (iWasLocalPlayer && !isInLobby) Messenger<int>.RemoveListener(GameEvent.DISTANCE_INCREASED, OnDistanceIncreased);
-        if (iWasLocalPlayer) NetworkSceneManager.OnSceneSwitched -= OnNewScene;
+        NetworkSceneManager.OnSceneSwitched -= OnNewScene;
     }
 }

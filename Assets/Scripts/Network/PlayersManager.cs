@@ -110,6 +110,8 @@ public class PlayersManager : NetworkBehaviour
                 }
             };
 
+            NetworkManager.Singleton.ConnectedClients[player].PlayerObject.Despawn(true);
+
             if (isFirst)
             {
                 Debug.Log("Setting up split's host");
@@ -175,7 +177,7 @@ public class PlayersManager : NetworkBehaviour
         NetworkManager.Singleton.GetComponent<UNetTransport>().ServerListenPort = port; //netManager.networkPort = port;
         if(!changeScene) GameObject.FindWithTag("PlayersFinder").GetComponent<PlayersFinder>().SetUpAsHost();
         NetworkManager.Singleton.StartHost();
-        //numberOfPlayers.Value = 0;
+        numberOfPlayers.Value = 0;
         if (changeScene) ChangeSceneWhenReady(numOfPly, scene);
     }
 

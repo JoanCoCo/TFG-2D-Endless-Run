@@ -161,6 +161,7 @@ public class GameController : NetworkBehaviour
 
     private void OnPlayerStarts(float p)
     {
+        Debug.Log("Player starts.");
         playerInitPos = p;
         playerFurthestPos = playerInitPos;
         lastMinX = playerInitPos;
