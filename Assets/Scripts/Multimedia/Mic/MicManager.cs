@@ -444,7 +444,7 @@ public class MicManager : StreamManager
                 Debug.Log("Turning mic on.");
                 if (voiceClip == null)
                 {
-                    voiceClip = Microphone.Start(Microphone.devices[0], true, 1, frequency);
+                    voiceClip = Microphone.Start(PlayerPrefs.GetString("Mic", Microphone.devices[0]), true, 1, frequency);
                     while (!(Microphone.GetPosition(Microphone.devices[0]) > 0)) { }
                 }
             }
@@ -459,7 +459,7 @@ public class MicManager : StreamManager
             if (Microphone.devices.Length > 0)
             {
                 Debug.Log("Turning mic off.");
-                Microphone.End(Microphone.devices[0]);
+                Microphone.End(PlayerPrefs.GetString("Mic", Microphone.devices[0]));
                 if (voiceClip != null)
                 {
                     voiceClip = null;
