@@ -7,8 +7,8 @@ public class SettingsScreen : MonoBehaviour
 {
     [SerializeField] private KeyCode m_exitKey = KeyCode.Escape;
     [SerializeField] private GameObject m_settingsScreen;
-    [SerializeField] private TMP_Dropdown camDropdown;
-    [SerializeField] private TMP_Dropdown micDropdown;
+    [SerializeField] private TMP_Dropdown m_camDropdown;
+    [SerializeField] private TMP_Dropdown m_micDropdown;
 
     private void Start()
     {
@@ -23,8 +23,8 @@ public class SettingsScreen : MonoBehaviour
             options.Add(mic);
             if (mic.Equals(targetMic)) i = options.Count - 1;
         }
-        micDropdown.AddOptions(options);
-        micDropdown.value = i;
+        m_micDropdown.AddOptions(options);
+        m_micDropdown.value = i;
         options.Clear();
         i = 0;
         foreach(var cam in WebCamTexture.devices)
@@ -32,11 +32,19 @@ public class SettingsScreen : MonoBehaviour
             options.Add(cam.name);
             if (cam.name.Equals(targetCam)) i = options.Count - 1;
         }
-        camDropdown.AddOptions(options);
-        camDropdown.value = i;
+        m_camDropdown.AddOptions(options);
+        m_camDropdown.value = i;
 
-        micDropdown.onValueChanged.AddListener(OnMicSelected);
-        camDropdown.onValueChanged.AddListener(OnCamSelected);
+        m_micDropdown.onValueChanged.AddListener(OnMicSelected);
+        m_camDropdown.onValueChanged.AddListener(OnCamSelected);
+    }
+
+    private void Update()
+    {
+        if(m_settingsScreen.activeSelf && Input.GetKeyDown(m_exitKey))
+        {
+            ToggleSettings();
+        }
     }
 
     public void ToggleSettings()
@@ -46,11 +54,11 @@ public class SettingsScreen : MonoBehaviour
 
     public void OnCamSelected(int index)
     {
-        PlayerPrefs.SetString("Cam", camDropdown.options[index].text);
+        PlayerPrefs.SetString("Cam", m_camDropdown.options[index].text);
     }
 
     public void OnMicSelected(int index)
     {
-        PlayerPrefs.SetString("Mic", micDropdown.options[index].text);
+        PlayerPrefs.SetString("Mic", m_micDropdown.options[index].text);
     }
 }
