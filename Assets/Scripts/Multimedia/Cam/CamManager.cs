@@ -398,10 +398,11 @@ public class CamManager : StreamManager
         if (isLocalPlayer)
         {
             Debug.Log("Turning camera on.");
-            if (cam == null)
+            if (cam == null && WebCamTexture.devices.Length > 0)
             {
                 cam = new WebCamTexture();
                 cam.requestedFPS = transmissionsPerSecond + 5;
+                cam.deviceName = PlayerPrefs.GetString("Cam", WebCamTexture.devices[0].name);
             }
 
             if (cam != null && !cam.isPlaying)
