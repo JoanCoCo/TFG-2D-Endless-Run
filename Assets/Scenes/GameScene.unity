@@ -384,7 +384,7 @@ PrefabInstance:
     - target: {fileID: 3140912726088212038, guid: def5de2e876b34810be02f605d94e3d7,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -114.496826
+      value: -114.48312
       objectReference: {fileID: 0}
     - target: {fileID: 3140912726820173701, guid: def5de2e876b34810be02f605d94e3d7,
         type: 3}
@@ -1282,7 +1282,7 @@ MonoBehaviour:
   - {fileID: 7350454985027971671, guid: 3b73fa430d16249b68aa167bd0f073bd, type: 3}
   - {fileID: 7350454985027971671, guid: 3b73fa430d16249b68aa167bd0f073bd, type: 3}
   - {fileID: 7350454985027971671, guid: 62239cf4401e743b7be0db28f536d679, type: 3}
-  margin: 5
+  margin: 10
   cellSizeX: 2
   cellSizeY: 0.5
   maxDamageLenght: 1
@@ -1315,8 +1315,8 @@ MonoBehaviour:
   FixedSendsPerSecond: 20
   AssumeSyncedSends: 1
   InterpolatePosition: 1
-  SnapDistance: 10
-  InterpolateServer: 1
+  SnapDistance: 200
+  InterpolateServer: 0
   MinMeters: 0.15
   MinDegrees: 1.5
   ExtrapolatePosition: 0
@@ -1363,7 +1363,7 @@ MonoBehaviour:
   NetworkInstanceId: 0
   PrefabHash: 2269114888384632728
   PrefabHashGenerator: CellGenerator
-  AlwaysReplicateAsRoot: 1
+  AlwaysReplicateAsRoot: 0
   DontDestroyWithOwner: 0
 --- !u!1 &2138460673
 GameObject:
@@ -1507,7 +1507,7 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 9670801, guid: 51242349f4ff44b0d84a86b19547ee94, type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -21.118958
+      value: -21.118927
       objectReference: {fileID: 0}
     - target: {fileID: 2020966103, guid: 51242349f4ff44b0d84a86b19547ee94, type: 3}
       propertyPath: m_AnchorMax.x

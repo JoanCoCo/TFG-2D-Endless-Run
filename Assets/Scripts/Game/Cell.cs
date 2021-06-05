@@ -43,8 +43,8 @@ public class Cell : NetworkBehaviour
             if (gameObject.transform.position.x < lastPosX
                 - _mainCamera.orthographicSize * _mainCamera.aspect - _margin)
             {
-                //GetComponent<NetworkObject>().Despawn(true); // NetworkSever.Destroy(gameObject);
-                Destroy(gameObject);
+                GetComponent<NetworkObject>().Despawn(true); // NetworkSever.Destroy(gameObject);
+                //Destroy(gameObject);
                 despawnWasTriggered = true;
                 Debug.Log("Cell was despawned.");
             }

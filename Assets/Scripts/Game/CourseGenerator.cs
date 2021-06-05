@@ -24,9 +24,17 @@ public class CourseGenerator : NetworkBehaviour
     private float refX = 0.0f;
     private Camera _mainCamera;
 
+    private float elapsedTime = 0;
+
+    private bool generatingNewCells = false;
+
+    [SerializeField] private float startDelay = 0.2f;
+
+    private bool iWasServer = false;
+
     private void Awake()
     {
-        Messenger<float>.AddListener(GameEvent.FIRST_PLAYER_POSITION_CHANGED, OnFirstPlayerPositionChanged);
+        //Messenger<float>.AddListener(GameEvent.FIRST_PLAYER_POSITION_CHANGED, OnFirstPlayerPositionChanged);
     }
 
     // Start is called before the first frame update
@@ -34,12 +42,14 @@ public class CourseGenerator : NetworkBehaviour
     {
         if (IsServer)
         {
+            Messenger<float>.AddListener(GameEvent.FIRST_PLAYER_POSITION_CHANGED, OnFirstPlayerPositionChanged);
             _origin = GetComponent<Transform>();
             _initialY = _origin.position.y;
             _initialX = _origin.position.x;
             _previousCol = new GameObject[_rows];
             _newCol = new GameObject[_rows];
             _mainCamera = Camera.main;
+            iWasServer = true;
         }
     }
 
@@ -54,15 +64,27 @@ public class CourseGenerator : NetworkBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (IsServer)
+        if (IsServer && elapsedTime > startDelay && !generatingNewCells)
         {
-            while (gameObject.transform.position.x < refX
-                + _mainCamera.orthographicSize * _mainCamera.aspect + margin)
-            {
-                GenerateNewCol();
-            }
-            Assert.IsTrue(maxHeight <= _rows);
+            generatingNewCells = true;
+            StartCoroutine(GenerateColumns());
         }
+        else if (IsServer)
+        {
+            elapsedTime += Time.deltaTime;
+        }
+    }
+
+    private IEnumerator GenerateColumns()
+    {
+        while (gameObject.transform.position.x < refX
+                + _mainCamera.orthographicSize * _mainCamera.aspect + margin)
+        {
+            yield return new WaitForSeconds(0.01f);
+            GenerateNewCol();
+        }
+        Assert.IsTrue(maxHeight <= _rows);
+        generatingNewCells = false;
     }
 
     private void GenerateNewCol()
@@ -71,6 +93,8 @@ public class CourseGenerator : NetworkBehaviour
         bool hasDamage = false;
         for (int i = _rows - 1; i >= 0; i--)
         {
+            new WaitForSeconds(0.01f);
+
             Transform spawnPoint = _origin;
             spawnPoint.position = new Vector3(_currentCol * cellSizeX + _initialX,
                 i * cellSizeY + _initialY, 0);
@@ -155,6 +179,6 @@ public class CourseGenerator : NetworkBehaviour
 
     private void OnDestroy()
     {
-        Messenger<float>.RemoveListener(GameEvent.FIRST_PLAYER_POSITION_CHANGED, OnFirstPlayerPositionChanged);
+        if (iWasServer) Messenger<float>.RemoveListener(GameEvent.FIRST_PLAYER_POSITION_CHANGED, OnFirstPlayerPositionChanged);
     }
 }
