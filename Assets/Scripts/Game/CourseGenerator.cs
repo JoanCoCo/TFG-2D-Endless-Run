@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Assertions;
 using MLAPI;
+using MLAPI.Prototyping;
 
 public class CourseGenerator : NetworkBehaviour
 {
@@ -28,7 +29,7 @@ public class CourseGenerator : NetworkBehaviour
 
     private bool generatingNewCells = false;
 
-    [SerializeField] private float startDelay = 0.2f;
+    [SerializeField] private float startDelay = 0.5f;
 
     private bool iWasServer = false;
 

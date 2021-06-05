@@ -206,10 +206,10 @@ public class PlayersManager : NetworkBehaviour
 
     private IEnumerator ChangeClientConnection(int port, string address)
     {
-        yield return new WaitForSeconds(0.01f);
         Debug.Log("Changing connection to host.");
         //GameObject.FindWithTag("LocalPlayer").GetComponent<NetworkObject>().Despawn();
-        //NetworkManager.Singleton.StopClient();
+        NetworkManager.Singleton.StopClient();
+        while (GameObject.FindWithTag("LocalPlayer") != null) { yield return new WaitForSeconds(0.01f); }
         //NetworkManager.Singleton.Shutdown();
         NetworkManager.Singleton.GetComponent<UNetTransport>().ConnectPort = port; //netManager.networkPort = port;
         NetworkManager.Singleton.GetComponent<UNetTransport>().ConnectAddress = address; //NetworkManager.Singleton.networkAddress = address;

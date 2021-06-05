@@ -259,16 +259,6 @@ public class Player : NetworkBehaviour
     }
 
     [ClientRpc]
-    private void HidePlayerClientRpc()
-    {
-        arrow.SetActive(false);
-        healthBarObject.SetActive(false);
-        nameText.text = "";
-        textCanvas.SetActive(false);
-        GetComponent<SpriteRenderer>().sprite = null;
-    }
-
-    [ClientRpc]
     private void UpdateHealthBarClientRpc(int h)
     {
         if(!IsLocalPlayer) healthBar.transform.localScale = new Vector3(((float) h) / maxHealth, 1.0f, 1.0f);

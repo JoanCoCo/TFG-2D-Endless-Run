@@ -1286,6 +1286,7 @@ MonoBehaviour:
   cellSizeX: 2
   cellSizeY: 0.5
   maxDamageLenght: 1
+  startDelay: 0.2
 --- !u!4 &2129837211
 Transform:
   m_ObjectHideFlags: 0
@@ -1314,8 +1315,8 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   FixedSendsPerSecond: 20
   AssumeSyncedSends: 1
-  InterpolatePosition: 1
-  SnapDistance: 200
+  InterpolatePosition: 0
+  SnapDistance: 300
   InterpolateServer: 0
   MinMeters: 0.15
   MinDegrees: 1.5
