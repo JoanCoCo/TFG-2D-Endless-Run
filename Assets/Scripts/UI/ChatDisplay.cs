@@ -27,10 +27,9 @@ public class ChatDisplay : MonoBehaviour
 
     private void Update()
     {
-        if(Input.GetKeyDown(hideKey) && (inputAvailabilityManager == null || !inputAvailabilityManager.UserIsTyping))
+        if((Input.GetKeyDown(hideKey) || Input.GetKeyDown(KeyCode.Escape) && !isHidden) && (inputAvailabilityManager == null || !inputAvailabilityManager.UserIsTyping))
         {
-            isHidden = !isHidden;
-            UpdateDisplay();
+            ChangeState();
         }
     }
 
@@ -49,5 +48,11 @@ public class ChatDisplay : MonoBehaviour
         uint myPlayerNetId = GameObject.FindWithTag("LocalPlayer").GetComponent<NetworkIdentity>().netId.Value;
         if (myPlayerNetId == id) tmsg.alignment = TextAlignmentOptions.MidlineRight;
         omsg.transform.SetAsLastSibling();
+    }
+
+    public void ChangeState()
+    {
+        isHidden = !isHidden;
+        UpdateDisplay();
     }
 }

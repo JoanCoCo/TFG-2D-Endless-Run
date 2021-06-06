@@ -7,9 +7,10 @@ using TMPro;
 public class MediaInputController : MonoBehaviour
 {
     [SerializeField] private StreamManager mediaInputManager;
-    [SerializeField] private GameObject onImage;
-    [SerializeField] private GameObject offImage;
+    [SerializeField] private Sprite onImage;
+    [SerializeField] private Sprite offImage;
     [SerializeField] private TextMeshProUGUI keyText;
+    [SerializeField] private Button button;
     [SerializeField] private KeyCode interactionKey;
     private enum State { On, Off };
     [SerializeField] private State state = State.Off;
@@ -20,6 +21,7 @@ public class MediaInputController : MonoBehaviour
     {
         keyText.text = interactionKey.ToString();
         inputAvailabilityManager = GameObject.FindWithTag("InputAvailabilityManager").GetComponent<InputAvailabilityManager>();
+        button.onClick.AddListener(ChangeState);
         UpdateState();
     }
 
@@ -33,13 +35,15 @@ public class MediaInputController : MonoBehaviour
 
     private void UpdateState()
     {
-        offImage.SetActive(state == State.Off);
-        onImage.SetActive(state == State.On);
+        //offImage.SetActive(state == State.Off);
+        //onImage.SetActive(state == State.On);
         if(state == State.On)
         {
+            button.GetComponent<Image>().sprite = onImage;
             if(mediaInputManager != null) mediaInputManager.StartRecording();
         } else
         {
+            button.GetComponent<Image>().sprite = offImage;
             if(mediaInputManager != null) mediaInputManager.StopRecording();
         }
     }
