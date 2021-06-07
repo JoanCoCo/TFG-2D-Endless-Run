@@ -268,10 +268,10 @@ namespace MLAPI
                 UnityEngine.Networking.NetworkTransport.Init();
             }
 
-            if (!NetworkManager.Singleton.GetComponent<UNetTransport>().isActiveAndEnabled)
+            /*if (!NetworkManager.Singleton.GetComponent<UNetTransport>().isActiveAndEnabled)
             {
                 NetworkManager.Singleton.GetComponent<UNetTransport>().Init();
-            }
+            }*/
 
             if (m_UseNetworkManager && NetworkManager.Singleton != null)
             {

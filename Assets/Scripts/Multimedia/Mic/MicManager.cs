@@ -136,6 +136,10 @@ public class MicManager : StreamManager
             frequency = f;
         }
 
+        /// <summary>
+        /// Constructor to instantiate AudioHeaderMessage
+        /// </summary>
+        /// <param name="stream">Byte stream that contains the information of a AudioHeaderMessage</param>
         public AudioHeaderMessage(Stream stream) : base(stream)
         {
             using (PooledNetworkReader reader = PooledNetworkReader.Get(stream))
@@ -144,14 +148,6 @@ public class MicManager : StreamManager
                 channels = reader.ReadInt32();
                 frequency = reader.ReadInt32();
             }
-        }
-
-        public override void NetworkSerialize(NetworkSerializer serializer)
-        {
-            base.NetworkSerialize(serializer);
-            serializer.Serialize(ref samples);
-            serializer.Serialize(ref channels);
-            serializer.Serialize(ref frequency);
         }
     }
 
@@ -210,6 +206,10 @@ public class MicManager : StreamManager
             this.size = size;
         }
 
+        /// <summary>
+        /// Constructor to instantiate AudioChunkMessage
+        /// </summary>
+        /// <param name="stream">Byte stream that contains the information of a AudioChunkMessage</param>
         public AudioChunkMessage(Stream stream) : base(stream)
         {
             using (PooledNetworkReader reader = PooledNetworkReader.Get(stream))
@@ -219,16 +219,6 @@ public class MicManager : StreamManager
                 {
                     data[i] = reader.ReadSingle();
                 }
-            }
-        }
-
-        public override void NetworkSerialize(NetworkSerializer serializer)
-        {
-            data = new float[size];
-            base.NetworkSerialize(serializer);
-            for(int i = 0; i < size; i++)
-            {
-                serializer.Serialize(ref data[i]);
             }
         }
     }

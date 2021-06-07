@@ -37,6 +37,9 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
         public abstract void UpdateTypes(ulong n);
     }
 
+    /// <summary>
+    /// Class that represents the basic stream message.
+    /// </summary>
     protected abstract class StreamMessage {
         /// <summary>
         /// Network identifier of the player object who sent the message.
@@ -48,13 +51,16 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
         /// </summary>
         public uint id;
 
+        /// <summary>
+        /// Property that allows getting the message in as byte stream.
+        /// </summary>
         public abstract Stream MessageStream { get; }
     }
 
     /// <summary>
     /// Class that represents the basic stream header message.
     /// </summary>
-    protected class StreamHeaderMessage : StreamMessage, INetworkSerializable
+    protected class StreamHeaderMessage : StreamMessage
     {
         /// <summary>
         /// Maximum size of the following chunks associated with this header.
@@ -96,6 +102,10 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
             timeStamp = System.DateTime.Now.ToUniversalTime().Ticks;
         }
 
+        /// <summary>
+        /// Constructor to instantiate StreamHeaderMessage
+        /// </summary>
+        /// <param name="stream">Byte stream that contains the information of a StreamHeaderMessage</param>
         public StreamHeaderMessage(Stream stream)
         {
             using(PooledNetworkReader reader = PooledNetworkReader.Get(stream))
@@ -106,17 +116,12 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
                 timeStamp = reader.ReadInt64();
             }
         }
-
-        public virtual void NetworkSerialize(NetworkSerializer serializer)
-        {
-            serializer.Serialize(ref netId);
-            serializer.Serialize(ref id);
-            serializer.Serialize(ref chunkSize);
-            serializer.Serialize(ref timeStamp);
-        }
     }
 
-    protected class StreamChunkMessage : StreamMessage, INetworkSerializable
+    /// <summary>
+    /// Class that represents the basic stream chunk message.
+    /// </summary>
+    protected class StreamChunkMessage : StreamMessage
     {
         /// <summary>
         /// Position in the sequence of chunks with the same id. Starts in cero.
@@ -158,6 +163,10 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
             size = 0;
         }
 
+        /// <summary>
+        /// Constructor to instantiate StreamChunkMessage
+        /// </summary>
+        /// <param name="stream">Byte stream that contains the information of a StreamChunkMessage</param>
         public StreamChunkMessage(Stream stream)
         {
             using (PooledNetworkReader reader = PooledNetworkReader.Get(stream))
@@ -167,14 +176,6 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
                 order = reader.ReadInt32();
                 size = reader.ReadInt32();
             }
-        }
-
-        public virtual void NetworkSerialize(NetworkSerializer serializer)
-        {
-            serializer.Serialize(ref netId);
-            serializer.Serialize(ref id);
-            serializer.Serialize(ref order);
-            serializer.Serialize(ref size);
         }
     }
 
@@ -825,7 +826,7 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
     }
 
     /// <summary>
-    /// Sends a message from the server to all the clients.
+    /// Sends a message from the server to all the clients (except itself).
     /// </summary>
     /// <param name="id">Type of message that is being sent.</param>
     /// <param name="msg">Message to be sent.</param>

@@ -121,6 +121,10 @@ public class CamManager : StreamManager
             height = h;
         }
 
+        /// <summary>
+        /// Constructor to instantiate TextureHeaderMessage
+        /// </summary>
+        /// <param name="stream">Byte stream that contains the information of a TextureHeaderMessage</param>
         public TextureHeaderMessage(Stream stream) : base (stream)
         {
             using(PooledNetworkReader reader = PooledNetworkReader.Get(stream))
@@ -128,13 +132,6 @@ public class CamManager : StreamManager
                 width = reader.ReadInt32();
                 height = reader.ReadInt32();
             }
-        }
-
-        public override void NetworkSerialize(NetworkSerializer serializer)
-        {
-            base.NetworkSerialize(serializer);
-            serializer.Serialize(ref width);
-            serializer.Serialize(ref height);
         }
     }
 
@@ -194,6 +191,10 @@ public class CamManager : StreamManager
             this.size = size;
         }
 
+        /// <summary>
+        /// Constructor to instantiate TextureChunkMessage
+        /// </summary>
+        /// <param name="stream">Byte stream that contains the information of a TextureChunkMessage</param>
         public TextureChunkMessage(Stream stream) : base(stream)
         {
             using(PooledNetworkReader reader = PooledNetworkReader.Get(stream))
@@ -203,16 +204,6 @@ public class CamManager : StreamManager
                 {
                     data[i] = reader.ReadColor32();
                 }
-            }
-        }
-
-        public override void NetworkSerialize(NetworkSerializer serializer)
-        {
-            base.NetworkSerialize(serializer);
-            data = new Color32[size];
-            for(int i = 0; i < size; i++)
-            {
-                serializer.Serialize(ref data[i]);
             }
         }
     }
