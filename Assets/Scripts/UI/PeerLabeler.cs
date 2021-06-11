@@ -5,22 +5,24 @@ using UnityEngine.Networking;
 using TMPro;
 
 [RequireComponent(typeof(TextMeshProUGUI))]
-public class PeerLabeler : NetworkBehaviour
+public class PeerLabeler : MonoBehaviour
 {
     private TextMeshProUGUI m_text;
     private bool m_isHost = false;
+    private NetworkIdentity networkIdentity;
 
     // Start is called before the first frame update
     void Start()
     {
         m_text = GetComponent<TextMeshProUGUI>();
+        networkIdentity = transform.parent.GetComponent<NetworkIdentity>();
         UpdateText();
     }
 
     // Update is called once per frame
     void Update()
     {
-        bool peerType = isServer;
+        bool peerType = networkIdentity.isServer;
         if (peerType != m_isHost)
         {
             m_isHost = peerType;

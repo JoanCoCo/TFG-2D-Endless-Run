@@ -899,7 +899,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   streamTimeout: 1
   pendingHeadersTimeout: 5
-  transmissionsPerSecond: 10
+  transmissionsPerSecond: 5
   resolution: 100
 --- !u!114 &4668935782603991683
 MonoBehaviour:
@@ -916,7 +916,7 @@ MonoBehaviour:
   streamTimeout: 2
   pendingHeadersTimeout: 5
   transmissionsPerSecond: 1
-  frequency: 44100
+  frequency: 8000
 --- !u!1 &6304467527013659464
 GameObject:
   m_ObjectHideFlags: 0
