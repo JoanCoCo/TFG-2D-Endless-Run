@@ -37,9 +37,6 @@ public class GameController : NetworkBehaviour
     // Update is called once per frame
     void Update()
     {
-        elapsedTime += Time.deltaTime;
-        Messenger<int>.Broadcast(GameEvent.TIME_PASSED, (int)elapsedTime);
-
         if (!playerDied)
         {
             if (Input.GetKeyDown(KeyCode.Tab))
@@ -56,7 +53,11 @@ public class GameController : NetworkBehaviour
                     Messenger.Broadcast(GameEvent.RESUME);
                 }
             }
-        } else if(!gameFinished)
+
+            elapsedTime += Time.deltaTime;
+            Messenger<int>.Broadcast(GameEvent.TIME_PASSED, (int)elapsedTime);
+        }
+        else if(!gameFinished)
         {
             float pastScore = PlayerPrefs.GetFloat("HighScore", 0.0f);
             float diff = playerFurthestPos - playerInitPos;
@@ -95,9 +96,9 @@ public class GameController : NetworkBehaviour
                 }
             }
             Debug.Log(players.Length.ToString() + " still alive.");
-        } else
-        {
-            //Messenger.Broadcast(GameEvent.GAME_FINISHED);
+
+            elapsedTime += Time.deltaTime;
+            Messenger<int>.Broadcast(GameEvent.TIME_PASSED, (int)elapsedTime);
         }
 
         if(IsServer)
