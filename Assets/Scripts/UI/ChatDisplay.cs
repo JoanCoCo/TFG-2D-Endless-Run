@@ -23,6 +23,12 @@ public class ChatDisplay : MonoBehaviour
         myPlayer = PlayerPrefs.GetString("Name");
         UpdateDisplay();
         inputAvailabilityManager = GameObject.FindWithTag("InputAvailabilityManager").GetComponent<InputAvailabilityManager>();
+        Messenger.AddListener(GameEvent.FINISHED_SCREEN_IS_OUT, OnFinishedScreen);
+    }
+
+    private void OnFinishedScreen()
+    {
+        Destroy(gameObject);
     }
 
     private void Update()
@@ -54,5 +60,10 @@ public class ChatDisplay : MonoBehaviour
     {
         isHidden = !isHidden;
         UpdateDisplay();
+    }
+
+    private void OnDestroy()
+    {
+        Messenger.RemoveListener(GameEvent.FINISHED_SCREEN_IS_OUT, OnFinishedScreen);
     }
 }

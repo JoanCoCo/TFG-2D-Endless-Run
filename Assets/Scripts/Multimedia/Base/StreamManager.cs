@@ -362,6 +362,7 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
         /// <param name="id">Identifier of a stream.</param>
         public void RemoveStream(uint id)
         {
+            //Debug.Log("Removing stream " + id);
             if (streamIdsReceived.Contains(id)) streamIdsReceived.Remove(id);
             if (streamWasFullyReceived.ContainsKey(id)) streamWasFullyReceived.Remove(id);
             if (streamData.ContainsKey(id)) streamData.Remove(id);

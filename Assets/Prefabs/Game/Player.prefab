@@ -844,7 +844,7 @@ MonoBehaviour:
   m_EditorClassIdentifier: 
   streamTimeout: 1
   pendingHeadersTimeout: 5
-  transmissionsPerSecond: 10
+  transmissionsPerSecond: 5
   resolution: 100
 --- !u!114 &4668935782603991683
 MonoBehaviour:
@@ -858,7 +858,7 @@ MonoBehaviour:
   m_Script: {fileID: 11500000, guid: d246c198749d44b5da016f4a119de7df, type: 3}
   m_Name: 
   m_EditorClassIdentifier: 
-  streamTimeout: 2
+  streamTimeout: 1
   pendingHeadersTimeout: 5
   transmissionsPerSecond: 1
   frequency: 8000
