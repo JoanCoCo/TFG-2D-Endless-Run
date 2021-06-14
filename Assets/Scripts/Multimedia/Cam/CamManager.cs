@@ -238,6 +238,8 @@ public class CamManager : StreamManager
 
     public override void NetworkStart()
     {
+        transmissionsPerSecond = PlayerPrefs.GetInt("CamFPS", transmissionsPerSecond);
+
         Initialize(msgData, textureMsgType);
 
         CreateHandlers(textureMsgType,

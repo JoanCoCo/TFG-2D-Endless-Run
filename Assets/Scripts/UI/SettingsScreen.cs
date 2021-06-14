@@ -2,13 +2,17 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using TMPro;
+using UnityEngine.EventSystems;
 
 public class SettingsScreen : MonoBehaviour
 {
     [SerializeField] private KeyCode m_exitKey = KeyCode.Escape;
     [SerializeField] private GameObject m_settingsScreen;
     [SerializeField] private TMP_Dropdown m_camDropdown;
+    [SerializeField] private TMP_InputField m_fpsInput;
     [SerializeField] private TMP_Dropdown m_micDropdown;
+    [SerializeField] private TMP_InputField m_samplingInput;
+    [SerializeField] private InputAvailabilityManager inputAvailabilityManager;
 
     private void Start()
     {
@@ -37,11 +41,17 @@ public class SettingsScreen : MonoBehaviour
 
         m_micDropdown.onValueChanged.AddListener(OnMicSelected);
         m_camDropdown.onValueChanged.AddListener(OnCamSelected);
+
+        m_fpsInput.text = PlayerPrefs.GetInt("CamFPS", int.Parse(m_fpsInput.text)).ToString();
+        m_samplingInput.text = PlayerPrefs.GetInt("MicFPS", int.Parse(m_samplingInput.text)).ToString();
+
+        m_fpsInput.onEndEdit.AddListener(OnFrameRateChanged);
+        m_samplingInput.onEndEdit.AddListener(OnSamplingRateChanged);
     }
 
     private void Update()
     {
-        if(m_settingsScreen.activeSelf && Input.GetKeyDown(m_exitKey))
+        if(m_settingsScreen.activeSelf && Input.GetKeyUp(m_exitKey))
         {
             ToggleSettings();
         }
@@ -50,6 +60,15 @@ public class SettingsScreen : MonoBehaviour
     public void ToggleSettings()
     {
         m_settingsScreen.SetActive(!m_settingsScreen.activeSelf);
+        if (!inputAvailabilityManager.UserIsTyping)
+        {
+            inputAvailabilityManager.UserStartedTyping("on");
+        }
+        else
+        {
+            inputAvailabilityManager.UserFinishedTyping("off");
+        }
+        EventSystem.current.SetSelectedGameObject(null);
     }
 
     public void OnCamSelected(int index)
@@ -60,5 +79,15 @@ public class SettingsScreen : MonoBehaviour
     public void OnMicSelected(int index)
     {
         PlayerPrefs.SetString("Mic", m_micDropdown.options[index].text);
+    }
+
+    public void OnFrameRateChanged(string value)
+    {
+        PlayerPrefs.SetInt("CamFPS", int.Parse(value));
+    }
+
+    public void OnSamplingRateChanged(string value)
+    {
+        PlayerPrefs.SetInt("MicFPS", int.Parse(value));
     }
 }

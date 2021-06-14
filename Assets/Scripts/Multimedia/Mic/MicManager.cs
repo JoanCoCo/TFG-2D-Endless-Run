@@ -253,6 +253,8 @@ public class MicManager : StreamManager
 
     public override void NetworkStart()
     {
+        transmissionsPerSecond = PlayerPrefs.GetInt("MicFPS", transmissionsPerSecond);
+
         Initialize(msgData, clipMsgType);
 
         CreateHandlers(clipMsgType,
