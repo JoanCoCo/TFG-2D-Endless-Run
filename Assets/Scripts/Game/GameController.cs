@@ -34,7 +34,7 @@ public class GameController : NetworkBehaviour
         myLocalPlayer = PlayerPrefs.GetString("Name");
     }
 
-    private int previousAxisValue;
+    private int previousAxisValue = 0;
 
     // Update is called once per frame
     void Update()
