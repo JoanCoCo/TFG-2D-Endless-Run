@@ -219,6 +219,8 @@ public class CamManager : StreamManager
 
     private void Start()
     {
+        transmissionsPerSecond = PlayerPrefs.GetInt("CamFPS", transmissionsPerSecond);
+
         Initialize(msgData, textureMsgType);
 
         CreateHandlers(textureMsgType,

@@ -7,30 +7,46 @@ public class MainMenuManager : MonoBehaviour
 {
     [SerializeField] private KeyCode playKey = KeyCode.Return;
     [SerializeField] private KeyCode exitKey = KeyCode.Escape;
+    private InputAvailabilityManager inputAvailabilityManager;
 
     public void PlayPressed()
     {
-        SceneManager.LoadScene("LobbyScene");
+        if (inputAvailabilityManager == null || !inputAvailabilityManager.UserIsTyping)
+        {
+            SceneManager.LoadScene("LobbyScene");
+        }
     }
 
     public void ExitPressed()
     {
-        #if UNITY_EDITOR
+        if (inputAvailabilityManager == null || !inputAvailabilityManager.UserIsTyping)
+        {
+#if UNITY_EDITOR
             UnityEditor.EditorApplication.isPlaying = false;
-        #else
+#else
             Application.Quit();
-        #endif
+#endif
+        }
+    }
+
+    private void Start()
+    {
+        var o = GameObject.FindWithTag("InputAvailabilityManager");
+        if (o != null) inputAvailabilityManager = o.GetComponent<InputAvailabilityManager>();
     }
 
     private void Update()
     {
-        if(Input.GetKeyDown(exitKey))
+        if (inputAvailabilityManager == null || !inputAvailabilityManager.UserIsTyping)
         {
-            ExitPressed();
+            if (Input.GetKeyDown(exitKey))
+            {
+                ExitPressed();
+            }
+            else if (Input.GetKeyDown(playKey))
+            {
+                PlayPressed();
+            }
         }
-        else if(Input.GetKeyDown(playKey))
-        {
-            PlayPressed();
-        } 
     }
 }

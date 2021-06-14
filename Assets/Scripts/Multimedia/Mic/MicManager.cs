@@ -235,6 +235,8 @@ public class MicManager : StreamManager
 
     private void Start()
     {
+        frequency = PlayerPrefs.GetInt("MicFPS", frequency);
+
         Initialize(msgData, clipMsgType);
 
         CreateHandlers(clipMsgType,
