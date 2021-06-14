@@ -170,6 +170,7 @@ public class PlayersManager : NetworkBehaviour
     private IEnumerator BecomeHost(int numOfPly, int port, bool changeScene, string scene)
     {
         Debug.Log("Becoming host on port " + port + "...");
+        yield return new WaitForSeconds(0.01f);
         //GameObject.FindWithTag("LocalPlayer").GetComponent<NetworkObject>().Despawn();
         currentPlayerGroup.Clear();
         nextPlayerGroup.Clear();
@@ -207,6 +208,7 @@ public class PlayersManager : NetworkBehaviour
     private IEnumerator ChangeClientConnection(int port, string address)
     {
         Debug.Log("Changing connection to host.");
+        yield return new WaitForSeconds(0.01f);
         //GameObject.FindWithTag("LocalPlayer").GetComponent<NetworkObject>().Despawn();
         NetworkManager.Singleton.StopClient();
         while (GameObject.FindWithTag("LocalPlayer") != null) { yield return new WaitForSeconds(0.01f); }

@@ -101,20 +101,13 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
                 {
                     //netManager.ServerChangeScene(gameScene);
                     //Messenger.Broadcast(NetworkEvent.SPLIT);
-                    SendSplitClientRpc();
                     currNumberOfPlayers.Value = 0;
                     readyConfirmationPending = true;
                     gameIsStarting = false;
                     currentCountdown = matchCountdown;
-                    UpdateCountdownClientRpc(currentCountdown);
+                    Messenger<string>.Broadcast(NetworkEvent.SPLIT, gameScene);
                 }
             }
         }
-    }
-
-    [ClientRpc]
-    private void SendSplitClientRpc()
-    {
-        Messenger<string>.Broadcast(NetworkEvent.SPLIT, gameScene);
     }
 }
