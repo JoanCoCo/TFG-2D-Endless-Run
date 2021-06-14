@@ -170,7 +170,9 @@ public class PlayersManager : NetworkBehaviour
     private IEnumerator BecomeHost(int numOfPly, int port, bool changeScene, string scene)
     {
         Debug.Log("Becoming host on port " + port + "...");
-        yield return new WaitForSeconds(0.01f);
+        yield return new WaitForSeconds(0.0f);
+        var finder = GameObject.FindWithTag("PlayersFinder");
+        if(finder != null) finder.GetComponent<PlayersFinder>().IsOnSplit = true;
         //GameObject.FindWithTag("LocalPlayer").GetComponent<NetworkObject>().Despawn();
         currentPlayerGroup.Clear();
         nextPlayerGroup.Clear();
@@ -180,9 +182,10 @@ public class PlayersManager : NetworkBehaviour
         while(GameObject.FindWithTag("LocalPlayer") != null) { yield return new WaitForSeconds(0.01f); }
         //NetworkManager.Singleton.Shutdown();
         NetworkManager.Singleton.GetComponent<UNetTransport>().ServerListenPort = port; //netManager.networkPort = port;
-        if(!changeScene) GameObject.FindWithTag("PlayersFinder").GetComponent<PlayersFinder>().SetUpAsHost();
+        if(!changeScene) finder.GetComponent<PlayersFinder>().GetComponent<PlayersFinder>().SetUpAsHost();
         NetworkManager.Singleton.StartHost();
         numberOfPlayers.Value = 1;
+        if (finder != null) finder.GetComponent<PlayersFinder>().IsOnSplit = false;
         if (changeScene) ChangeSceneWhenReady(numOfPly, scene);
     }
 
@@ -208,7 +211,9 @@ public class PlayersManager : NetworkBehaviour
     private IEnumerator ChangeClientConnection(int port, string address)
     {
         Debug.Log("Changing connection to host.");
-        yield return new WaitForSeconds(0.01f);
+        yield return new WaitForSeconds(0.0f);
+        var finder = GameObject.FindWithTag("PlayersFinder");
+        if (finder != null) finder.GetComponent<PlayersFinder>().IsOnSplit = true;
         //GameObject.FindWithTag("LocalPlayer").GetComponent<NetworkObject>().Despawn();
         NetworkManager.Singleton.StopClient();
         while (GameObject.FindWithTag("LocalPlayer") != null) { yield return new WaitForSeconds(0.01f); }
@@ -216,6 +221,7 @@ public class PlayersManager : NetworkBehaviour
         NetworkManager.Singleton.GetComponent<UNetTransport>().ConnectPort = port; //netManager.networkPort = port;
         NetworkManager.Singleton.GetComponent<UNetTransport>().ConnectAddress = address; //NetworkManager.Singleton.networkAddress = address;
         NetworkManager.Singleton.StartClient();
+        if (finder != null) finder.GetComponent<PlayersFinder>().IsOnSplit = false;
     }
 
     [ServerRpc(RequireOwnership = false)]

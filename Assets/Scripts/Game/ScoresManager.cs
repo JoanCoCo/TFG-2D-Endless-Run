@@ -19,7 +19,17 @@ public class ScoresManager : NetworkBehaviour
     public override void NetworkStart()
     {
         Messenger<(string, int)>.AddListener(GameEvent.PLAYER_SCORE_OBTAINED, OnPlayerScoreObtained);
-        if (IsServer) numOfScoresNeeded.Value = NetworkManager.Singleton.ConnectedClients.Count;
+        if (IsServer)
+        {
+            numOfScoresNeeded.Value = NetworkManager.Singleton.ConnectedClients.Count;
+            NetworkManager.Singleton.OnClientConnectedCallback += OnClientsChange;
+            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientsChange;
+        }
+    }
+
+    private void OnClientsChange(ulong id)
+    {
+        numOfScoresNeeded.Value = NetworkManager.Singleton.ConnectedClients.Count;
     }
 
     private void Update()

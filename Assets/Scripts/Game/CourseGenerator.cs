@@ -33,11 +33,6 @@ public class CourseGenerator : NetworkBehaviour
 
     private bool iWasServer = false;
 
-    private void Awake()
-    {
-        //Messenger<float>.AddListener(GameEvent.FIRST_PLAYER_POSITION_CHANGED, OnFirstPlayerPositionChanged);
-    }
-
     // Start is called before the first frame update
     public override void NetworkStart()
     {
@@ -65,7 +60,7 @@ public class CourseGenerator : NetworkBehaviour
     // Update is called once per frame
     void Update()
     {
-        if (IsServer && elapsedTime > startDelay && !generatingNewCells)
+        if (IsServer && !generatingNewCells)
         {
             generatingNewCells = true;
             StartCoroutine(GenerateColumns());

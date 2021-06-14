@@ -2698,7 +2698,7 @@ MonoBehaviour:
     RegisteredScenes:
     - LobbyScene
     - GameScene
-    AllowRuntimeSceneChanges: 0
+    AllowRuntimeSceneChanges: 1
     NetworkPrefabs:
     - Prefab: {fileID: 5481941042463265584, guid: 1cbcb44d9d58945dab098c7073eb09b5,
         type: 3}
@@ -3300,8 +3300,13 @@ PrefabInstance:
       objectReference: {fileID: 0}
     - target: {fileID: 3140912726088212038, guid: def5de2e876b34810be02f605d94e3d7,
         type: 3}
+      propertyPath: m_AnchoredPosition.x
+      value: -11.720718
+      objectReference: {fileID: 0}
+    - target: {fileID: 3140912726088212038, guid: def5de2e876b34810be02f605d94e3d7,
+        type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -114.483215
+      value: -114.49475
       objectReference: {fileID: 0}
     - target: {fileID: 3140912726820173701, guid: def5de2e876b34810be02f605d94e3d7,
         type: 3}

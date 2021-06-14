@@ -16,6 +16,20 @@ public class PlayersFinder : MonoBehaviour
     private bool isConnected = false;
     private float waitSecondsForServer;
 
+    private bool isOnSplit = false;
+
+    public bool IsOnSplit
+    {
+        get
+        {
+            return isOnSplit;
+        }
+        set
+        {
+            isOnSplit = value;
+        }
+    }
+
     // Start is called before the first frame update
     void Start()
     {
@@ -75,16 +89,15 @@ public class PlayersFinder : MonoBehaviour
 
     private void OnNetworkDisconnect(ulong id)
     {
-        /*if (isConnected)
+        if (isConnected && !isOnSplit)
         {
-            netManager.StopClient();
             isConnected = false;
             elapsedTime = 0;
             netDiscovery.Initialize();
             netDiscovery.StartAsClient();
             if (connectingWindow != null) connectingWindow.SetActive(true);
             if (netDiscovery.broadcastsReceived.Count > 0) netDiscovery.broadcastsReceived.Clear();
-        }*/
+        }
     }
 
     public void SetUpAsHost()
@@ -93,5 +106,10 @@ public class PlayersFinder : MonoBehaviour
         //netDiscovery.broadcastPort += 1;
         netDiscovery.Initialize();
         netDiscovery.StartAsServer();
+    }
+
+    private void OnDestroy()
+    {
+        if(NetworkManager.Singleton != null) NetworkManager.Singleton.OnClientDisconnectCallback -= OnNetworkDisconnect;
     }
 }
