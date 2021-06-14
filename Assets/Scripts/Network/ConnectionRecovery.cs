@@ -8,7 +8,7 @@ public class ConnectionRecovery : NetworkBehaviour
 {
     private void Start()
     {
-        if(isClient) NetworkManager.singleton.client.RegisterHandler(MsgType.Disconnect, OnDisconnection);
+        if(isClient && !isServer) NetworkManager.singleton.client.RegisterHandler(MsgType.Disconnect, OnDisconnection);
     }
 
     private void OnDisconnection(NetworkMessage msg)

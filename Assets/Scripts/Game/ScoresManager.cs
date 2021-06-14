@@ -14,10 +14,23 @@ public class ScoresManager : DistributedEntityBehaviour
 
     [SerializeField] private ScoreScreen scoreScreen;
 
+    private bool iWasServer = false;
+
     private void Start()
     {
         Messenger<(string, int)>.AddListener(GameEvent.PLAYER_SCORE_OBTAINED, OnPlayerScoreObtained);
-        if(isServer) numOfScoresNeeded = GameObject.FindWithTag("PlayersManager").GetComponent<PlayersManager>().NumberOfPlayers;
+        if (isServer)
+        {
+            numOfScoresNeeded = GameObject.FindWithTag("PlayersManager").GetComponent<PlayersManager>().NumberOfPlayers;
+            //NetworkManager.singleton.client.RegisterHandler(MsgType.Disconnect, OnNetworkDisconnect);
+            NetworkServer.RegisterHandler(MsgType.Disconnect, OnNetworkDisconnect);
+            iWasServer = true;
+        }
+    }
+
+    private void OnNetworkDisconnect(NetworkMessage msg)
+    {
+        numOfScoresNeeded = NetworkManager.singleton.numPlayers;
     }
 
     private void Update()
@@ -70,5 +83,6 @@ public class ScoresManager : DistributedEntityBehaviour
     private void OnDestroy()
     {
         Messenger<(string, int)>.RemoveListener(GameEvent.PLAYER_SCORE_OBTAINED, OnPlayerScoreObtained);
+        if(iWasServer) NetworkServer.UnregisterHandler(MsgType.Disconnect);
     }
 }

@@ -34,6 +34,8 @@ public class GameController : NetworkBehaviour
         myLocalPlayer = PlayerPrefs.GetString("Name");
     }
 
+    private int previousAxisValue;
+
     // Update is called once per frame
     void Update()
     {
@@ -79,7 +81,12 @@ public class GameController : NetworkBehaviour
             gameFinished = players.Length == 0;
             if(!gameFinished)
             {
-                currentPlayerWatching += (int) Input.GetAxisRaw("Horizontal");
+                int axis = (int)Input.GetAxisRaw("Horizontal");
+                if (axis != previousAxisValue)
+                {
+                    currentPlayerWatching += axis;
+                    previousAxisValue = axis;
+                }
 
                 if (currentPlayerWatching < 0)
                 {
