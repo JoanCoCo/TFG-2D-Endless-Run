@@ -8,7 +8,7 @@ public class ConnectionRecovery : NetworkBehaviour
 {
     public override void NetworkStart()
     {
-        if(IsClient) NetworkManager.Singleton.OnClientDisconnectCallback += OnDisconnection;
+        if(IsClient && !IsServer) NetworkManager.Singleton.OnClientDisconnectCallback += OnDisconnection;
     }
 
     private void OnDisconnection(ulong id)
