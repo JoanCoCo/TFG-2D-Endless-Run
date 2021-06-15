@@ -22,6 +22,8 @@ public class PlayersManager : NetworkBehaviour
 
     private bool waitingCloseSignal = false;
 
+    private bool iWasServer = false;
+
     public int NumberOfPlayers {
         get
         {
@@ -250,7 +252,18 @@ public class PlayersManager : NetworkBehaviour
         {
             Debug.Log("I'm the server, adding my player.");
             RegisterNewPlayer(myClientId);
+            iWasServer = true;
+            NetworkManager.Singleton.OnClientDisconnectCallback += OnClientDisconnect;
         }
+    }
+
+    private void OnClientDisconnect(ulong id)
+    {
+        bool oneLess = currentPlayerGroup.Contains(id) || nextPlayerGroup.Contains(id);
+        if (currentPlayerGroup.Contains(id)) currentPlayerGroup.Remove(id);
+        if (nextPlayerGroup.Contains(id)) nextPlayerGroup.Remove(id);
+        if (playersIpAddresses.ContainsKey(id)) playersIpAddresses.Remove(id);
+        if (oneLess) numberOfPlayers.Value -= 1;
     }
 
     private void Update()
@@ -304,6 +317,7 @@ public class PlayersManager : NetworkBehaviour
         Messenger.RemoveListener(LobbyEvent.WAITING_FOR_MATCH, OnWaitingForMatch);
         Messenger<string>.RemoveListener(NetworkEvent.SPLIT, OnSplit);
         Messenger.RemoveListener(GameEvent.FINISHED_SCREEN_IS_OUT, OnFinishedScreenOut);
+        if (iWasServer) NetworkManager.Singleton.OnClientDisconnectCallback -= OnClientDisconnect;
     }
 
     private void OnFinishedScreenOut()
