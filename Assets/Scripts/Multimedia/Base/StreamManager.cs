@@ -621,6 +621,8 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
         NetworkMessageDelegate headerMessageFromServer,
         NetworkMessageDelegate chunkMessageFromServer)
     {
+        DestroyHandlers(msgType);
+
         if (isServer)
         {
             Debug.Log("Registering server handlers.");

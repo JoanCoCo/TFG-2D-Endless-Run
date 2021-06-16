@@ -33,6 +33,7 @@ public class MainMenuManager : MonoBehaviour
     {
         var o = GameObject.FindWithTag("InputAvailabilityManager");
         if (o != null) inputAvailabilityManager = o.GetComponent<InputAvailabilityManager>();
+        MessengerInternal.DEFAULT_MODE = MessengerMode.DONT_REQUIRE_LISTENER;
     }
 
     private void Update()

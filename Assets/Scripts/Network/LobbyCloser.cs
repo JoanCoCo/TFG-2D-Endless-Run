@@ -43,7 +43,7 @@ public class LobbyCloser : NetworkBehaviour, InteractableObject
     {
         Destroy(netManagerObject);
         NetworkManager.networkSceneName = "";
-        NetworkManager.Shutdown();
+        //NetworkManager.Shutdown();
         //NetworkTransport.Shutdown();
         GameObject playersManager = GameObject.FindWithTag("PlayersManager");
         if (playersManager != null) Destroy(playersManager);

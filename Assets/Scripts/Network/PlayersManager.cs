@@ -317,6 +317,7 @@ public class PlayersManager : DistributedEntityBehaviour
                 yield return new WaitForSeconds(0.01f);
             }
             NetworkServer.Destroy(GameObject.FindWithTag("LocalPlayer"));
+            DestroyChat();
             netManager.StopClient();
             Debug.Log("Closing game...");
             Destroy(gameObject);
@@ -386,6 +387,7 @@ public class PlayersManager : DistributedEntityBehaviour
         else
         {
             RemoveOwnership();
+            DestroyChat();
             netManager.StopClient();
             Destroy(gameObject);
         }
@@ -398,9 +400,17 @@ public class PlayersManager : DistributedEntityBehaviour
             Debug.Log("Waiting, currently connected players: " + netManager.numPlayers);
             yield return new WaitForSeconds(0.01f);
         }
+        DestroyChat();
         netManager.StopHost();
         Destroy(gameObject);
         if (closer != null) closer.Close();
+    }
+
+    private void DestroyChat()
+    {
+        var comm = GameObject.FindWithTag("Chat");
+        if (comm == null) return;
+        Destroy(comm);
     }
 
     private Coroutine CloseHost(LobbyCloser closer = null) => StartCoroutine(WaitBeforeClosing(closer));
