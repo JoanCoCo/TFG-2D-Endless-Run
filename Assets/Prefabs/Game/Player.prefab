@@ -830,6 +830,8 @@ MonoBehaviour:
   textCanvas: {fileID: 8741662726710662881}
   distanceText: {fileID: 9049407966697793256}
   nameText: {fileID: 4786540187676173223}
+  micSource: {fileID: 4873398203229621590}
+  camView: {fileID: 3182219254769104552}
 --- !u!114 &3394810250842336296
 MonoBehaviour:
   m_ObjectHideFlags: 0

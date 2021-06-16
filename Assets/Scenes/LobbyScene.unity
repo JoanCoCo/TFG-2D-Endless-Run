@@ -2016,7 +2016,7 @@ PrefabInstance:
     - target: {fileID: 1255541398554838848, guid: f40a0fba558f74a38a6754c4d954c43b,
         type: 3}
       propertyPath: m_LocalPosition.y
-      value: -210.39355
+      value: -210.39357
       objectReference: {fileID: 0}
     - target: {fileID: 5162437775394149940, guid: f40a0fba558f74a38a6754c4d954c43b,
         type: 3}
@@ -2767,7 +2767,7 @@ MonoBehaviour:
     m_PacketSize: 1440
     m_FragmentSize: 500
     m_ResendTimeout: 1200
-    m_DisconnectTimeout: 5000
+    m_DisconnectTimeout: 2000
     m_ConnectTimeout: 2000
     m_MinUpdateTimeout: 10
     m_PingTimeout: 500
@@ -3375,7 +3375,7 @@ PrefabInstance:
     - target: {fileID: 3140912726088212038, guid: def5de2e876b34810be02f605d94e3d7,
         type: 3}
       propertyPath: m_AnchoredPosition.y
-      value: -114.48758
+      value: -114.504974
       objectReference: {fileID: 0}
     - target: {fileID: 3140912726651267712, guid: def5de2e876b34810be02f605d94e3d7,
         type: 3}

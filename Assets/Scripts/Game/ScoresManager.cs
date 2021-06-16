@@ -19,6 +19,7 @@ public class ScoresManager : DistributedEntityBehaviour
     private void Start()
     {
         Messenger<(string, int)>.AddListener(GameEvent.PLAYER_SCORE_OBTAINED, OnPlayerScoreObtained);
+        Messenger.AddListener(GameEvent.PLAYER_DIED, OnPlayerDied);
         if (isServer)
         {
             numOfScoresNeeded = GameObject.FindWithTag("PlayersManager").GetComponent<PlayersManager>().NumberOfPlayers;
@@ -28,8 +29,14 @@ public class ScoresManager : DistributedEntityBehaviour
         }
     }
 
+    private void OnPlayerDied()
+    {
+        myPlayerDied = true;
+    }
+
     private void OnNetworkDisconnect(NetworkMessage msg)
     {
+        NetworkServer.DestroyPlayersForConnection(msg.conn);
         numOfScoresNeeded = NetworkManager.singleton.numPlayers;
     }
 
@@ -83,6 +90,7 @@ public class ScoresManager : DistributedEntityBehaviour
     private void OnDestroy()
     {
         Messenger<(string, int)>.RemoveListener(GameEvent.PLAYER_SCORE_OBTAINED, OnPlayerScoreObtained);
+        Messenger.RemoveListener(GameEvent.PLAYER_DIED, OnPlayerDied);
         if(iWasServer) NetworkServer.UnregisterHandler(MsgType.Disconnect);
     }
 }

@@ -333,6 +333,23 @@ public class PlayersManager : DistributedEntityBehaviour
         Debug.Log("Starting the server...");
         iAmServer = true;
         numberOfPlayers = 0;
+        NetworkServer.RegisterHandler(MsgType.Disconnect, OnClientDisconnect);
+    }
+
+    private void OnClientDisconnect(NetworkMessage msg)
+    {
+        foreach(var playerController in msg.conn.playerControllers)
+        {
+            if(playerController.IsValid && playerController.unetView != null)
+            {
+                var id = playerController.unetView.netId.Value;
+                if (currentPlayerGroup.Contains(id) || nextPlayerGroup.Contains(id)) numberOfPlayers -= 1;
+                if (currentPlayerGroup.Contains(id)) currentPlayerGroup.Remove(id);
+                if (nextPlayerGroup.Contains(id)) nextPlayerGroup.Remove(id);
+                if (playersIpAddresses.ContainsKey(id)) playersIpAddresses.Remove(id);
+            }
+        }
+        NetworkServer.DestroyPlayersForConnection(msg.conn);
     }
 
     [Command]

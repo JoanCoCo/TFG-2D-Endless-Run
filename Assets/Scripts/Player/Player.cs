@@ -22,6 +22,8 @@ public class Player : NetworkBehaviour
     [SerializeField] private GameObject textCanvas;
     [SerializeField] private TextMeshProUGUI distanceText;
     [SerializeField] private TextMeshProUGUI nameText;
+    [SerializeField] private GameObject micSource;
+    [SerializeField] private GameObject camView;
 
     [SyncVar]
     private string playerName;
@@ -236,6 +238,9 @@ public class Player : NetworkBehaviour
         nameText.text = "";
         textCanvas.SetActive(false);
         GetComponent<SpriteRenderer>().sprite = null;
+        micSource.SetActive(false);
+        camView.SetActive(false);
+        GetComponent<Rigidbody2D>().simulated = false;
     }
 
     [Command]

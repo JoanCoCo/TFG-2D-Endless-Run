@@ -655,6 +655,7 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
     {
         if (isServer)
         {
+            Debug.Log("Unegistering server handlers.");
             if (NetworkServer.handlers.ContainsKey(msgType.Header))
             {
                 NetworkServer.UnregisterHandler(msgType.Header);
@@ -666,6 +667,7 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
         }
         if (isClient && NetworkManager.singleton != null && NetworkManager.singleton.client != null)
         {
+            Debug.Log("Unregistering client handlers.");
             if (NetworkManager.singleton.client.handlers.ContainsKey(msgType.Header))
             {
                 NetworkManager.singleton.client.UnregisterHandler(msgType.Header);
@@ -822,7 +824,7 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
     /// <param name="msg">Message to be sent.</param>
     private void SendStreamMessageFromServer(short id, MessageBase msg)
     {
-        NetworkServer.SendByChannelToReady(gameObject, id, msg, 2);
+        if(gameObject != null) NetworkServer.SendByChannelToReady(gameObject, id, msg, 2);
     }
 
     /// <summary>

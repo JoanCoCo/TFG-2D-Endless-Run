@@ -72,6 +72,8 @@ public class CamManager : StreamManager
         {
             Header += (short) (n * 100);
             Chunk += (short) (n * 100);
+            if (Header < 0) Header *= -1;
+            if (Chunk < 0) Chunk *= -1;
         }
     }
 
