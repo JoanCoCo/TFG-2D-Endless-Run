@@ -2,7 +2,6 @@ using System.Collections;
 using System.Collections.Generic;
 using UnityEngine;
 using UnityEngine.Networking;
-using UnityEngine.SceneManagement;
 
 public class MatchStarter : DistributedEntityBehaviour, InteractableObject
 {
@@ -54,20 +53,12 @@ public class MatchStarter : DistributedEntityBehaviour, InteractableObject
         if (currNumberOfPlayers < maxNumberOfPlayers)
         {
             currNumberOfPlayers += 1;
-            //RpcUpdateNumberOfReadyPlayers(currNumberOfPlayers);
             if (gameIsStarting) RpcGetReadyForMatch();
             Debug.Log("Server Ready Players: " + currNumberOfPlayers.ToString());
         }
         RpcNewPlayerReadyForMatch(player);
         RemoveOwnership();
     }
-
-    /*[ClientRpc]
-    private void RpcUpdateNumberOfReadyPlayers(int n)
-    {
-        currNumberOfPlayers = n;
-        Debug.Log("Ready players: " + currNumberOfPlayers);
-    }*/
 
     [ClientRpc]
     private void RpcGetReadyForMatch()
@@ -112,8 +103,6 @@ public class MatchStarter : DistributedEntityBehaviour, InteractableObject
                 }
                 else
                 {
-                    //netManager.ServerChangeScene(gameScene);
-                    //Messenger.Broadcast(NetworkEvent.SPLIT);
                     RpcSendSplit();
                     currNumberOfPlayers = 0;
                     readyConfirmationPending = true;

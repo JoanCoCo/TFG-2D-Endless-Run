@@ -41,7 +41,6 @@ public class DistributedEntityBehaviour : NetworkBehaviour
                 yield return new WaitForSeconds(0.01f);
             }
             Debug.Log("Authority received.");
-            //myPlayerId = player.GetComponent<NetworkIdentity>().netId.Value;
         }
     }
 

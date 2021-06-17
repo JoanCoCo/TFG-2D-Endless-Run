@@ -16,7 +16,6 @@ public class MediaInputController : MonoBehaviour
     [SerializeField] private State state = State.Off;
     private InputAvailabilityManager inputAvailabilityManager;
 
-    // Start is called before the first frame update
     void Start()
     {
         keyText.text = interactionKey.ToString();
@@ -25,7 +24,6 @@ public class MediaInputController : MonoBehaviour
         UpdateState();
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (Input.GetKeyDown(interactionKey)
@@ -35,8 +33,6 @@ public class MediaInputController : MonoBehaviour
 
     private void UpdateState()
     {
-        //offImage.SetActive(state == State.Off);
-        //onImage.SetActive(state == State.On);
         if(state == State.On)
         {
             button.GetComponent<Image>().sprite = onImage;

@@ -32,14 +32,11 @@ public class Player : NetworkBehaviour
 
     private InputAvailabilityManager inputAvailabilityManager;
 
-    //[SerializeField] private CamManager camManager;
-
     private void Awake()
     {
         isInLobby = SceneManager.GetActiveScene().name.Equals("LobbyScene");
     }
 
-    // Start is called before the first frame update
     void Start()
     {
         if (isLocalPlayer)
@@ -83,7 +80,6 @@ public class Player : NetworkBehaviour
         if(!isLocalPlayer) nameText.text = playerName;
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (isLocalPlayer && health > 0)
@@ -109,7 +105,6 @@ public class Player : NetworkBehaviour
             if (Input.GetKeyDown(KeyCode.Space) && IsTouchingGround() &&
                 (inputAvailabilityManager == null || !inputAvailabilityManager.UserIsTyping))
             {
-                //Debug.Log("Jumping");
                 _body.AddForce(Vector2.up * jumpForce, ForceMode2D.Impulse);
                 _body.AddTorque(Mathf.Sign(_body.velocity.x) * -10.0f, ForceMode2D.Impulse);
             }
@@ -184,7 +179,6 @@ public class Player : NetworkBehaviour
     {
         if(isLocalPlayer && other.gameObject.CompareTag("Interactable") && health > 0)
         {
-            Debug.Log("Interactable in range.");
             _currentInteractable = other.gameObject.GetComponent<InteractableObject>();
         }
     }
@@ -193,7 +187,6 @@ public class Player : NetworkBehaviour
     {
         if (isLocalPlayer && other.gameObject.CompareTag("Interactable") && health > 0)
         {
-            Debug.Log("Interactable out of range.");
             _currentInteractable = null;
         }
     }
@@ -204,7 +197,6 @@ public class Player : NetworkBehaviour
         {
             ReceiveDamage(1);
         }
-        //Debug.Log("Col : " + collision.gameObject.tag);
     }
 
     private void ReceiveDamage(int damage)
@@ -225,7 +217,6 @@ public class Player : NetworkBehaviour
         if (health == 0)
         {
             RpcHidePlayer();
-            //NetworkServer.Destroy(gameObject);
         }
         RpcUpdateHealthBar(health);
     }

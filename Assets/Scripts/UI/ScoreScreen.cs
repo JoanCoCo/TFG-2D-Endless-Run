@@ -13,7 +13,6 @@ public class ScoreScreen : MonoBehaviour
 
     public bool isNewHighscore = false;
 
-    // Update is called once per frame
     void Update()
     {
         if(isNewHighscore)
@@ -35,7 +34,6 @@ public class ScoreScreen : MonoBehaviour
                 NetworkManager.networkSceneName = "";
 
                 NetworkManager.Shutdown();
-                //NetworkTransport.Shutdown();
             }
             GameObject playersManager = GameObject.FindWithTag("PlayersManager");
             if(playersManager != null) Destroy(playersManager);
@@ -50,7 +48,6 @@ public class ScoreScreen : MonoBehaviour
     private string GetScoreString()
     {
         int d = (int) PlayerPrefs.GetFloat( (isNewHighscore) ? "HighScore" : "LastScore", 0.0f);
-        //string s = (time % 60) >= 10 ? (time % 60).ToString() : "0" + (time % 60);
         return d.ToString() + " m";
     }
 

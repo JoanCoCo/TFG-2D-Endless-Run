@@ -29,7 +29,6 @@ public class CourseGenerator : NetworkBehaviour
         Messenger<float>.AddListener(GameEvent.FIRST_PLAYER_POSITION_CHANGED, OnFirstPlayerPositionChanged);
     }
 
-    // Start is called before the first frame update
     void Start()
     {
         if (isServer)
@@ -51,7 +50,6 @@ public class CourseGenerator : NetworkBehaviour
         }
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (isServer)
@@ -76,10 +74,7 @@ public class CourseGenerator : NetworkBehaviour
                 i * cellSizeY + _initialY, 0);
             GameObject o = Instantiate(suggestCell(i));
             o.transform.position = spawnPoint.position;
-            //o.transform.parent = gameObject.transform;
             hasDamage |= o.CompareTag("Damage");
-            //o.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, cellSizeY);
-            //o.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, cellSizeX);
             o.GetComponent<Cell>().SetHeight(cellSizeY);
             o.GetComponent<Cell>().SetWidth(cellSizeX);
 
@@ -101,7 +96,6 @@ public class CourseGenerator : NetworkBehaviour
                 topFound = true;
             }
         }
-        //Debug.Log("Next max height = " + maxHeight.ToString());
 
         if (hasDamage)
         {

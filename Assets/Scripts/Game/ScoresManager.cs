@@ -23,7 +23,6 @@ public class ScoresManager : DistributedEntityBehaviour
         if (isServer)
         {
             numOfScoresNeeded = GameObject.FindWithTag("PlayersManager").GetComponent<PlayersManager>().NumberOfPlayers;
-            //NetworkManager.singleton.client.RegisterHandler(MsgType.Disconnect, OnNetworkDisconnect);
             NetworkServer.RegisterHandler(MsgType.Disconnect, OnNetworkDisconnect);
             iWasServer = true;
         }

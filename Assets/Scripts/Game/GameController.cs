@@ -20,6 +20,8 @@ public class GameController : NetworkBehaviour
 
     private string myLocalPlayer;
 
+    private int previousAxisValue = 0;
+
     private void Awake()
     {
         Messenger<float>.AddListener(GameEvent.PLAYER_STARTS, OnPlayerStarts);
@@ -27,16 +29,12 @@ public class GameController : NetworkBehaviour
         Messenger<float>.AddListener(GameEvent.PLAYER_MOVED, OnPlayerMovement);
     }
 
-    // Start is called before the first frame update
     void Start()
     {
         cameraSet = GameObject.FindWithTag("CameraSet").GetComponent<CinemachineVirtualCamera>();
         myLocalPlayer = PlayerPrefs.GetString("Name");
     }
 
-    private int previousAxisValue = 0;
-
-    // Update is called once per frame
     void Update()
     {
         elapsedTime += Time.deltaTime;
@@ -74,8 +72,6 @@ public class GameController : NetworkBehaviour
                 scoreWasUpdated = true;
                 Messenger<(string, int)>.Broadcast(GameEvent.PLAYER_SCORE_OBTAINED, (myLocalPlayer, (int) diff));
             }
-            //gameFinished = true;
-            //Time.timeScale = 0;
 
             GameObject[] players = GameObject.FindGameObjectsWithTag("Player");
             gameFinished = players.Length == 0;
@@ -101,10 +97,6 @@ public class GameController : NetworkBehaviour
                     cameraSet.Follow = players[currentPlayerWatching].transform;
                 }
             }
-            Debug.Log(players.Length.ToString() + " still alive.");
-        } else
-        {
-            //Messenger.Broadcast(GameEvent.GAME_FINISHED);
         }
 
         if(isServer)
@@ -147,7 +139,6 @@ public class GameController : NetworkBehaviour
     private void OnPlayerDeath()
     {
         playerDied = true;
-        //Messenger.Broadcast(GameEvent.PLAYER_DIED);
     }
 
     private void OnDestroy()

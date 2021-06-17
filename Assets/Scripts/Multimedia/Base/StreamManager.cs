@@ -93,6 +93,9 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
         }
     }
 
+    /// <summary>
+    /// Class that represents the basic stream chunk message.
+    /// </summary>
     protected class StreamChunkMessage : MessageBase
     {
         /// <summary>

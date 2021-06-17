@@ -10,7 +10,7 @@ public class CellElement : MonoBehaviour
     [SerializeField] private Vector2 cornerDown;
     private SpriteRenderer _renderer;
     private Cell parent;
-    // Start is called before the first frame update
+    
     void Start()
     {
         parent = transform.parent.GetComponent<Cell>();

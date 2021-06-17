@@ -12,7 +12,6 @@ public class ChatDisplay : MonoBehaviour
     [SerializeField] private GameObject inputBox;
     [SerializeField] private GameObject messagePrefab;
     [SerializeField] private GameObject chatIcon;
-    private string myPlayer;
     [SerializeField] private bool isHidden = false;
     private KeyCode hideKey = KeyCode.M;
 
@@ -20,7 +19,6 @@ public class ChatDisplay : MonoBehaviour
 
     private void Start()
     {
-        myPlayer = PlayerPrefs.GetString("Name");
         UpdateDisplay();
         inputAvailabilityManager = GameObject.FindWithTag("InputAvailabilityManager").GetComponent<InputAvailabilityManager>();
     }

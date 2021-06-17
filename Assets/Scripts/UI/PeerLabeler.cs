@@ -11,7 +11,6 @@ public class PeerLabeler : MonoBehaviour
     private bool m_isHost = false;
     private NetworkIdentity networkIdentity;
 
-    // Start is called before the first frame update
     void Start()
     {
         m_text = GetComponent<TextMeshProUGUI>();
@@ -19,7 +18,6 @@ public class PeerLabeler : MonoBehaviour
         UpdateText();
     }
 
-    // Update is called once per frame
     void Update()
     {
         bool peerType = networkIdentity.isServer;

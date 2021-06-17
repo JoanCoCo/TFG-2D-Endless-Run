@@ -140,7 +140,6 @@ public class PlayersManager : DistributedEntityBehaviour
                     RpcChangeClientConnection(player, port, address);
                 }
             }
-            //new WaitForSeconds(0.1f);
             numberOfPlayers = nextPlayerGroup.Count;
             var playersFinder = GameObject.FindWithTag("PlayersFinder");
             playersFinder.GetComponent<NetworkDiscovery>().StopBroadcast();
@@ -192,7 +191,6 @@ public class PlayersManager : DistributedEntityBehaviour
         numberOfPlayers = 0;
         if(!changeScene) GameObject.FindWithTag("PlayersFinder").GetComponent<PlayersFinder>().SetUpAsHost();
         netManager.StartHost();
-        //AddServerPlayer();
         if (changeScene) ChangeSceneWhenReady(numOfPly, scene);
     }
 
@@ -217,7 +215,6 @@ public class PlayersManager : DistributedEntityBehaviour
             Debug.Log("Changing connection to host.");
             NetworkServer.Destroy(GameObject.FindWithTag("LocalPlayer"));
             netManager.StopClient();
-            //numberOfPlayers = 0;
             netManager.networkPort = port;
             netManager.networkAddress = address;
             netManager.StartClient();
@@ -238,11 +235,6 @@ public class PlayersManager : DistributedEntityBehaviour
         {
             netManager = GameObject.FindWithTag("NetManager").GetComponent<NetworkManager>();
         }
-    }
-
-    private void Update()
-    {
-        Debug.Log(numberOfPlayers.ToString() + " players currently connected.");
     }
 
     public override void OnStartClient()
@@ -273,7 +265,6 @@ public class PlayersManager : DistributedEntityBehaviour
             yield return new WaitForSeconds(0.01f);
         }
         myPlayerId = player.GetComponent<NetworkIdentity>().netId.Value;
-        //playersIpAddresses.Add(myPlayerId, player.GetComponent<NetworkIdentity>().connectionToClient.address);
         RegisterNewPlayer(myPlayerId);
     }
 
@@ -287,7 +278,6 @@ public class PlayersManager : DistributedEntityBehaviour
             yield return new WaitForSeconds(0.01f);
         }
         myPlayerId = player.GetComponent<NetworkIdentity>().netId.Value;
-        //Debug.Log("Connection with server IP: " + player.GetComponent<NetworkIdentity>().connectionToServer.address);
         RunCommand(AddPlayerCommandCapsule, myPlayerId);
     }
 
@@ -359,7 +349,6 @@ public class PlayersManager : DistributedEntityBehaviour
         RegisterNewPlayer(nwId);
         GameObject nwPlayer = NetworkServer.FindLocalObject(new NetworkInstanceId(nwId));
         playersIpAddresses.Add(nwId, nwPlayer.GetComponent<NetworkIdentity>().connectionToClient.address);
-        //Debug.Log("Connection with client IP: " + nwPlayer.GetComponent<NetworkIdentity>().connectionToClient.address);
         RemoveOwnership();
     }
 

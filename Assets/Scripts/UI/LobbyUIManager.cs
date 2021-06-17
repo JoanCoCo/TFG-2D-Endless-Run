@@ -11,7 +11,6 @@ public class LobbyUIManager : MonoBehaviour
     private TextMeshProUGUI newPlayerReadyText;
     private bool waitingMatch = false;
 
-    // Start is called before the first frame update
     void Start()
     {
         Messenger.AddListener(LobbyEvent.WAITING_FOR_MATCH, OnWaitingForMatch);
