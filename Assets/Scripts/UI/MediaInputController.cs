@@ -52,8 +52,12 @@ public class MediaInputController : MonoBehaviour
 
     public void SetMedia(StreamManager mediaInputManager)
     {
-        this.mediaInputManager = mediaInputManager;
-        UpdateState();
+        if (mediaInputManager != null)
+        {
+            this.mediaInputManager = mediaInputManager;
+            state = mediaInputManager.IsOn ? State.On : State.Off;
+            UpdateState();
+        }
     }
 
     public bool IsNotSet() { return mediaInputManager == null; }

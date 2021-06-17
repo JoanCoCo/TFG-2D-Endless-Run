@@ -108,7 +108,7 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
         /// <param name="stream">Byte stream that contains the information of a StreamHeaderMessage</param>
         public StreamHeaderMessage(Stream stream)
         {
-            using(PooledNetworkReader reader = PooledNetworkReader.Get(stream))
+            using (PooledNetworkReader reader = PooledNetworkReader.Get(stream))
             {
                 netId = reader.ReadUInt64();
                 id = reader.ReadUInt32();
@@ -599,6 +599,10 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
     /// Network identity of this object.
     /// </summary>
     protected NetworkObject networkIdentity;
+
+    /// <summary>
+    /// Next id available for marking a stream.
+    /// </summary>
     protected uint nextId = 0;
 
     /// <summary>
@@ -618,6 +622,14 @@ public abstract class StreamManager : NetworkBehaviour, IMediaInputManager
 
     private const string SERVER_MSGTYPE = "Server";
     private const string CLIENT_MSGTYPE = "Client";
+
+    public bool IsOn
+    {
+        get
+        {
+            return isStreamOn.Value;
+        }
+    }
 
     /// <summary>
     /// Initializes the manager, setting up the network identity, updating the

@@ -16,4 +16,9 @@ public interface IMediaInputManager
     /// Stops capturing and transmiting the media.
     /// </summary>
     public void StopRecording();
+
+    /// <summary>
+    /// Is it transmiting?
+    /// </summary>
+    public bool IsOn { get; }
 }
