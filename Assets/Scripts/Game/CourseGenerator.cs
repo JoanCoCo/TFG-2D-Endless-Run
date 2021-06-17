@@ -33,7 +33,6 @@ public class CourseGenerator : NetworkBehaviour
 
     private bool iWasServer = false;
 
-    // Start is called before the first frame update
     public override void NetworkStart()
     {
         if (IsServer)
@@ -57,7 +56,6 @@ public class CourseGenerator : NetworkBehaviour
         }
     }
 
-    // Update is called once per frame
     void Update()
     {
         if (IsServer && !generatingNewCells)
@@ -96,10 +94,7 @@ public class CourseGenerator : NetworkBehaviour
                 i * cellSizeY + _initialY, 0);
             GameObject o = Instantiate(suggestCell(i));
             o.transform.position = spawnPoint.position;
-            //o.transform.parent = gameObject.transform;
             hasDamage |= o.CompareTag("Damage");
-            //o.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Vertical, cellSizeY);
-            //o.GetComponent<RectTransform>().SetSizeWithCurrentAnchors(RectTransform.Axis.Horizontal, cellSizeX);
 
             if(_red)
             {
@@ -122,7 +117,6 @@ public class CourseGenerator : NetworkBehaviour
                 topFound = true;
             }
         }
-        //Debug.Log("Next max height = " + maxHeight.ToString());
 
         if (hasDamage)
         {

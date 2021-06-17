@@ -27,7 +27,6 @@ public class ForwardHorizontalDisplacement : NetworkBehaviour
             lastPos = posX;
             initialDiff = gameObject.transform.position.x - lastPos;
             hasBeenInit = true;
-            Debug.Log("Last pos: " + lastPos.ToString());
         }
     }
 
@@ -38,7 +37,6 @@ public class ForwardHorizontalDisplacement : NetworkBehaviour
             lastPos = posX;
             gameObject.transform.position = new Vector3(initialDiff + lastPos,
                     gameObject.transform.position.y, gameObject.transform.position.z);
-            Debug.Log("Last pos updated: " + lastPos);
         }
     }
 

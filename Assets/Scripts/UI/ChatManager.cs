@@ -24,7 +24,6 @@ public class ChatManager : NetworkBehaviour
         display = GetComponent<ChatDisplay>();
         inputText.onEndEdit.AddListener(OnSendNewMessage);
         myPlayerName = PlayerPrefs.GetString("Name");
-        //DontDestroyOnLoad(gameObject);
     }
 
     private void OnSendNewMessage(string msg)

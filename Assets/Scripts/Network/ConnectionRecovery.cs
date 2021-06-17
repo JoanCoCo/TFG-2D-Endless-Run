@@ -21,12 +21,6 @@ public class ConnectionRecovery : NetworkBehaviour
                 netManager.GetComponent<NetworkManager>().Shutdown();
             }
             Destroy(netManager);
-
-            //Necessary to reset the online scene. If not, clients will try to change again to the GameScene when connecting to host.
-            //NetworkManager.networkSceneName = "";
-
-            //NetworkManager.Shutdown();
-            //NetworkTransport.Shutdown();
         }
 
         SceneManager.LoadScene("LobbyScene");

@@ -7,7 +7,6 @@ public class PopUpBehaviour : MonoBehaviour
 {
     [SerializeField] private GameObject note;
 
-    // Start is called before the first frame update
     void Start()
     {
         note.SetActive(false);

@@ -7,7 +7,6 @@ public class CourseUI : MonoBehaviour
 {
     [SerializeField] private GameObject health;
     [SerializeField] private GameObject healthBar;
-    //private RectTransform healthBarInitialTransform;
     [SerializeField] private TextMeshProUGUI chronoText;
     [SerializeField] private TextMeshProUGUI distaceText;
     [SerializeField] private GameObject pausedScreen;
@@ -26,22 +25,17 @@ public class CourseUI : MonoBehaviour
         Messenger.AddListener(GameEvent.NEW_HIGHSCORE_REACHED, OnNewHighscore);
     }
 
-    // Start is called before the first frame update
     void Start()
     {
-        //healthBarInitialTransform = healthBar.GetComponent<RectTransform>();
         pausedScreen.SetActive(false);
         finishedScreen.SetActive(false);
     }
 
-    // Update is called once per frame
     void Update()
     {
         if(finishedScreen.activeSelf && Input.GetKey(KeyCode.Return))
         {
             Time.timeScale = 1;
-            //NetworkManager netManager = GameObject.FindWithTag("NetManager").GetComponent<NetworkManager>();
-            //netManager.ServerChangeScene("LobbyScene");
         }
     }
 

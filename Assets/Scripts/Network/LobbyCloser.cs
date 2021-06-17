@@ -24,13 +24,10 @@ public class LobbyCloser : NetworkBehaviour, InteractableObject
             {
                 Debug.Log("Server LobbyCloser.");
                 GameObject.FindWithTag("PlayersManager").GetComponent<PlayersManager>().IsolateHost(this);
-                //netManager.StopHost();
-                //Close();
             } else
             {
                 Debug.Log("Client LobbyCloser.");
                 GameObject.FindWithTag("PlayersManager").GetComponent<PlayersManager>().IsolateClient(this);
-                //netManager.StopClient();
             }
         }
     }
@@ -38,9 +35,6 @@ public class LobbyCloser : NetworkBehaviour, InteractableObject
     public void Close()
     {
         Destroy(netManagerObject);
-        //NetworkManager.networkSceneName = "";
-        //NetworkManager.Singleton.Shutdown();
-        //NetworkTransport.Shutdown();
         GameObject playersManager = GameObject.FindWithTag("PlayersManager");
         if (playersManager != null) Destroy(playersManager);
         GameObject playersFinder = GameObject.FindWithTag("PlayersFinder");

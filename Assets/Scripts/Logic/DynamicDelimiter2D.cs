@@ -17,8 +17,6 @@ public class DynamicDelimiter2D : CinemachineExtension
         // Move the body before the Aim is calculated
         if (stage == CinemachineCore.Stage.Body)
         {
-            //Vector3 displacement = RespectCameraRadius(state.RawPosition);
-            //state.PositionCorrection += displacement;
             if (leftLimit != null && rightLimit != null && upperLimit != null && lowerLimit != null)
             {
                 float cameraHeight = state.Lens.OrthographicSize * 2.0f;

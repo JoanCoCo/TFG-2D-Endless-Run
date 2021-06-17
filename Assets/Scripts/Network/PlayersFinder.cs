@@ -30,7 +30,6 @@ public class PlayersFinder : MonoBehaviour
         }
     }
 
-    // Start is called before the first frame update
     void Start()
     {
         netDiscovery = GetComponent<NetworkDiscovery>();
@@ -43,7 +42,6 @@ public class PlayersFinder : MonoBehaviour
         if (netDiscovery.broadcastsReceived.Count > 0) netDiscovery.broadcastsReceived.Clear();
     }
 
-    // Update is called once per frame
     void Update()
     {
         if(netDiscovery.isClient)
@@ -73,18 +71,9 @@ public class PlayersFinder : MonoBehaviour
                 isConnected = true;
                 netDiscovery.StopBroadcast();
                 if (connectingWindow != null) connectingWindow.SetActive(false);
-                //NetworkManager.singleton.client.RegisterHandler(MsgType.Disconnect, OnNetworkDisconnect);
                 NetworkManager.Singleton.OnClientDisconnectCallback += OnNetworkDisconnect;
-                //netDiscovery.broadcastsReceived.Clear();
             }
         }
-        /*if(Input.GetKeyDown(KeyCode.Alpha1))
-        {
-            NetworkManager.Singleton.StartHost();
-        } else if(Input.GetKeyDown(KeyCode.Alpha2))
-        {
-            NetworkManager.Singleton.StartClient();
-        }*/
     }
 
     private void OnNetworkDisconnect(ulong id)
@@ -103,7 +92,6 @@ public class PlayersFinder : MonoBehaviour
     public void SetUpAsHost()
     {
         Debug.Log("Setting up discovery system as host...");
-        //netDiscovery.broadcastPort += 1;
         netDiscovery.Initialize();
         netDiscovery.StartAsServer();
     }

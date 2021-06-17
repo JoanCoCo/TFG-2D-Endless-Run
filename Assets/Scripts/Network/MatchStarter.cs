@@ -49,7 +49,6 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
         if (currNumberOfPlayers.Value < maxNumberOfPlayers)
         {
             currNumberOfPlayers.Value += 1;
-            //RpcUpdateNumberOfReadyPlayers(currNumberOfPlayers);
             if (gameIsStarting) GetReadyForMatchClientRpc();
             Debug.Log("Server Ready Players: " + currNumberOfPlayers.Value.ToString());
         }
@@ -99,8 +98,6 @@ public class MatchStarter : NetworkBehaviour, InteractableObject
                 }
                 else
                 {
-                    //netManager.ServerChangeScene(gameScene);
-                    //Messenger.Broadcast(NetworkEvent.SPLIT);
                     currNumberOfPlayers.Value = 0;
                     readyConfirmationPending = true;
                     gameIsStarting = false;

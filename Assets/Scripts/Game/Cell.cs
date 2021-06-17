@@ -22,14 +22,11 @@ public class Cell : NetworkBehaviour
 
     private bool despawnWasTriggered = false;
 
-    // Start is called before the first frame update
     public override void NetworkStart()
     {
         Assert.AreEqual(4, _conections.Length);
         if (IsServer)
         {
-            //width.Value = 1.0f;
-            //height.Value = 1.0f;
             _mainCamera = Camera.main;
             lastPosX = _mainCamera.transform.position.x;
             Messenger<float>.AddListener(GameEvent.LAST_PLAYER_POSITION_CHANGED, OnLastPlayerPositionChanged);
@@ -43,8 +40,7 @@ public class Cell : NetworkBehaviour
             if (gameObject.transform.position.x < lastPosX
                 - _mainCamera.orthographicSize * _mainCamera.aspect - _margin)
             {
-                GetComponent<NetworkObject>().Despawn(true); // NetworkSever.Destroy(gameObject);
-                //Destroy(gameObject);
+                GetComponent<NetworkObject>().Despawn(true);
                 despawnWasTriggered = true;
                 Debug.Log("Cell was despawned.");
             }

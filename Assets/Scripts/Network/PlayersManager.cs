@@ -36,7 +36,6 @@ public class PlayersManager : NetworkBehaviour
         Messenger.AddListener(LobbyEvent.WAITING_FOR_MATCH, OnWaitingForMatch);
         Messenger<string>.AddListener(NetworkEvent.SPLIT, OnSplit);
         Messenger.AddListener(GameEvent.FINISHED_SCREEN_IS_OUT, OnFinishedScreenOut);
-        //DontDestroyOnLoad(gameObject);
     }
 
     private void OnWaitingForMatch()
@@ -112,8 +111,6 @@ public class PlayersManager : NetworkBehaviour
                 }
             };
 
-            //NetworkManager.Singleton.ConnectedClients[player].PlayerObject.Despawn(true);
-
             if (isFirst)
             {
                 Debug.Log("Setting up split's host");
@@ -175,15 +172,12 @@ public class PlayersManager : NetworkBehaviour
         yield return new WaitForSeconds(0.0f);
         var finder = GameObject.FindWithTag("PlayersFinder");
         if(finder != null) finder.GetComponent<PlayersFinder>().IsOnSplit = true;
-        //GameObject.FindWithTag("LocalPlayer").GetComponent<NetworkObject>().Despawn();
         currentPlayerGroup.Clear();
         nextPlayerGroup.Clear();
         playersIpAddresses.Clear();
         NetworkManager.Singleton.StopClient();
-        //yield return new WaitForSeconds(1f);
         while(GameObject.FindWithTag("LocalPlayer") != null) { yield return new WaitForSeconds(0.01f); }
-        //NetworkManager.Singleton.Shutdown();
-        NetworkManager.Singleton.GetComponent<UNetTransport>().ServerListenPort = port; //netManager.networkPort = port;
+        NetworkManager.Singleton.GetComponent<UNetTransport>().ServerListenPort = port; 
         if(!changeScene) finder.GetComponent<PlayersFinder>().GetComponent<PlayersFinder>().SetUpAsHost();
         NetworkManager.Singleton.StartHost();
         numberOfPlayers.Value = 1;
@@ -216,12 +210,10 @@ public class PlayersManager : NetworkBehaviour
         yield return new WaitForSeconds(0.0f);
         var finder = GameObject.FindWithTag("PlayersFinder");
         if (finder != null) finder.GetComponent<PlayersFinder>().IsOnSplit = true;
-        //GameObject.FindWithTag("LocalPlayer").GetComponent<NetworkObject>().Despawn();
         NetworkManager.Singleton.StopClient();
         while (GameObject.FindWithTag("LocalPlayer") != null) { yield return new WaitForSeconds(0.01f); }
-        //NetworkManager.Singleton.Shutdown();
-        NetworkManager.Singleton.GetComponent<UNetTransport>().ConnectPort = port; //netManager.networkPort = port;
-        NetworkManager.Singleton.GetComponent<UNetTransport>().ConnectAddress = address; //NetworkManager.Singleton.networkAddress = address;
+        NetworkManager.Singleton.GetComponent<UNetTransport>().ConnectPort = port; 
+        NetworkManager.Singleton.GetComponent<UNetTransport>().ConnectAddress = address;
         NetworkManager.Singleton.StartClient();
         if (finder != null) finder.GetComponent<PlayersFinder>().IsOnSplit = false;
     }
@@ -264,20 +256,6 @@ public class PlayersManager : NetworkBehaviour
         if (nextPlayerGroup.Contains(id)) nextPlayerGroup.Remove(id);
         if (playersIpAddresses.ContainsKey(id)) playersIpAddresses.Remove(id);
         if (oneLess) numberOfPlayers.Value -= 1;
-    }
-
-    private void Update()
-    {
-        if (IsClient || IsServer)
-        {
-            Debug.Log(numberOfPlayers.Value.ToString() + " players currently connected.");
-            string playersConn = "Players connected: ";
-            foreach (var player in NetworkManager.Singleton.ConnectedClients.Keys)
-            {
-                playersConn += player + " ";
-            }
-            Debug.Log(playersConn);
-        }
     }
 
     IEnumerator WaitToAuthorityRemoval(LobbyCloser closer)
@@ -340,7 +318,7 @@ public class PlayersManager : NetworkBehaviour
             Debug.Log("Waiting, connected players: " + NetworkManager.Singleton.ConnectedClients.Count);
             yield return new WaitForSeconds(0.01f);
         }
-        //NetworkManager.Singleton.StopHost();
+
         Destroy(gameObject);
         if (closer != null)
         {

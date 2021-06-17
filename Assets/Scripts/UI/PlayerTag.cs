@@ -6,13 +6,11 @@ public class PlayerTag : MonoBehaviour
 {
     private GameObject player;
 
-    // Start is called before the first frame update
     void Start()
     {
         player = transform.parent.gameObject;
     }
 
-    // Update is called once per frame
     void Update()
     {
         Vector3 angles = -player.transform.localRotation.eulerAngles;

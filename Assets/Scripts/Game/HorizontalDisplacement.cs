@@ -6,13 +6,11 @@ public class HorizontalDisplacement : MonoBehaviour
 {
     private GameObject target;
 
-    // Start is called before the first frame update
     void Start()
     {
         target = GameObject.FindWithTag("CameraSet");
     }
 
-    // Update is called once per frame
     void Update()
     {
         if(target != null)

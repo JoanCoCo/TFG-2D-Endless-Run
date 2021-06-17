@@ -10,14 +10,12 @@ public class PeerLabeler : NetworkBehaviour
     private TextMeshProUGUI m_text;
     private bool m_isHost = false;
 
-    // Start is called before the first frame update
     void Start()
     {
         m_text = GetComponent<TextMeshProUGUI>();
         UpdateText();
     }
 
-    // Update is called once per frame
     void Update()
     {
         bool peerType = IsServer;
