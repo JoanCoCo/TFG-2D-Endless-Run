@@ -10,8 +10,6 @@ public class ScoresManager : NetworkBehaviour
     private List<(string, int)> scores = new List<(string, int)>();
     private NetworkVariable<int> numOfScoresNeeded = new NetworkVariable<int>();
     private int currentScoresReceived;
-    private bool myPlayerDied = false;
-    private bool myPlayedIsDestroyed = false;
     private bool scoresHaveBeenDelivered = false;
 
     [SerializeField] private ScoreScreen scoreScreen;
@@ -65,11 +63,6 @@ public class ScoresManager : NetworkBehaviour
     private void SyncScoresClientRpc(string player, int d)
     {
         scores.InsertIntoSortedList((player, d), (p1, p2) => p1.Item2.CompareTo(p2.Item2));
-        if (myPlayerDied && !myPlayedIsDestroyed)
-        {
-            GetComponent<NetworkObject>().Despawn(GameObject.FindWithTag("LocalPlayer"));
-            myPlayedIsDestroyed = true;
-        }
         currentScoresReceived += 1;
         Debug.Log(currentScoresReceived + "/" + numOfScoresNeeded.Value + " scores have been received.");
     }
