@@ -42,7 +42,8 @@ public class PlayersFinder : MonoBehaviour
                     Debug.Log("No hosts were found, setting up as a host.");
                     if (connectingWindow != null) connectingWindow.SetActive(false);
                 }
-            } else if(!isConnected)
+            }
+            else if(!isConnected)
             {
                 var brdReceived = netDiscovery.broadcastsReceived;
                 var brdKeys = brdReceived.Keys.ToArray();
@@ -58,6 +59,11 @@ public class PlayersFinder : MonoBehaviour
                 if (connectingWindow != null) connectingWindow.SetActive(false);
                 NetworkManager.singleton.client.RegisterHandler(MsgType.Disconnect, OnNetworkDisconnect);
             }
+        }
+
+        if(isConnected && !NetworkManager.singleton.client.handlers.ContainsValue(OnNetworkDisconnect))
+        {
+            NetworkManager.singleton.client.RegisterHandler(MsgType.Disconnect, OnNetworkDisconnect);
         }
     }
 
